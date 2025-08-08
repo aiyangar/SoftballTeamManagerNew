@@ -1,10 +1,9 @@
-import { Link } from 'react-router-dom'
+import Signup from './components/Signup'
 
 export default function App() {
   return (
-    <div className="p-6">
-      
-      
-    </div>
+    <>
+      <Signup />
+    </>
   )
 }

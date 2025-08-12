@@ -49,13 +49,23 @@ const Dashboard = () => {
           </h2>
           
           {/* Enlaces de navegación */}
-          <div className="mb-6">
-                         <Link 
-               to="/teams"
-               className="inline-block px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
-             >
-               Gestionar Equipos
-             </Link>
+          <div className="mb-6 space-y-3">
+            <div>
+              <Link 
+                to="/teams"
+                className="inline-block px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
+              >
+                Gestionar Equipos
+              </Link>
+            </div>
+            <div>
+              <Link 
+                to="/players"
+                className="inline-block px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
+              >
+                Gestionar Jugadores
+              </Link>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

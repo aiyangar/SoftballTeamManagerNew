@@ -4,6 +4,7 @@ import Signup from "./components/Signup";
 import Signin from "./components/Signin";
 import Dashboard from "./components/Dashboard";
 import Teams from "./components/Teams";
+import Players from "./components/Players";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 /**
@@ -24,6 +25,16 @@ export const router = createBrowserRouter([
         element: (
             <ProtectedRoute>
                 <Teams />
+            </ProtectedRoute>
+        ) 
+    },
+    
+    // Ruta protegida para gestión de jugadores
+    { 
+        path: "/players", 
+        element: (
+            <ProtectedRoute>
+                <Players />
             </ProtectedRoute>
         ) 
     },

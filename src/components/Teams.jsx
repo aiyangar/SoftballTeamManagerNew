@@ -11,7 +11,6 @@ import { supabase } from '../supabaseClient'
 const Teams = () => {
     // Estados para manejar el formulario
     const [name, setName] = useState('')
-    const [description, setDescription] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [teams, setTeams] = useState([]) // Estado para almacenar los equipos

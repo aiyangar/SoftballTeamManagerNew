@@ -172,22 +172,7 @@ const Teams = () => {
                         />
                     </div>
                     
-                    {/* Campo de descripción comentado - no está en la base de datos actual
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Descripción
-                        </label>
-                        <textarea 
-                            placeholder='Descripción del equipo (opcional)' 
-                            value={description} 
-                            onChange={(e) => setDescription(e.target.value)} 
-                            className='w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500' 
-                            rows="3"
-                        />
-                    </div>
-                    */}
-                    
-                                         <button 
+                    <button 
                          type='submit' 
                          disabled={loading} 
                          className='w-full mt-6 border border-gray-600 rounded-md p-3 bg-gray-800 text-white hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'

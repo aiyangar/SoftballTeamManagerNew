@@ -2,34 +2,49 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { UserAuth } from '../context/AuthContext.jsx'
 
+/**
+ * Componente para el inicio de sesión de usuarios existentes
+ * Permite autenticarse con email y contraseña
+ */
 const Signin = () => {
+    // Estados para manejar el formulario
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState(null)
+    const [loading, setLoading] = useState(false) // Estado de carga durante el proceso
+    const [error, setError] = useState(null) // Estado para mostrar errores
+    
+    // Hook para navegación programática
     const navigate = useNavigate()
 
+    // Obtener función de signin del contexto de autenticación
     const { session, signInUser } = UserAuth()
 
+    /**
+     * Maneja el envío del formulario de inicio de sesión
+     * @param {Event} e - Evento del formulario
+     */
     const handleSignIn = async (e) => {
-        e.preventDefault()
-        setLoading(true)
-        setError(null)
+        e.preventDefault() // Prevenir envío por defecto del formulario
+        setLoading(true) // Activar estado de carga
+        setError(null) // Limpiar errores anteriores
         
         try {
+            // Intentar iniciar sesión con las credenciales proporcionadas
             const result = await signInUser(email, password)
             
             if (result.success) {
                 console.log('Inicio de sesión exitoso:', result.data)
+                // Redirigir al dashboard después de autenticación exitosa
                 navigate('/dashboard')
             } else {
+                // Mostrar error si la autenticación falló
                 setError(result.error || 'Error al iniciar sesión')
             }
         } catch (error) {
-            console.error('Error en handleSignIn:', error)
+            console.error('Error inesperado en handleSignIn:', error)
             setError(error.message || 'Error inesperado')
         } finally {
-            setLoading(false)
+            setLoading(false) // Desactivar estado de carga
         }
     }
 

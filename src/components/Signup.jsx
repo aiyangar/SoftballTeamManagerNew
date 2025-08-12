@@ -2,43 +2,58 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { UserAuth } from '../context/AuthContext.jsx'
 
+/**
+ * Componente para el registro de nuevos usuarios
+ * Permite crear una cuenta nueva o hacer signin si el usuario ya existe
+ */
 const Signup = () => {
+    // Estados para manejar el formulario
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState(null)
+    const [loading, setLoading] = useState(false) // Estado de carga durante el proceso
+    const [error, setError] = useState(null) // Estado para mostrar errores
+    
+    // Hook para navegación programática
     const navigate = useNavigate()
 
+    // Obtener funciones y estado del contexto de autenticación
     const { session, signUpNewUser, signInUser, signOut } = UserAuth()
-    console.log(session)
+    console.log('Estado de sesión actual:', session)
+    /**
+     * Maneja el envío del formulario de registro
+     * @param {Event} e - Evento del formulario
+     */
     const handleSignUp = async (e) => {
-        e.preventDefault()
-        setLoading(true)
-        setError(null)
+        e.preventDefault() // Prevenir envío por defecto del formulario
+        setLoading(true) // Activar estado de carga
+        setError(null) // Limpiar errores anteriores
         
         try {
-            // Registrar o hacer signin del usuario
+            // Intentar registrar o hacer signin del usuario
+            // La función signUpNewUser maneja automáticamente usuarios existentes
             const result = await signUpNewUser(email, password)
             
             if (result.success) {
                 console.log('Operación exitosa:', result.data)
                 
+                // Log para debugging según el tipo de operación
                 if (result.isExistingUser) {
                     console.log('Usuario existente, ya autenticado')
                 } else {
                     console.log('Nuevo usuario registrado')
                 }
                 
-                // Redirigir al dashboard
+                // Redirigir al dashboard después de autenticación exitosa
                 navigate('/dashboard')
             } else {
+                // Mostrar error si la operación falló
                 setError(result.error || 'Error en el proceso')
             }
         } catch (error) {
-            console.error('Error en handleSignUp:', error)
+            console.error('Error inesperado en handleSignUp:', error)
             setError(error.message || 'Error inesperado')
         } finally {
-            setLoading(false)
+            setLoading(false) // Desactivar estado de carga
         }
     }
     

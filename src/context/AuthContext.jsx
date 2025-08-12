@@ -1,16 +1,25 @@
 import { createContext, useEffect, useState, useContext } from "react";
 import { supabase } from "../supabaseClient"
 
+// Contexto para manejar la autenticación global de la aplicación
 const AuthContext = createContext()
 
 export const AuthContextProvider = ({ children }) => {
+    // Estado de la sesión del usuario (null = no autenticado, objeto = autenticado)
     const [session, setSession] = useState(null)
+    // Estado de carga para mostrar spinners mientras se verifica la autenticación
     const [loading, setLoading] = useState(true)
 
-    // Sign up
+    /**
+     * Registra un nuevo usuario o hace signin si ya existe
+     * @param {string} email - Email del usuario
+     * @param {string} password - Contraseña del usuario
+     * @returns {Object} - Resultado de la operación con success, data y isExistingUser
+     */
     const signUpNewUser = async (email, password) => {
         try {
-            // Intentar hacer signin directamente (si el usuario ya existe)
+            // Primero intentar hacer signin (para usuarios existentes)
+            // Esto evita el problema de "Email no confirmado" para usuarios ya registrados
             const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
                 email: email,
                 password: password
@@ -24,11 +33,12 @@ export const AuthContextProvider = ({ children }) => {
             console.log('Usuario no existe, procediendo con registro...')
         }
         
-        // Si no existe, crear nuevo usuario
+        // Si el usuario no existe, crear una nueva cuenta
         const { data, error } = await supabase.auth.signUp({ 
             email: email, 
             password: password,
             options: {
+                // URL de redirección después de confirmar email
                 emailRedirectTo: `${window.location.origin}/dashboard`
             }
         })
@@ -42,66 +52,86 @@ export const AuthContextProvider = ({ children }) => {
         return { success: true, data: data, isExistingUser: false }
     }
 
-    // Sign in
+    /**
+     * Inicia sesión con email y contraseña
+     * @param {string} email - Email del usuario
+     * @param {string} password - Contraseña del usuario
+     * @returns {Object} - Resultado de la operación con success y data/error
+     */
     const signInUser = async (email, password) => {
         try {
             const { data, error } = await supabase.auth.signInWithPassword({ 
                 email: email,
                 password: password 
-                })
+            })
+            
             if (error) {
-                console.error(error)
+                console.error('Error en signin:', error)
                 return { success: false, error: error.message }
             }
-            console.log(data)
+            
+            console.log('Signin exitoso:', data)
             return { success: true, data: data }
         } catch (error) {
-            console.error(error)
+            console.error('Error inesperado en signin:', error)
             return { success: false, error: error.message }
         }
     }
 
+    // Effect para inicializar y escuchar cambios de autenticación
     useEffect(() => {
-        // Obtener sesión inicial
+        // Función para obtener la sesión inicial al cargar la app
         const getInitialSession = async () => {
             try {
                 const { data: { session }, error } = await supabase.auth.getSession()
                 if (error) {
-                    console.error('Error getting session:', error)
+                    console.error('Error obteniendo sesión inicial:', error)
                 }
                 setSession(session)
             } catch (error) {
-                console.error('Error in getInitialSession:', error)
+                console.error('Error inesperado obteniendo sesión inicial:', error)
             } finally {
-                setLoading(false)
+                setLoading(false) // Marcar como no cargando independientemente del resultado
             }
         }
 
+        // Obtener sesión inicial
         getInitialSession()
 
-        // Escuchar cambios de autenticación
+        // Suscribirse a cambios de estado de autenticación
+        // Esto se ejecuta cuando el usuario hace login/logout
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            console.log('Auth state changed:', _event, session)
+            console.log('Estado de autenticación cambiado:', _event, session)
             setSession(session)
         })
 
-        // Limpiar subscription
+        // Cleanup: desuscribirse cuando el componente se desmonte
         return () => subscription.unsubscribe()
     }, [])
 
-    // Sign out
+    /**
+     * Cierra la sesión del usuario actual
+     * @returns {Promise<void>}
+     */
     const signOut = async () => {
         const { error } = await supabase.auth.signOut()
         if (error) {
-            console.error(error)
+            console.error('Error al cerrar sesión:', error)
         }
     }
 
+    // Proporcionar el contexto con todos los valores y funciones necesarias
     return (
-        <AuthContext.Provider value={{ session, loading, signUpNewUser, signInUser, signOut }}>{children}</AuthContext.Provider>    
+        <AuthContext.Provider value={{ session, loading, signUpNewUser, signInUser, signOut }}>
+            {children}
+        </AuthContext.Provider>    
     )
 }
 
+/**
+ * Hook personalizado para acceder al contexto de autenticación
+ * @returns {Object} - Objeto con session, loading y funciones de auth
+ */
 export const UserAuth = () => {
     return useContext(AuthContext)
 }

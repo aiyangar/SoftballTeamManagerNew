@@ -2,19 +2,30 @@ import React from 'react'
 import { UserAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 
+/**
+ * Componente Dashboard - Página principal para usuarios autenticados
+ * Muestra información del usuario y permite cerrar sesión
+ * Este componente está protegido por ProtectedRoute
+ */
 const Dashboard = () => {
+  // Obtener estado de sesión y función de logout del contexto
   const { session, loading, signOut } = UserAuth()
   const navigate = useNavigate()
 
-  console.log('Session:', session)
-  console.log('Loading:', loading)
+  // Logs para debugging
+  console.log('Estado de sesión en Dashboard:', session)
+  console.log('Estado de carga en Dashboard:', loading)
 
+  /**
+   * Maneja el proceso de cerrar sesión
+   * Cierra la sesión y redirige al usuario a la página de signin
+   */
   const handleSignOut = async () => {
     try {
-      await signOut()
-      navigate('/signin')
+      await signOut() // Cerrar sesión en Supabase
+      navigate('/signin') // Redirigir a la página de inicio de sesión
     } catch (error) {
-      console.error('Error signing out:', error)
+      console.error('Error al cerrar sesión:', error)
     }
   }
 

@@ -3,6 +3,7 @@ import App from "./App";
 import Signup from "./components/Signup";
 import Signin from "./components/Signin";
 import Dashboard from "./components/Dashboard";
+import Teams from "./components/Teams";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 /**
@@ -16,6 +17,7 @@ export const router = createBrowserRouter([
     // Rutas públicas (no requieren autenticación)
     { path: "/signup", element: <Signup /> },
     { path: "/signin", element: <Signin /> },
+    { path: "/teams", element: <Teams /> },
     
     // Ruta protegida (requiere autenticación)
     { 

@@ -1,6 +1,6 @@
 import React from 'react'
 import { UserAuth } from '../context/AuthContext'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 
 /**
  * Componente Dashboard - Página principal para usuarios autenticados
@@ -43,24 +43,35 @@ const Dashboard = () => {
         </button>
       </div>
       
-      <div className="bg-neutral-900 shadow rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">
-          Bienvenido, {session.user.email}
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-neutral-700 p-4 rounded">
-            <h3 className="font-medium mb-2">Información del Usuario</h3>
-            <p><strong>Email:</strong> {session.user.email}</p>
-            <p><strong>ID:</strong> {session.user.id}</p>
-            <p><strong>Último acceso:</strong> {new Date(session.user.last_sign_in_at).toLocaleString()}</p>
+              <div className="bg-neutral-900 shadow rounded-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">
+            Bienvenido, {session.user.email}
+          </h2>
+          
+          {/* Enlaces de navegación */}
+          <div className="mb-6">
+                         <Link 
+               to="/teams"
+               className="inline-block px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
+             >
+               Gestionar Equipos
+             </Link>
           </div>
-          <div className="bg-neutral-700 p-4 rounded">
-            <h3 className="font-medium mb-2">Estado de Sesión</h3>
-            <p><strong>Token expira:</strong> {new Date(session.expires_at * 1000).toLocaleString()}</p>
-            <p><strong>Proveedor:</strong> {session.user.app_metadata?.provider || 'email'}</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-neutral-700 p-4 rounded">
+              <h3 className="font-medium mb-2">Información del Usuario</h3>
+              <p><strong>Email:</strong> {session.user.email}</p>
+              <p><strong>ID:</strong> {session.user.id}</p>
+              <p><strong>Último acceso:</strong> {new Date(session.user.last_sign_in_at).toLocaleString()}</p>
+            </div>
+            <div className="bg-neutral-700 p-4 rounded">
+              <h3 className="font-medium mb-2">Estado de Sesión</h3>
+              <p><strong>Token expira:</strong> {new Date(session.expires_at * 1000).toLocaleString()}</p>
+              <p><strong>Proveedor:</strong> {session.user.app_metadata?.provider || 'email'}</p>
+            </div>
           </div>
         </div>
-      </div>
     </div>
   )
 }

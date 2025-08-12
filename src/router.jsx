@@ -17,7 +17,16 @@ export const router = createBrowserRouter([
     // Rutas públicas (no requieren autenticación)
     { path: "/signup", element: <Signup /> },
     { path: "/signin", element: <Signin /> },
-    { path: "/teams", element: <Teams /> },
+    
+    // Rutas protegidas (requieren autenticación)
+    { 
+        path: "/teams", 
+        element: (
+            <ProtectedRoute>
+                <Teams />
+            </ProtectedRoute>
+        ) 
+    },
     
     // Ruta protegida (requiere autenticación)
     { 

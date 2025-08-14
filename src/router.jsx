@@ -5,6 +5,7 @@ import Signin from "./components/Signin";
 import Dashboard from "./components/Dashboard";
 import Teams from "./components/Teams";
 import Players from "./components/Players";
+import Schedule from "./components/Schedule";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 /**
@@ -39,6 +40,15 @@ export const router = createBrowserRouter([
         ) 
     },
     
+    {
+        path: "/schedule",
+        element: (
+            <ProtectedRoute>
+                <Schedule />
+            </ProtectedRoute>
+        )
+    },
+
     // Ruta protegida (requiere autenticación)
     { 
         path: "/dashboard", 

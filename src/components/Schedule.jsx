@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { UserAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import PaymentForm from './PaymentForm';
 
 const Schedule = () => {
     const { session } = UserAuth();
@@ -17,6 +18,9 @@ const Schedule = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [attendance, setAttendance] = useState({}); // { [gameId]: [playerId1, playerId2] }
+    const [showPaymentForm, setShowPaymentForm] = useState(false);
+    const [selectedGameForPayment, setSelectedGameForPayment] = useState(null);
+    const [gameFinalizationStatus, setGameFinalizationStatus] = useState({});
 
     useEffect(() => {
         if (session) {
@@ -49,33 +53,44 @@ const Schedule = () => {
     };
 
     const fetchPlayers = async (teamId) => {
+        console.log('Fetching players for team:', teamId);
         const { data, error } = await supabase
             .from('jugadores')
-            .select('id, nombre_completo')
+            .select('id, nombre')
             .eq('equipo_id', teamId);
         if (error) {
             console.error('Error fetching players:', error);
+            setError('Error al cargar jugadores: ' + error.message);
         } else {
-            setPlayers(data);
+            console.log('Players loaded:', data);
+            setPlayers(data || []);
         }
     };
 
     const fetchGames = async (teamId) => {
         const { data, error } = await supabase
             .from('partidos')
-            .select('*, asistencia(jugador_id)')
+            .select('*, asistencia_partidos(jugador_id)')
             .eq('equipo_id', teamId)
             .order('fecha_partido', { ascending: false });
         if (error) {
             console.error('Error fetching games:', error);
         } else {
             setGames(data);
-            // Initialize attendance state
+            // Initialize attendance state with existing attendance data
             const initialAttendance = data.reduce((acc, game) => {
-                acc[game.id] = game.asistencia.map(a => a.jugador_id);
+                // Only include players that are already marked as attending
+                acc[game.id] = game.asistencia_partidos ? game.asistencia_partidos.map(a => a.jugador_id) : [];
                 return acc;
             }, {});
             setAttendance(initialAttendance);
+            
+            // Initialize finalization status
+            const finalizationStatus = data.reduce((acc, game) => {
+                acc[game.id] = game.finalizado || false;
+                return acc;
+            }, {});
+            setGameFinalizationStatus(finalizationStatus);
         }
     };
 
@@ -107,35 +122,40 @@ const Schedule = () => {
         setLoading(false);
     };
 
-    const registerPayments = async (gameId) => {
-        setLoading(true);
-        const playerIds = attendance[gameId] || [];
+    const openPaymentForm = (gameId) => {
+        setSelectedGameForPayment(gameId);
+        setShowPaymentForm(true);
+    };
 
-        if (playerIds.length === 0) {
-            alert("No hay jugadores en la lista de asistencia para este partido.");
-            setLoading(false);
+    const closePaymentForm = () => {
+        setShowPaymentForm(false);
+        setSelectedGameForPayment(null);
+    };
+
+    const handlePaymentComplete = () => {
+        closePaymentForm();
+        // Optionally refresh data or show success message
+    };
+
+    const finalizeGame = async (gameId) => {
+        if (!confirm('¿Estás seguro de que quieres finalizar este partido? No se podrán registrar más pagos.')) {
             return;
         }
 
-        const paymentsToInsert = playerIds.map(playerId => ({
-            jugador_id: playerId,
-            fecha_pago: new Date(),
-            monto_umpire: 10, // Example value
-            monto_inscripcion: 5, // Example value
-            concepto: 'Pago de partido',
-            metodo_pago: 'Efectivo',
-            equipo_id: selectedTeam
-        }));
-
+        setLoading(true);
         const { error } = await supabase
-            .from('pagos')
-            .insert(paymentsToInsert);
+            .from('partidos')
+            .update({ finalizado: true })
+            .eq('id', gameId);
 
         if (error) {
-            setError(error.message);
-            alert('Error al registrar los pagos.');
+            setError('Error al finalizar el partido: ' + error.message);
         } else {
-            alert('Pagos registrados con éxito para los asistentes.');
+            setGameFinalizationStatus(prev => ({
+                ...prev,
+                [gameId]: true
+            }));
+            alert('Partido finalizado con éxito. No se pueden registrar más pagos.');
         }
         setLoading(false);
     };
@@ -157,7 +177,7 @@ const Schedule = () => {
 
         // First, remove existing attendance for this game
         const { error: deleteError } = await supabase
-            .from('asistencia')
+            .from('asistencia_partidos')
             .delete()
             .eq('partido_id', gameId);
 
@@ -175,16 +195,34 @@ const Schedule = () => {
         }));
 
         const { error: insertError } = await supabase
-            .from('asistencia')
+            .from('asistencia_partidos')
             .insert(attendanceToInsert);
 
         if (insertError) {
             setError(insertError.message);
         } else {
             alert('Asistencia guardada con éxito!');
-            // Optional: trigger payment registration here or with another button
+            // Refresh the games to show updated attendance
+            fetchGames(selectedTeam);
         }
         setLoading(false);
+    };
+
+    const loadExistingAttendance = async (gameId) => {
+        const { data, error } = await supabase
+            .from('asistencia_partidos')
+            .select('jugador_id')
+            .eq('partido_id', gameId);
+
+        if (error) {
+            console.error('Error loading attendance:', error);
+        } else {
+            const playerIds = data.map(a => a.jugador_id);
+            setAttendance(prev => ({
+                ...prev,
+                [gameId]: playerIds
+            }));
+        }
     };
 
     return (
@@ -265,39 +303,94 @@ const Schedule = () => {
                                     </div>
                                     <div className="mt-4">
                                         <h4 className="font-semibold mb-2">Asistencia de Jugadores</h4>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {players.map(player => (
-                                                <label key={player.id} className="flex items-center space-x-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={attendance[game.id]?.includes(player.id) || false}
-                                                        onChange={() => handleAttendanceChange(game.id, player.id)}
-                                                        className="form-checkbox h-5 w-5 text-blue-600"
-                                                    />
-                                                    <span>{player.nombre_completo}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                        <div className="flex space-x-2 mt-4">
-                                            <button
-                                                onClick={() => recordAttendance(game.id)}
-                                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                                            >
-                                                Actualizar Asistencia
-                                            </button>
-                                            <button
-                                                onClick={() => registerPayments(game.id)}
-                                                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                                            >
-                                                Registrar Pagos
-                                            </button>
-                                        </div>
+                                                                                 {players.length === 0 ? (
+                                             <div className="text-yellow-500 mb-4">
+                                                 No hay jugadores registrados en este equipo. 
+                                                 <br />
+                                                 <span className="text-sm">Jugadores cargados: {players.length}</span>
+                                                 <br />
+                                                 <button 
+                                                     onClick={() => fetchPlayers(selectedTeam)}
+                                                     className="mt-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                                                 >
+                                                     Recargar Jugadores
+                                                 </button>
+                                             </div>
+                                         ) : (
+                                             <div className="grid grid-cols-2 gap-2">
+                                                 {players.map(player => (
+                                                     <label key={player.id} className="flex items-center space-x-2">
+                                                         <input
+                                                             type="checkbox"
+                                                             checked={attendance[game.id]?.includes(player.id) || false}
+                                                             onChange={() => handleAttendanceChange(game.id, player.id)}
+                                                             disabled={gameFinalizationStatus[game.id]}
+                                                             className="form-checkbox h-5 w-5 text-blue-600 disabled:opacity-50"
+                                                         />
+                                                         <span className={gameFinalizationStatus[game.id] ? "text-gray-400" : ""}>{player.nombre}</span>
+                                                     </label>
+                                                 ))}
+                                             </div>
+                                         )}
+                                                                                 <div className="flex space-x-2 mt-4">
+                                             <button
+                                                 onClick={() => loadExistingAttendance(game.id)}
+                                                 disabled={gameFinalizationStatus[game.id]}
+                                                 className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50"
+                                             >
+                                                 Cargar Asistencia Existente
+                                             </button>
+                                             <button
+                                                 onClick={() => recordAttendance(game.id)}
+                                                 disabled={gameFinalizationStatus[game.id]}
+                                                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                                             >
+                                                 Guardar Asistencia
+                                             </button>
+                                             <button
+                                                 onClick={() => openPaymentForm(game.id)}
+                                                 disabled={gameFinalizationStatus[game.id]}
+                                                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                                             >
+                                                 Registrar Pagos
+                                             </button>
+                                         </div>
+                                        
+                                                                                 {gameFinalizationStatus[game.id] ? (
+                                             <div className="mt-4 p-3 bg-red-900 border border-red-600 rounded">
+                                                 <span className="text-red-200 font-semibold">🔒 PARTIDO FINALIZADO</span>
+                                                 <p className="text-red-100 text-sm">No se pueden modificar la asistencia ni registrar más pagos</p>
+                                             </div>
+                                         ) : (
+                                            <div className="mt-4 pt-3 border-t border-gray-600">
+                                                <button
+                                                    onClick={() => finalizeGame(game.id)}
+                                                    disabled={loading}
+                                                    className="w-full px-4 py-3 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-semibold"
+                                                >
+                                                    {loading ? 'Finalizando...' : '🔒 Finalizar Partido'}
+                                                </button>
+                                                                                                 <p className="text-gray-400 text-xs text-center mt-2">
+                                                     Al finalizar no se podrán modificar la asistencia ni registrar más pagos
+                                                 </p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
                 </>
+            )}
+
+            {/* Payment Form Modal */}
+            {showPaymentForm && selectedGameForPayment && (
+                <PaymentForm
+                    gameId={selectedGameForPayment}
+                    teamId={selectedTeam}
+                    onClose={closePaymentForm}
+                    onPaymentComplete={handlePaymentComplete}
+                />
             )}
         </div>
     );

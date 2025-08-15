@@ -15,6 +15,7 @@ const Schedule = () => {
         const localTeam = teams.find(team => team.id === selectedTeam);
         return localTeam ? localTeam.nombre_equipo : 'Tu Equipo';
     };
+
     const [players, setPlayers] = useState([]);
     const [games, setGames] = useState([]);
     const [newGame, setNewGame] = useState({
@@ -41,6 +42,16 @@ const Schedule = () => {
         carreras_equipo_local: 0,
         carreras_equipo_contrario: 0
     });
+
+    // Limpiar mensaje de éxito después de 5 segundos
+    useEffect(() => {
+        if (success) {
+            const timer = setTimeout(() => {
+                setSuccess(null)
+            }, 5000)
+            return () => clearTimeout(timer)
+        }
+    }, [success])
 
 
 
@@ -420,10 +431,10 @@ const Schedule = () => {
     }, [selectedTeam]);
 
     return (
-        <div className="max-w-4xl mx-auto p-6">
+        <div className="max-w-6xl mx-auto p-6">
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold">Partidos</h1>
-                                 <Menu />
+                <h1 className="text-3xl font-bold text-white">Gestión de Partidos</h1>
+                <Menu />
             </div>
 
             {selectedTeam ? (
@@ -444,7 +455,7 @@ const Schedule = () => {
                     {/* Game Creation Form */}
                                         {showGameForm && (
                         <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8">
-                            <h2 className="text-xl font-semibold mb-4 text-white">
+                            <h2 className="text-xl font-semibold mb-6 text-white">
                                 {editingGame ? 'Editar Partido' : 'Registrar Nuevo Partido'}
                             </h2>
                         <form onSubmit={handleCreateGame} className="space-y-4">
@@ -500,7 +511,7 @@ const Schedule = () => {
                                  <button 
                                      type="submit" 
                                      disabled={loading} 
-                                     className="flex-1 px-4 py-3 bg-gray-800 text-white rounded hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                                     className="flex-1 px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                                  >
                                      {loading ? (editingGame ? 'Actualizando...' : 'Registrando...') : (editingGame ? 'Actualizar Partido' : 'Registrar Partido')}
                                  </button>
@@ -512,22 +523,28 @@ const Schedule = () => {
 
                     {/* Games List */}
                     <div className="bg-neutral-900 shadow rounded-lg p-6">
-                        <h2 className="text-xl font-semibold mb-4 text-white">Partidos Registrados</h2>
+                        <h2 className="text-xl font-semibold mb-6 text-white">Partidos Registrados</h2>
                         
                         {/* Mensajes de error y éxito */}
                         {error && (
-                            <div className="bg-red-900 border border-red-600 text-red-200 px-4 py-3 rounded mb-4">
+                            <div className="bg-red-900 border border-red-600 text-red-200 px-4 py-3 rounded mb-6">
                                 {error}
                             </div>
                         )}
                         {success && (
-                            <div className="bg-green-900 border border-green-600 text-green-200 px-4 py-3 rounded mb-4">
+                            <div className="bg-green-900 border border-green-600 text-green-200 px-4 py-3 rounded mb-6">
                                 {success}
                             </div>
                         )}
                         
-                        <div className="space-y-4">
-                            {games.map(game => (
+                        {games.length === 0 ? (
+                            <div className="text-center py-8">
+                                <p className="text-gray-300">No hay partidos registrados aún.</p>
+                                <p className="text-sm text-gray-400 mt-1">Registra tu primer partido usando el formulario de arriba.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {games.map(game => (
                                 <div key={game.id} className="border border-gray-600 rounded-lg p-4">
                                                                          <div className="flex justify-between items-start">
                                          <div className="flex-1">
@@ -611,7 +628,7 @@ const Schedule = () => {
                                     <div className="relative">
                                             <button
                                                 onClick={() => toggleActionMenu(game.id)}
-                                                className="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-500 transition-colors"
+                                                className="px-3 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-500 transition-colors"
                                             >
                                                 ⋮
                                             </button>
@@ -731,13 +748,14 @@ const Schedule = () => {
                                     )}
                                 </div>
                             ))}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 </>
             ) : (
                 <div className="bg-neutral-900 shadow rounded-lg p-8 text-center">
-                    <p className="text-gray-400 mb-4">No hay equipo seleccionado</p>
-                    <p className="text-sm text-gray-500">Selecciona un equipo desde el Dashboard para gestionar partidos</p>
+                    <p className="text-gray-300 mb-4">No hay equipo seleccionado</p>
+                    <p className="text-sm text-gray-400">Selecciona un equipo desde el Dashboard para gestionar partidos</p>
                 </div>
             )}
 

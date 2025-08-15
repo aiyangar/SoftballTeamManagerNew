@@ -50,6 +50,16 @@ const Players = () => {
     const authContext = UserAuth()
     const session = authContext?.session
 
+    // Limpiar mensaje de éxito después de 5 segundos
+    useEffect(() => {
+        if (success) {
+            const timer = setTimeout(() => {
+                setSuccess(null)
+            }, 5000)
+            return () => clearTimeout(timer)
+        }
+    }, [success])
+
     /**
      * Obtiene los jugadores del usuario autenticado
      * @param {string} propietarioId - ID del usuario propietario
@@ -485,20 +495,20 @@ const Players = () => {
     }
 
     return (
-        <div className="max-w-4xl mx-auto p-6">
+        <div className="max-w-6xl mx-auto p-6">
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold text-white">Jugadores</h1>
-                                 <Menu />
+                <h1 className="text-3xl font-bold text-white">Gestión de Jugadores</h1>
+                <Menu />
             </div>
 
             {/* Mensajes de error y éxito */}
             {error && (
-                <div className="bg-red-900 border border-red-600 text-red-200 px-4 py-3 rounded mb-4">
+                <div className="bg-red-900 border border-red-600 text-red-200 px-4 py-3 rounded mb-6">
                     {error}
                 </div>
             )}
             {success && (
-                <div className="bg-green-900 border border-green-600 text-green-200 px-4 py-3 rounded mb-4">
+                <div className="bg-green-900 border border-green-600 text-green-200 px-4 py-3 rounded mb-6">
                     {success}
                 </div>
             )}
@@ -506,7 +516,7 @@ const Players = () => {
             {/* Formulario de registro */}
             {showForm && (
                 <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8">
-                    <h2 className="text-xl font-semibold mb-4 text-white">
+                    <h2 className="text-xl font-semibold mb-6 text-white">
                         {editingPlayer ? 'Editar Jugador' : 'Registrar Nuevo Jugador'}
                     </h2>
                     <form onSubmit={handleSubmit} className="space-y-4">
@@ -609,7 +619,7 @@ const Players = () => {
                                                          <button
                                  type="submit"
                                  disabled={loading}
-                                 className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                              >
                                  {loading ? (editingPlayer ? 'Actualizando...' : 'Registrando...') : (editingPlayer ? 'Actualizar Jugador' : 'Registrar Jugador')}
                              </button>
@@ -633,7 +643,7 @@ const Players = () => {
 
             {/* Lista de jugadores */}
             <div className="bg-neutral-900 shadow rounded-lg p-6">
-                                 <div className="flex items-center justify-between mb-4">
+                                 <div className="flex items-center justify-between mb-6">
                      <h2 className="text-xl font-semibold text-white">Jugadores Registrados</h2>
                      <div className="flex items-center space-x-4">
                          {selectedTeam && teams.length > 0 && (
@@ -844,14 +854,14 @@ const Players = () => {
                                                   <div className="relative">
                                                                                                              <button
                                                            onClick={() => toggleActionMenu(player.id)}
-                                                           className="px-2 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-500 transition-colors"
+                                                           className="px-3 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-500 transition-colors"
                                                        >
                                                            ⋮
                                                        </button>
                                                       
                                                       {actionMenuOpen === player.id && (
                                                           <>
-                                                              <div className="absolute right-0 mt-2 w-32 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50">
+                                                              <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50">
                                                                   <div className="py-1">
                                                                       <button
                                                                           onClick={() => editPlayer(player.id)}

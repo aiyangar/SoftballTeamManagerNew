@@ -198,12 +198,18 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
             <div className="bg-neutral-900 rounded-lg p-6 w-full max-w-md mx-4">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-semibold text-white">Registrar Pago</h2>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-white text-2xl"
-                    >
-                        ×
-                    </button>
+                                         <button
+                         onClick={() => {
+                             // Recargar datos antes de cerrar
+                             if (onPaymentComplete) {
+                                 onPaymentComplete();
+                             }
+                             onClose();
+                         }}
+                         className="text-gray-400 hover:text-white text-2xl"
+                     >
+                         ×
+                     </button>
                 </div>
 
                                  {gameInfo && (
@@ -394,13 +400,19 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                      )}
 
                                           <div className="flex space-x-3 pt-4">
-                         <button
-                             type="button"
-                             onClick={onClose}
-                             className="flex-1 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-                         >
-                             Cancelar
-                         </button>
+                                                   <button
+                              type="button"
+                              onClick={() => {
+                                  // Recargar datos antes de cerrar
+                                  if (onPaymentComplete) {
+                                      onPaymentComplete();
+                                  }
+                                  onClose();
+                              }}
+                              className="flex-1 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                          >
+                              Cancelar
+                          </button>
                          <button
                              type="submit"
                              disabled={loading || players.length === 0 || showUpdateWarning}

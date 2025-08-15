@@ -479,9 +479,9 @@ const Schedule = () => {
                                              <p>Umpire: ${game.umpire || 550}</p>
                                              
                                                                                            {/* Información de Pagos Acumulados */}
-                                              {paymentTotals[game.id] && (
-                                                  <div className="mt-3 p-3 bg-gray-800 rounded-lg">
-                                                      <h4 className="font-semibold text-white text-sm mb-2 text-center">Estado de Pagos</h4>
+                                                                                                                                                                                           {paymentTotals[game.id] && (
+                                                    <div className="mt-3 p-3 bg-gray-800 rounded-lg text-center mx-auto max-w-lg">
+                                                       <h4 className="font-semibold text-white text-sm mb-2">Estado de Pagos</h4>
                                                      
                                                      {/* Umpire */}
                                                      <div className="mb-2">
@@ -527,7 +527,7 @@ const Schedule = () => {
                                                  </div>
                                              )}
                                          </div>
-                                        <div className="relative">
+                                    <div className="relative">
                                             <button
                                                 onClick={() => toggleActionMenu(game.id)}
                                                 className="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-500 transition-colors"

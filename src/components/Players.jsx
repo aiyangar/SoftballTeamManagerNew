@@ -30,6 +30,16 @@ const Players = () => {
     const [positions, setPositions] = useState([])
     const [loadingPositions, setLoadingPositions] = useState(true)
     const [showForm, setShowForm] = useState(false)
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
+    const [visibleColumns, setVisibleColumns] = useState({
+        numero: true,
+        nombre: true,
+        posiciones: true,
+        telefono: false,
+        email: false,
+        equipo: false
+    })
+    const [showColumnMenu, setShowColumnMenu] = useState(false)
 
     // Hook para navegación programática
     const navigate = useNavigate()
@@ -333,6 +343,71 @@ const Players = () => {
         }
     }, [selectedTeam])
 
+    // Función para ordenar los jugadores
+    const sortPlayers = (players, key, direction) => {
+        return [...players].sort((a, b) => {
+            let aValue = a[key]
+            let bValue = b[key]
+
+            // Para el nombre, convertir a minúsculas para ordenamiento alfabético
+            if (key === 'nombre') {
+                aValue = aValue.toLowerCase()
+                bValue = bValue.toLowerCase()
+            }
+
+            // Para el número, convertir a números
+            if (key === 'numero') {
+                aValue = parseInt(aValue) || 0
+                bValue = parseInt(bValue) || 0
+            }
+
+            if (aValue < bValue) {
+                return direction === 'asc' ? -1 : 1
+            }
+            if (aValue > bValue) {
+                return direction === 'asc' ? 1 : -1
+            }
+            return 0
+        })
+    }
+
+    // Función para manejar el ordenamiento
+    const handleSort = (key) => {
+        let direction = 'asc'
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc'
+        }
+        setSortConfig({ key, direction })
+    }
+
+    // Obtener jugadores ordenados
+    const sortedPlayers = sortConfig.key ? sortPlayers(players, sortConfig.key, sortConfig.direction) : players
+
+    // Función para obtener la abreviación de la posición
+    const getPositionAbbreviation = (positionName) => {
+        const abbreviations = {
+            'Pitcher': 'P',
+            'Catcher': 'C',
+            'Primera Base': '1B',
+            'Segunda Base': '2B',
+            'Tercera Base': '3B',
+            'Shortstop': 'SS',
+            'Jardinero Izquierdo': 'LF',
+            'Jardinero Central': 'CF',
+            'Jardinero Derecho': 'RF',
+            'Short Fielder': 'SF'
+        }
+        return abbreviations[positionName] || positionName
+    }
+
+    // Función para manejar la visibilidad de columnas
+    const toggleColumn = (column) => {
+        setVisibleColumns(prev => ({
+            ...prev,
+            [column]: !prev[column]
+        }))
+    }
+
     // Si no hay sesión, redirigir al login
     if (!session) {
         navigate('/signin')
@@ -485,7 +560,103 @@ const Players = () => {
 
             {/* Lista de jugadores */}
             <div className="bg-neutral-900 shadow rounded-lg p-6">
-                <h2 className="text-xl font-semibold mb-4 text-white">Jugadores Registrados</h2>
+                                 <div className="flex items-center justify-between mb-4">
+                     <h2 className="text-xl font-semibold text-white">Jugadores Registrados</h2>
+                     <div className="flex items-center space-x-4">
+                         {selectedTeam && teams.length > 0 && (
+                             <div className="text-sm text-gray-300">
+                                 <span className="text-gray-400">Equipo: </span>
+                                 <span className="font-medium text-blue-400">
+                                     {teams.find(team => team.id === selectedTeam)?.nombre_equipo}
+                                 </span>
+                             </div>
+                         )}
+                         
+                         {/* Menú de columnas */}
+                         <div className="relative">
+                             <button
+                                 className="px-3 py-1 bg-gray-700 text-white text-sm rounded hover:bg-gray-600 transition-colors flex items-center space-x-1"
+                                 onClick={() => setShowColumnMenu(!showColumnMenu)}
+                             >
+                                 <span>Columnas</span>
+                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                 </svg>
+                             </button>
+                             
+                             {showColumnMenu && (
+                                 <>
+                                     <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50">
+                                         <div className="p-3">
+                                             <h4 className="text-white text-sm font-medium mb-2">Mostrar/Ocultar Columnas</h4>
+                                             <div className="space-y-2">
+                                                 <label className="flex items-center space-x-2">
+                                                     <input
+                                                         type="checkbox"
+                                                         checked={visibleColumns.numero}
+                                                         onChange={() => toggleColumn('numero')}
+                                                         className="rounded border-gray-600 text-gray-500 focus:ring-gray-500 bg-gray-700"
+                                                     />
+                                                     <span className="text-sm text-gray-300">Número</span>
+                                                 </label>
+                                                 <label className="flex items-center space-x-2">
+                                                     <input
+                                                         type="checkbox"
+                                                         checked={visibleColumns.nombre}
+                                                         onChange={() => toggleColumn('nombre')}
+                                                         className="rounded border-gray-600 text-gray-500 focus:ring-gray-500 bg-gray-700"
+                                                     />
+                                                     <span className="text-sm text-gray-300">Nombre</span>
+                                                 </label>
+                                                 <label className="flex items-center space-x-2">
+                                                     <input
+                                                         type="checkbox"
+                                                         checked={visibleColumns.posiciones}
+                                                         onChange={() => toggleColumn('posiciones')}
+                                                         className="rounded border-gray-600 text-gray-500 focus:ring-gray-500 bg-gray-700"
+                                                     />
+                                                     <span className="text-sm text-gray-300">Posiciones</span>
+                                                 </label>
+                                                 <label className="flex items-center space-x-2">
+                                                     <input
+                                                         type="checkbox"
+                                                         checked={visibleColumns.telefono}
+                                                         onChange={() => toggleColumn('telefono')}
+                                                         className="rounded border-gray-600 text-gray-500 focus:ring-gray-500 bg-gray-700"
+                                                     />
+                                                     <span className="text-sm text-gray-300">Teléfono</span>
+                                                 </label>
+                                                 <label className="flex items-center space-x-2">
+                                                     <input
+                                                         type="checkbox"
+                                                         checked={visibleColumns.email}
+                                                         onChange={() => toggleColumn('email')}
+                                                         className="rounded border-gray-600 text-gray-500 focus:ring-gray-500 bg-gray-700"
+                                                     />
+                                                     <span className="text-sm text-gray-300">Email</span>
+                                                 </label>
+                                                 <label className="flex items-center space-x-2">
+                                                     <input
+                                                         type="checkbox"
+                                                         checked={visibleColumns.equipo}
+                                                         onChange={() => toggleColumn('equipo')}
+                                                         className="rounded border-gray-600 text-gray-500 focus:ring-gray-500 bg-gray-700"
+                                                     />
+                                                     <span className="text-sm text-gray-300">Equipo</span>
+                                                 </label>
+                                             </div>
+                                         </div>
+                                     </div>
+                                     {/* Overlay para cerrar menú */}
+                                     <div 
+                                         className="fixed inset-0 z-40" 
+                                         onClick={() => setShowColumnMenu(false)}
+                                     />
+                                 </>
+                             )}
+                         </div>
+                     </div>
+                 </div>
                 <div>
                     {loadingPlayers ? (
                         <div className="text-center py-8">
@@ -499,63 +670,113 @@ const Players = () => {
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-600">
-                                <thead className="bg-gray-800">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                            Nombre
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                            Número
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                            Teléfono
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                            Email
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                            Equipo
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                            Posiciones
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                            Acciones
-                                        </th>
-                                    </tr>
-                                </thead>
+                                                         <table className="min-w-full divide-y divide-gray-600">
+                                 <thead className="bg-gray-800">
+                                     <tr>
+                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                             #
+                                         </th>
+                                         {visibleColumns.nombre && (
+                                             <th 
+                                                 className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                                                 onClick={() => handleSort('nombre')}
+                                             >
+                                                 <div className="flex items-center space-x-1">
+                                                     <span>Nombre</span>
+                                                     {sortConfig.key === 'nombre' && (
+                                                         <span className="text-blue-400">
+                                                             {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                                                         </span>
+                                                     )}
+                                                 </div>
+                                             </th>
+                                         )}
+                                         {visibleColumns.numero && (
+                                             <th 
+                                                 className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                                                 onClick={() => handleSort('numero')}
+                                             >
+                                                 <div className="flex items-center space-x-1">
+                                                     <span>Número</span>
+                                                     {sortConfig.key === 'numero' && (
+                                                         <span className="text-blue-400">
+                                                             {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                                                         </span>
+                                                     )}
+                                                 </div>
+                                             </th>
+                                         )}
+                                         {visibleColumns.telefono && (
+                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                                 Teléfono
+                                             </th>
+                                         )}
+                                         {visibleColumns.email && (
+                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                                 Email
+                                             </th>
+                                         )}
+                                         {visibleColumns.equipo && (
+                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                                 Equipo
+                                             </th>
+                                         )}
+                                         {visibleColumns.posiciones && (
+                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                                 Posiciones
+                                             </th>
+                                         )}
+                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                                             Acciones
+                                         </th>
+                                     </tr>
+                                 </thead>
                                 <tbody className="bg-gray-700 divide-y divide-gray-600">
-                                    {players.map(player => (
-                                        <tr key={player.id} className="hover:bg-gray-800">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
-                                                {player.nombre}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                                {player.numero}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                                {player.telefono || '-'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                                {player.email || '-'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                                {player.equipos?.nombre_equipo || '-'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                                {player.jugador_posiciones?.map(jp => jp.posiciones.nombre_posicion).join(', ') || '-'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                <button
-                                                    onClick={() => deletePlayer(player.id)}
-                                                    className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
-                                                >
-                                                    Eliminar
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                                                         {sortedPlayers.map((player, index) => (
+                                         <tr key={player.id} className="hover:bg-gray-800">
+                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                                 {index + 1}
+                                             </td>
+                                             {visibleColumns.nombre && (
+                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
+                                                     {player.nombre}
+                                                 </td>
+                                             )}
+                                             {visibleColumns.numero && (
+                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                                     {player.numero}
+                                                 </td>
+                                             )}
+                                             {visibleColumns.telefono && (
+                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                                     {player.telefono || '-'}
+                                                 </td>
+                                             )}
+                                             {visibleColumns.email && (
+                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                                     {player.email || '-'}
+                                                 </td>
+                                             )}
+                                             {visibleColumns.equipo && (
+                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                                     {player.equipos?.nombre_equipo || '-'}
+                                                 </td>
+                                             )}
+                                             {visibleColumns.posiciones && (
+                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                                     {player.jugador_posiciones?.map(jp => getPositionAbbreviation(jp.posiciones.nombre_posicion)).join(', ') || '-'}
+                                                 </td>
+                                             )}
+                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                 <button
+                                                     onClick={() => deletePlayer(player.id)}
+                                                     className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
+                                                 >
+                                                     Eliminar
+                                                 </button>
+                                             </td>
+                                         </tr>
+                                     ))}
                                 </tbody>
                             </table>
                         </div>

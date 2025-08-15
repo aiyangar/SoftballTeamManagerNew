@@ -16,8 +16,10 @@ const Signin = () => {
     // Hook para navegación programática
     const navigate = useNavigate()
 
-    // Obtener función de signin del contexto de autenticación
-    const { session, signInUser } = UserAuth()
+    // Obtener funciones de autenticación del contexto
+    const authContext = UserAuth()
+    const session = authContext?.session
+    const signInUser = authContext?.signInUser
 
     /**
      * Maneja el envío del formulario de inicio de sesión
@@ -33,7 +35,7 @@ const Signin = () => {
             const result = await signInUser(email, password)
             
             if (result.success) {
-                console.log('Inicio de sesión exitoso:', result.data)
+        
                 // Redirigir al dashboard después de autenticación exitosa
                 navigate('/dashboard')
             } else {

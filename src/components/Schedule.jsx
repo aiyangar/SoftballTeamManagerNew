@@ -6,7 +6,8 @@ import Menu from './Menu';
 import { useTeam } from '../context/TeamContext';
 
 const Schedule = () => {
-    const { session } = UserAuth();
+    const authContext = UserAuth();
+    const session = authContext?.session;
     const { teams, selectedTeam, handleTeamChange: contextHandleTeamChange } = useTeam();
     
     // Obtener el nombre del equipo local
@@ -68,7 +69,7 @@ const Schedule = () => {
     };
 
     const fetchPlayers = async (teamId) => {
-        console.log('Fetching players for team:', teamId);
+    
         const { data, error } = await supabase
             .from('jugadores')
             .select('id, nombre')
@@ -77,7 +78,7 @@ const Schedule = () => {
             console.error('Error fetching players:', error);
             setError('Error al cargar jugadores: ' + error.message);
         } else {
-            console.log('Players loaded:', data);
+        
             setPlayers(data || []);
         }
     };
@@ -361,7 +362,7 @@ const Schedule = () => {
         if (insertError) {
             setError(insertError.message);
         } else {
-            alert('Asistencia guardada con éxito!');
+            setSuccess('Asistencia guardada con éxito!');
             // Refresh the games to show updated attendance
             fetchGames(selectedTeam);
         }
@@ -553,7 +554,7 @@ const Schedule = () => {
                                              
                                                                                            {/* Información de Pagos Acumulados */}
                                                                                                                                                                                            {paymentTotals[game.id] && (
-                                                    <div className="mt-3 p-3 bg-gray-800 rounded-lg text-center mx-auto max-w-lg">
+                                                    <div className="mt-3 p-3 bg-gray-800 rounded-lg text-center">
                                                        <h4 className="font-semibold text-white text-sm mb-2">Estado de Pagos</h4>
                                                      
                                                      {/* Umpire */}
@@ -645,7 +646,7 @@ const Schedule = () => {
                                                                      onClick={() => openScoreForm(game)}
                                                                      className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900 transition-colors"
                                                                  >
-                                                                     🏁 Finalizar Partido
+                                                                     ⚾ Finalizar Partido
                                                                  </button>
                                                              )}
                                                         </div>

@@ -16,9 +16,13 @@ const Signup = () => {
     // Hook para navegación programática
     const navigate = useNavigate()
 
-    // Obtener funciones y estado del contexto de autenticación
-    const { session, signUpNewUser, signInUser, signOut } = UserAuth()
-    console.log('Estado de sesión actual:', session)
+    // Obtener funciones de autenticación del contexto
+    const authContext = UserAuth()
+    const session = authContext?.session
+    const signUpNewUser = authContext?.signUpNewUser
+    const signInUser = authContext?.signInUser
+    const signOut = authContext?.signOut
+
     /**
      * Maneja el envío del formulario de registro
      * @param {Event} e - Evento del formulario
@@ -34,13 +38,13 @@ const Signup = () => {
             const result = await signUpNewUser(email, password)
             
             if (result.success) {
-                console.log('Operación exitosa:', result.data)
+        
                 
                 // Log para debugging según el tipo de operación
                 if (result.isExistingUser) {
-                    console.log('Usuario existente, ya autenticado')
-                } else {
-                    console.log('Nuevo usuario registrado')
+                                    // Usuario existente, ya autenticado
+              } else {
+                // Nuevo usuario registrado
                 }
                 
                 // Redirigir al dashboard después de autenticación exitosa

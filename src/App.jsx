@@ -10,8 +10,10 @@ import { UserAuth } from './context/AuthContext'
  * - Mientras carga: muestra un spinner
  */
 export default function App() {
-  // Obtener estado de autenticación del contexto
-  const { session, loading } = UserAuth()
+  // Obtener estado de autenticación del contexto con manejo de errores
+  const authContext = UserAuth()
+  const session = authContext?.session
+  const loading = authContext?.loading
   const navigate = useNavigate()
 
   // Effect para manejar navegación automática según el estado de autenticación

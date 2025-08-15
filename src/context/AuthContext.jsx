@@ -26,11 +26,11 @@ export const AuthContextProvider = ({ children }) => {
             })
             
             if (signInData.user) {
-                console.log('Usuario ya existe, signin exitoso:', signInData)
+        
                 return { success: true, data: signInData, isExistingUser: true }
             }
         } catch (error) {
-            console.log('Usuario no existe, procediendo con registro...')
+
         }
         
         // Si el usuario no existe, crear una nueva cuenta
@@ -48,7 +48,7 @@ export const AuthContextProvider = ({ children }) => {
             return { success: false, error: error.message }
         } 
         
-        console.log('Signup response:', data)
+
         return { success: true, data: data, isExistingUser: false }
     }
 
@@ -70,7 +70,7 @@ export const AuthContextProvider = ({ children }) => {
                 return { success: false, error: error.message }
             }
             
-            console.log('Signin exitoso:', data)
+    
             return { success: true, data: data }
         } catch (error) {
             console.error('Error inesperado en signin:', error)
@@ -101,7 +101,7 @@ export const AuthContextProvider = ({ children }) => {
         // Suscribirse a cambios de estado de autenticación
         // Esto se ejecuta cuando el usuario hace login/logout
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            console.log('Estado de autenticación cambiado:', _event, session)
+    
             setSession(session)
         })
 
@@ -133,5 +133,20 @@ export const AuthContextProvider = ({ children }) => {
  * @returns {Object} - Objeto con session, loading y funciones de auth
  */
 export const UserAuth = () => {
-    return useContext(AuthContext)
+    const context = useContext(AuthContext)
+    
+    // Verificar si el contexto está disponible
+    if (context === undefined) {
+        console.error('UserAuth debe ser usado dentro de un AuthContextProvider')
+        // Retornar valores por defecto para evitar errores
+        return {
+            session: null,
+            loading: true,
+            signUpNewUser: async () => ({ success: false, error: 'Context not available' }),
+            signInUser: async () => ({ success: false, error: 'Context not available' }),
+            signOut: async () => {}
+        }
+    }
+    
+    return context
 }

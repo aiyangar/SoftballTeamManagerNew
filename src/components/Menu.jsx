@@ -8,7 +8,9 @@ import { useTeam } from '../context/TeamContext'
  * Se puede usar en todas las páginas de la aplicación
  */
 const Menu = () => {
-    const { session, signOut } = UserAuth()
+    const authContext = UserAuth()
+    const session = authContext?.session
+    const signOut = authContext?.signOut
     const { teams, selectedTeam, handleTeamChange } = useTeam()
     const navigate = useNavigate()
     const [showMenu, setShowMenu] = useState(false)

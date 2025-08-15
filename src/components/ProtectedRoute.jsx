@@ -11,8 +11,10 @@ import { UserAuth } from '../context/AuthContext'
  * @returns {React.ReactNode} - Componentes protegidos o redirección
  */
 const ProtectedRoute = ({ children }) => {
-    // Obtener estado de autenticación del contexto
-    const { session, loading } = UserAuth()
+    // Obtener estado de autenticación del contexto con manejo de errores
+    const authContext = UserAuth()
+    const session = authContext?.session
+    const loading = authContext?.loading
 
     // Mostrar spinner de carga mientras se verifica la autenticación
     if (loading) {

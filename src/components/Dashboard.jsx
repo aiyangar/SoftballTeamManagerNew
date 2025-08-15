@@ -11,8 +11,11 @@ import { useTeam } from '../context/TeamContext'
  * Este componente está protegido por ProtectedRoute
  */
 const Dashboard = () => {
-  // Obtener estado de sesión y función de logout del contexto
-  const { session, loading, signOut } = UserAuth()
+  // Obtener estado de sesión y función de logout del contexto con manejo de errores
+  const authContext = UserAuth()
+  const session = authContext?.session
+  const loading = authContext?.loading
+  const signOut = authContext?.signOut
   const navigate = useNavigate()
 
   // Estados para la información del equipo
@@ -32,41 +35,29 @@ const Dashboard = () => {
   const [loadingTeam, setLoadingTeam] = useState(false)
 
   // Logs para debugging
-  console.log('Estado de sesión en Dashboard:', session)
-  console.log('Estado de carga en Dashboard:', loading)
-  console.log('Equipos cargados:', teams)
 
   useEffect(() => {
     if (selectedTeam) {
-      console.log('Team selected, fetching team info...')
       fetchTeamInfo(selectedTeam)
     }
   }, [selectedTeam])
 
   const fetchTeams = async () => {
-    console.log('Fetching teams for user:', session?.user?.id)
     setLoadingTeams(true)
     
     const { data, error } = await supabase
       .from('equipos')
       .select('id, nombre_equipo')
-      .eq('propietario_id', session.user.id)
-
-    console.log('Teams response:', { data, error })
+      .eq('propietario_id', session?.user?.id)
 
     if (error) {
       console.error('Error fetching teams:', error)
     } else {
-      console.log('Teams loaded successfully:', data)
       setTeams(data || [])
       
       // Si solo hay un equipo, seleccionarlo automáticamente
       if (data && data.length === 1) {
-        console.log('Auto-selecting single team:', data[0].id)
         handleTeamChange(data[0].id)
-      } else if (data && data.length > 1 && !selectedTeam) {
-        // Si hay múltiples equipos y no hay uno seleccionado, mostrar mensaje
-        console.log('Multiple teams available, user needs to select one')
       }
     }
     setLoadingTeams(false)
@@ -75,7 +66,6 @@ const Dashboard = () => {
   const { handleTeamChange: contextHandleTeamChange } = useTeam()
 
   const handleTeamChange = async (teamId) => {
-    console.log('Team selected:', teamId)
     contextHandleTeamChange(teamId)
     if (teamId) {
       setLoadingTeam(true)
@@ -98,7 +88,6 @@ const Dashboard = () => {
   }
 
   const fetchTeamInfo = async (teamId) => {
-    console.log('Fetching team info for team:', teamId)
     try {
       // Obtener total de jugadores
       const { data: players, error: playersError } = await supabase
@@ -110,8 +99,6 @@ const Dashboard = () => {
         console.error('Error fetching players:', playersError)
         return
       }
-
-      console.log('Players loaded:', players)
 
       // Obtener próximo juego (próxima fecha)
       const { data: nextGame, error: gameError } = await supabase
@@ -127,8 +114,6 @@ const Dashboard = () => {
         console.error('Error fetching next game:', gameError)
       }
 
-      console.log('Next game loaded:', nextGame)
-
       // Obtener último partido jugado
       const { data: lastGame, error: lastGameError } = await supabase
         .from('partidos')
@@ -143,8 +128,6 @@ const Dashboard = () => {
         console.error('Error fetching last game:', lastGameError)
       }
 
-      console.log('Last game loaded:', lastGame)
-
       // Obtener estadísticas de partidos
       const { data: allGames, error: statsError } = await supabase
         .from('partidos')
@@ -155,8 +138,6 @@ const Dashboard = () => {
       if (statsError) {
         console.error('Error fetching game stats:', statsError)
       }
-
-      console.log('All games loaded:', allGames)
 
       // Calcular estadísticas
       const gameStats = {
@@ -176,8 +157,6 @@ const Dashboard = () => {
         return
       }
 
-      console.log('Payments loaded:', payments)
-
              const totalRegistrationPaid = payments.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0)
 
        // Obtener los 3 jugadores que más han aportado
@@ -191,11 +170,9 @@ const Dashboard = () => {
          .not('monto_inscripcion', 'is', null)
          .gt('monto_inscripcion', 0)
 
-       if (contributorsError) {
-         console.error('Error fetching contributors:', contributorsError)
-       }
-
-       console.log('Contributors loaded:', contributors)
+             if (contributorsError) {
+        console.error('Error fetching contributors:', contributorsError)
+      }
 
        // Agrupar por jugador y sumar sus aportaciones
        const playerContributions = {}

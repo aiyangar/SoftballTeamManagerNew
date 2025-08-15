@@ -13,7 +13,9 @@ export const useTeam = () => {
 }
 
 export const TeamProvider = ({ children }) => {
-  const { session } = UserAuth()
+  const authContext = UserAuth()
+  const session = authContext?.session // Usar optional chaining para evitar errores
+  
   const [teams, setTeams] = useState([])
   const [selectedTeam, setSelectedTeam] = useState('')
   const [loadingTeams, setLoadingTeams] = useState(false)
@@ -65,7 +67,7 @@ export const TeamProvider = ({ children }) => {
       
       // Si solo hay un equipo, seleccionarlo automáticamente
       if (teamsWithInfo && teamsWithInfo.length === 1) {
-        console.log('Auto-selecting single team:', teamsWithInfo[0].id)
+
         setSelectedTeam(teamsWithInfo[0].id)
       }
     } catch (error) {
@@ -76,7 +78,7 @@ export const TeamProvider = ({ children }) => {
   }
 
   const handleTeamChange = (teamId) => {
-    console.log('Team selected in context:', teamId)
+
     setSelectedTeam(teamId)
   }
 

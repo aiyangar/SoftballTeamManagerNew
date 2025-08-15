@@ -46,8 +46,9 @@ const Players = () => {
     // Hook para navegación programática
     const navigate = useNavigate()
 
-    // Obtener sesión del usuario autenticado
-    const { session } = UserAuth()
+    // Obtener estado de sesión del contexto
+    const authContext = UserAuth()
+    const session = authContext?.session
 
     /**
      * Obtiene los jugadores del usuario autenticado
@@ -79,7 +80,7 @@ const Players = () => {
                 return { success: false, error: error.message }
             }
 
-            console.log('Jugadores obtenidos:', data)
+      
             setPlayers(data)
             setLoadingPlayers(false)
             return { success: true, data: data }
@@ -107,7 +108,7 @@ const Players = () => {
                 return { success: false, error: error.message }
             }
 
-            console.log('Equipos obtenidos:', data)
+      
             setTeams(data)
             setLoadingTeams(false)
             return { success: true, data: data }
@@ -152,7 +153,7 @@ const Players = () => {
                 return orderA - orderB
             })
 
-            console.log('Posiciones obtenidas y ordenadas:', sortedPositions)
+      
             setPositions(sortedPositions)
             setLoadingPositions(false)
             return { success: true, data: sortedPositions }
@@ -229,7 +230,7 @@ const Players = () => {
 
             // Esta línea ya no es necesaria porque playerError se maneja dentro de cada bloque
 
-            console.log(editingPlayer ? 'Jugador actualizado:' : 'Jugador registrado:', playerResult)
+      
 
             // Manejar posiciones
             if (editingPlayer) {

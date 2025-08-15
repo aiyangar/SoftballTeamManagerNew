@@ -21,9 +21,9 @@ const Teams = () => {
     // Hook para navegación programática
     const navigate = useNavigate()
 
-    // Obtener sesión del usuario autenticado
-    const { session } = UserAuth()
-
+    // Obtener estado de sesión del contexto
+    const authContext = UserAuth()
+    const session = authContext?.session
 
 
     /**
@@ -51,7 +51,7 @@ const Teams = () => {
                 return { success: false, error: error.message }
             }
 
-            console.log('Equipo creado:', data)
+    
             return { success: true, data: data }
         } catch (error) {
             console.error('Error inesperado al crear equipo:', error)
@@ -82,7 +82,7 @@ const Teams = () => {
             const result = await createTeam(name, inscripcion, session.user.id)
 
             if (result.success) {
-                console.log('Equipo creado exitosamente:', result.data)
+        
                 // Limpiar el formulario
                 setName('')
                 setInscripcion('')

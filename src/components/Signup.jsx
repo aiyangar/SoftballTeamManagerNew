@@ -1,105 +1,52 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { UserAuth } from '../context/AuthContext.jsx'
+import React from 'react'
+import { Link } from 'react-router-dom'
 
 /**
  * Componente para el registro de nuevos usuarios
- * Permite crear una cuenta nueva o hacer signin si el usuario ya existe
+ * Actualmente deshabilitado - solo el administrador puede crear usuarios
  */
 const Signup = () => {
-    // Estados para manejar el formulario
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [loading, setLoading] = useState(false) // Estado de carga durante el proceso
-    const [error, setError] = useState(null) // Estado para mostrar errores
-    
-    // Hook para navegación programática
-    const navigate = useNavigate()
-
-    // Obtener funciones de autenticación del contexto
-    const authContext = UserAuth()
-    const session = authContext?.session
-    const signUpNewUser = authContext?.signUpNewUser
-    const signInUser = authContext?.signInUser
-    const signOut = authContext?.signOut
-
-    /**
-     * Maneja el envío del formulario de registro
-     * @param {Event} e - Evento del formulario
-     */
-    const handleSignUp = async (e) => {
-        e.preventDefault() // Prevenir envío por defecto del formulario
-        setLoading(true) // Activar estado de carga
-        setError(null) // Limpiar errores anteriores
-        
-        try {
-            // Intentar registrar o hacer signin del usuario
-            // La función signUpNewUser maneja automáticamente usuarios existentes
-            const result = await signUpNewUser(email, password)
-            
-            if (result.success) {
-        
-                
-                // Log para debugging según el tipo de operación
-                if (result.isExistingUser) {
-                                    // Usuario existente, ya autenticado
-              } else {
-                // Nuevo usuario registrado
-                }
-                
-                // Redirigir al dashboard después de autenticación exitosa
-                navigate('/dashboard')
-            } else {
-                // Mostrar error si la operación falló
-                setError(result.error || 'Error en el proceso')
-            }
-        } catch (error) {
-            console.error('Error inesperado en handleSignUp:', error)
-            setError(error.message || 'Error inesperado')
-        } finally {
-            setLoading(false) // Desactivar estado de carga
-        }
-    }
-    
   return (
-    <div>
-        <form onSubmit={handleSignUp} className='max-w-md m-auto pt-24'>
-            <h2 className="font-bold pb-2 text-2xl">Registrarse</h2>
-            <p className="text-gray-600 mb-6">
-                ¿Ya tienes una cuenta? <Link to="/signin" className="text-blue-500 hover:text-blue-700">Inicia sesión</Link>
-            </p>
-            <div className='flex flex-col py-4'>
-                <input 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className='p-3 border mt-6 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500' 
-                  type="email" 
-                  placeholder='Email' 
-                  required
-                />
-                <input 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className='p-3 border mt-6 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500' 
-                  type="password" 
-                  placeholder='Contraseña' 
-                  required
-                />
-                <button 
-                  type='submit' 
-                  disabled={loading} 
-                  className='mt-6 border border-gray-300 rounded-md p-3 bg-blue-500 text-white hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
-                >
-                  {loading ? 'Registrando...' : 'Registrarse'}
-                </button>
+    <div className='max-w-md m-auto pt-24'>
+        <div className="bg-neutral-900 border border-gray-600 rounded-lg p-8 shadow-lg">
+            <div className="text-center">
+                {/* Icono de candado */}
+                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gray-800 mb-6">
+                    <svg className="h-8 w-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
                 
-                {error && (
-                    <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                        {error}
+                <h2 className="font-bold pb-2 text-2xl text-white">Registro Deshabilitado</h2>
+                
+                <div className="mt-4 space-y-4">
+                    <p className="text-gray-300 leading-relaxed">
+                        El registro público está actualmente deshabilitado. 
+                        Solo el administrador puede crear nuevas cuentas de usuario.
+                    </p>
+                    
+                    <div className="bg-blue-900 border border-blue-600 rounded-lg p-4">
+                        <h3 className="font-semibold text-blue-200 mb-2">¿Necesitas acceso?</h3>
+                        <p className="text-blue-100 text-sm">
+                            Contacta al administrador del sistema para solicitar una cuenta.
+                        </p>
                     </div>
-                )}
+                    
+                    <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4">
+                        <h3 className="font-semibold text-yellow-200 mb-2">¿Ya tienes una cuenta?</h3>
+                        <p className="text-yellow-100 text-sm mb-3">
+                            Si ya tienes credenciales, puedes iniciar sesión.
+                        </p>
+                        <Link 
+                            to="/signin" 
+                            className="inline-block bg-black text-white px-4 py-2 rounded-md hover:bg-gray-900 transition-colors text-sm"
+                        >
+                            Iniciar Sesión
+                        </Link>
+                    </div>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
   )
 }

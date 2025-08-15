@@ -6,6 +6,7 @@ import Dashboard from "./components/Dashboard";
 import Teams from "./components/Teams";
 import Players from "./components/Players";
 import Schedule from "./components/Schedule";
+import AdminPanel from "./components/AdminPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 /**
@@ -55,6 +56,16 @@ export const router = createBrowserRouter([
         element: (
             <ProtectedRoute>
                 <Dashboard />
+            </ProtectedRoute>
+        ) 
+    },
+
+    // Ruta protegida para panel de administración
+    { 
+        path: "/admin", 
+        element: (
+            <ProtectedRoute>
+                <AdminPanel />
             </ProtectedRoute>
         ) 
     },

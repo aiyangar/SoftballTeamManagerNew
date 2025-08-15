@@ -114,6 +114,17 @@ const Menu = () => {
                                 >
                                     ⚾ Gestionar Partidos
                                 </Link>
+                                
+                                                                 {/* Enlace de administración (solo para administradores) */}
+                                 {session?.user?.email === 'admin@tuempresa.com' && (
+                                    <Link
+                                        to="/admin"
+                                        className="block w-full text-left px-3 py-2 text-yellow-400 hover:bg-yellow-900 rounded transition-colors"
+                                        onClick={() => setShowMenu(false)}
+                                    >
+                                        ⚙️ Panel de Administración
+                                    </Link>
+                                )}
                             </div>
                             
                             <div className="border-t border-gray-600 mt-4 pt-4">

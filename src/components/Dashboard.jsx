@@ -308,9 +308,9 @@ const Dashboard = () => {
               <p className="text-gray-400 mb-4">No tienes equipos registrados</p>
               <Link 
                 to="/teams"
-                className="inline-block px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                className="inline-block px-6 py-3 bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
               >
-                Crear Primer Equipo
+                Crear Equipo
               </Link>
             </div>
           ) : (

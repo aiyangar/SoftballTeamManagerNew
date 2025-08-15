@@ -11,6 +11,7 @@ import { supabase } from '../supabaseClient'
 const Teams = () => {
     // Estados para manejar el formulario
     const [name, setName] = useState('')
+    const [inscripcion, setInscripcion] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [teams, setTeams] = useState([]) // Estado para almacenar los equipos
@@ -23,7 +24,7 @@ const Teams = () => {
     const { session } = UserAuth()
 
     /**
-     * Obtiene los equipos del usuario autenticado
+     * Obtiene los equipos del usuario autenticado con información adicional
      * @param {string} propietarioId - ID del usuario propietario
      * @returns {Object} - Resultado de la operación
      */
@@ -40,8 +41,36 @@ const Teams = () => {
                 return { success: false, error: error.message }
             }
 
-            console.log('Equipos obtenidos:', data)
-            return { success: true, data: data }
+            // Obtener información adicional para cada equipo
+            const teamsWithInfo = await Promise.all(
+                data.map(async (team) => {
+                    // Obtener cantidad de jugadores
+                    const { data: players, error: playersError } = await supabase
+                        .from('jugadores')
+                        .select('id')
+                        .eq('equipo_id', team.id)
+
+                                         // Obtener total pagado para registro (solo monto_inscripcion, no monto_umpire)
+                     const { data: payments, error: paymentsError } = await supabase
+                         .from('pagos')
+                         .select('monto_inscripcion')
+                         .eq('equipo_id', team.id)
+                         .not('monto_inscripcion', 'is', null)
+
+                    const totalPlayers = playersError ? 0 : (players?.length || 0)
+                    const totalRegistrationPaid = paymentsError ? 0 : 
+                        (payments?.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0) || 0)
+
+                    return {
+                        ...team,
+                        totalPlayers,
+                        totalRegistrationPaid
+                    }
+                })
+            )
+
+            console.log('Equipos obtenidos con información:', teamsWithInfo)
+            return { success: true, data: teamsWithInfo }
         } catch (error) {
             console.error('Error inesperado al obtener equipos:', error)
             return { success: false, error: error.message }
@@ -51,16 +80,18 @@ const Teams = () => {
     /**
      * Crea un nuevo equipo en la base de datos
      * @param {string} nombreEquipo - Nombre del equipo
+     * @param {string} inscripcion - Monto de inscripción del equipo
      * @param {string} propietarioId - ID del usuario propietario
      * @returns {Object} - Resultado de la operación
      */
-    const createTeam = async (nombreEquipo, propietarioId) => {
+    const createTeam = async (nombreEquipo, inscripcion, propietarioId) => {
         try {
             const { data, error } = await supabase
                 .from('equipos')
                 .insert([
                     {
                         nombre_equipo: nombreEquipo,
+                        inscripcion: inscripcion ? parseFloat(inscripcion) : null,
                         propietario_id: propietarioId // ID del usuario que crea el equipo
                     }
                 ])
@@ -115,13 +146,13 @@ const Teams = () => {
 
         try {
             // Crear el equipo con el ID del usuario autenticado
-            const result = await createTeam(name, session.user.id)
+            const result = await createTeam(name, inscripcion, session.user.id)
 
             if (result.success) {
                 console.log('Equipo creado exitosamente:', result.data)
                 // Limpiar el formulario
                 setName('')
-                setDescription('') // Mantener por si quieres agregar descripción en el futuro
+                setInscripcion('')
                 // Recargar la lista de equipos
                 const teamsResult = await fetchTeams(session.user.id)
                 if (teamsResult.success) {
@@ -171,6 +202,22 @@ const Teams = () => {
                         />
                     </div>
                     
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Monto de Inscripción ($)
+                        </label>
+                        <input 
+                            type="number" 
+                            step="0.01"
+                            min="0"
+                            placeholder='Ej: 1500.00' 
+                            value={inscripcion} 
+                            onChange={(e) => setInscripcion(e.target.value)} 
+                            className='w-full p-3 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-gray-800 text-white' 
+                        />
+                        <p className="text-xs text-gray-400 mt-1">Opcional: Deja vacío si no hay monto de inscripción</p>
+                    </div>
+                    
                     <button 
                          type='submit' 
                          disabled={loading} 
@@ -203,43 +250,48 @@ const Teams = () => {
                     </div>
                 ) : (
                     <div className="grid gap-4">
-                        {teams.map((team) => (
-                            <div key={team.id} className="border border-gray-600 rounded-lg p-4 hover:bg-gray-800 bg-gray-700">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <h3 className="font-medium text-lg text-white">{team.nombre_equipo}</h3>
-                                        <p className="text-sm text-gray-300">ID: {team.id}</p>
-                                        <p className="text-sm text-gray-300">Propietario ID: {team.propietario_id}</p>
-                                    </div>
-                                    <div className="flex space-x-2">
-                                                                                 <button 
+                                                 {teams.map((team) => (
+                             <div key={team.id} className="border border-gray-600 rounded-lg p-4 hover:bg-gray-800 bg-gray-700">
+                                 <div className="flex justify-between items-start">
+                                     <div className="flex-1">
+                                         <h3 className="font-medium text-lg text-white mb-2">{team.nombre_equipo}</h3>
+                                         <div className="grid grid-cols-2 gap-4 text-sm">
+                                             <div className="flex items-center space-x-2">
+                                                 <span className="text-blue-400">👥</span>
+                                                 <span className="text-gray-300">
+                                                     <span className="font-semibold">{team.totalPlayers}</span> jugadores
+                                                 </span>
+                                             </div>
+                                             <div className="flex items-center space-x-2">
+                                                 <span className="text-green-400">💰</span>
+                                                 <span className="text-gray-300">
+                                                     <span className="font-semibold">${team.totalRegistrationPaid.toLocaleString()}</span> pagado
+                                                 </span>
+                                             </div>
+                                         </div>
+                                     </div>
+                                     <div className="flex space-x-2 ml-4">
+                                         <button 
                                              className="px-3 py-1 bg-gray-800 text-white text-sm rounded hover:bg-gray-900"
                                              onClick={() => alert('Función de editar equipo - próximamente')}
                                          >
                                              Editar
                                          </button>
-                                        <button 
-                                            className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
-                                            onClick={() => alert('Función de eliminar equipo - próximamente')}
-                                        >
-                                            Eliminar
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                                         <button 
+                                             className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
+                                             onClick={() => alert('Función de eliminar equipo - próximamente')}
+                                         >
+                                             Eliminar
+                                         </button>
+                                     </div>
+                                 </div>
+                             </div>
+                         ))}
                     </div>
                 )}
             </div>
 
-            {/* Información del usuario */}
-            {session?.user && (
-                <div className="bg-neutral-700 p-4 rounded-lg">
-                    <h3 className="font-medium mb-2 text-white">Información del Creador</h3>
-                    <p className="text-gray-300"><strong>Usuario:</strong> {session.user.email}</p>
-                    <p className="text-gray-300"><strong>ID de Usuario:</strong> {session.user.id}</p>
-                </div>
-            )}
+
         </div>
     )
 }

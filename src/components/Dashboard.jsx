@@ -301,8 +301,8 @@ const Dashboard = () => {
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                      {/* Card: Total de Jugadores */}
            <Link to="/players" className="block">
-             <div className="bg-neutral-900 shadow rounded-lg p-6 hover:bg-neutral-800 transition-colors cursor-pointer">
-               <div className="flex items-center justify-between mb-4">
+             <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer h-64">
+               <div className="flex items-center justify-between mb-3">
                  <h3 className="text-lg font-semibold text-white">Total de Jugadores</h3>
                  <div className="text-4xl text-blue-400 flex items-center justify-center w-16 h-16">👥</div>
                </div>
@@ -318,8 +318,8 @@ const Dashboard = () => {
 
                      {/* Card: Próximo Juego */}
            <Link to="/schedule" className="block">
-             <div className="bg-neutral-900 shadow rounded-lg p-6 hover:bg-neutral-800 transition-colors cursor-pointer">
-               <div className="flex items-center justify-between mb-4">
+             <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer h-64">
+               <div className="flex items-center justify-between mb-3">
                  <h3 className="text-lg font-semibold text-white">Próximo Juego</h3>
                  <div className="text-4xl text-green-400 flex items-center justify-center w-16 h-16">⚾</div>
                </div>
@@ -350,8 +350,8 @@ const Dashboard = () => {
 
                      {/* Card: Total Pagado Registro */}
            <Link to="/teams" className="block">
-             <div className="bg-neutral-900 shadow rounded-lg p-6 hover:bg-neutral-800 transition-colors cursor-pointer">
-               <div className="flex items-center justify-between mb-4">
+             <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer h-64">
+               <div className="flex items-center justify-between mb-3">
                  <h3 className="text-lg font-semibold text-white">Total Pagado Registro</h3>
                  <div className="text-4xl text-green-400 flex items-center justify-center w-16 h-16">💰</div>
                </div>
@@ -375,8 +375,8 @@ const Dashboard = () => {
 
           {/* Card: Último Partido */}
           <Link to="/schedule" className="block">
-            <div className="bg-neutral-900 shadow rounded-lg p-6 hover:bg-neutral-800 transition-colors cursor-pointer">
-              <div className="flex items-center justify-between mb-4">
+            <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer h-64">
+              <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-semibold text-white">Último Partido</h3>
                 <div className="text-4xl text-yellow-400 flex items-center justify-center w-16 h-16">🏆</div>
               </div>
@@ -409,13 +409,13 @@ const Dashboard = () => {
             </div>
           </Link>
 
-          {/* Card: Historial de Resultados */}
-          <Link to="/schedule" className="block">
-            <div className="bg-neutral-900 shadow rounded-lg p-6 hover:bg-neutral-800 transition-colors cursor-pointer">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Historial de Resultados</h3>
-                <div className="text-4xl text-purple-400 flex items-center justify-center w-16 h-16">📊</div>
-              </div>
+                                           {/* Card: Historial de Resultados */}
+            <Link to="/schedule" className="block">
+              <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer h-64">
+               <div className="flex items-center justify-between mb-3">
+                 <h3 className="text-lg font-semibold text-white">Historial de Resultados</h3>
+                 <div className="text-4xl text-purple-400 flex items-center justify-center w-16 h-16">📊</div>
+               </div>
               <div>
                 {loadingTeam ? (
                   <p className="text-gray-400">Cargando...</p>
@@ -447,13 +447,13 @@ const Dashboard = () => {
             </div>
           </Link>
 
-                     {/* Card: Top Contribuyentes */}
-           <Link to="/players" className="block">
-             <div className="bg-neutral-900 shadow rounded-lg p-6 hover:bg-neutral-800 transition-colors cursor-pointer">
-               <div className="flex items-center justify-between mb-4">
-                 <h3 className="text-lg font-semibold text-white">Top Contribuyentes</h3>
-                 <div className="text-4xl text-orange-400 flex items-center justify-center w-16 h-16">🏅</div>
-               </div>
+                                                                                       {/* Card: Top Contribuyentes */}
+             <Link to="/players" className="block">
+               <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer h-64">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-white">Top Contribuyentes</h3>
+                  <div className="text-4xl text-orange-400 flex items-center justify-center w-16 h-16">🏅</div>
+                </div>
                <div>
                  {loadingTeam ? (
                    <p className="text-gray-400">Cargando...</p>
@@ -484,13 +484,13 @@ const Dashboard = () => {
              </div>
            </Link>
 
-                       {/* Card: Top Asistencias */}
-            <Link to="/players" className="block">
-              <div className="bg-neutral-900 shadow rounded-lg p-6 hover:bg-neutral-800 transition-colors cursor-pointer">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-white">Top Asistencias</h3>
-                  <div className="text-4xl text-blue-400 flex items-center justify-center w-16 h-16">📋</div>
-                </div>
+                                                                                               {/* Card: Top Asistencias */}
+              <Link to="/players" className="block">
+                <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer h-64">
+                 <div className="flex items-center justify-between mb-3">
+                   <h3 className="text-lg font-semibold text-white">Top Asistencias</h3>
+                   <div className="text-4xl text-blue-400 flex items-center justify-center w-16 h-16">📋</div>
+                 </div>
                 <div>
                   {loadingTeam ? (
                     <p className="text-gray-400">Cargando...</p>
@@ -521,13 +521,13 @@ const Dashboard = () => {
               </div>
             </Link>
 
-                       {/* Card: Estadísticas Generales */}
-            <Link to="/schedule" className="block">
-              <div className="bg-neutral-900 shadow rounded-lg p-6 hover:bg-neutral-800 transition-colors cursor-pointer">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-white">Estadísticas Generales</h3>
-                  <div className="text-4xl text-purple-400 flex items-center justify-center w-16 h-16">📈</div>
-                </div>
+                                                                                               {/* Card: Estadísticas Generales */}
+              <Link to="/schedule" className="block">
+                <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer h-64">
+                 <div className="flex items-center justify-between mb-3">
+                   <h3 className="text-lg font-semibold text-white">Estadísticas Generales</h3>
+                   <div className="text-4xl text-purple-400 flex items-center justify-center w-16 h-16">📈</div>
+                 </div>
                 <div>
                   {loadingTeam ? (
                     <p className="text-gray-400">Cargando...</p>

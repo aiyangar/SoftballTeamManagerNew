@@ -40,6 +40,7 @@ const Players = () => {
         equipo: false
     })
     const [showColumnMenu, setShowColumnMenu] = useState(false)
+    const [actionMenuOpen, setActionMenuOpen] = useState(null)
 
     // Hook para navegación programática
     const navigate = useNavigate()
@@ -408,6 +409,18 @@ const Players = () => {
         }))
     }
 
+    // Función para manejar el menú de acciones
+    const toggleActionMenu = (playerId) => {
+        setActionMenuOpen(actionMenuOpen === playerId ? null : playerId)
+    }
+
+    // Función para editar jugador (placeholder por ahora)
+    const editPlayer = (playerId) => {
+        console.log('Editar jugador:', playerId)
+        setActionMenuOpen(null)
+        // Aquí se implementaría la lógica de edición
+    }
+
     // Si no hay sesión, redirigir al login
     if (!session) {
         navigate('/signin')
@@ -767,14 +780,45 @@ const Players = () => {
                                                      {player.jugador_posiciones?.map(jp => getPositionAbbreviation(jp.posiciones.nombre_posicion)).join(', ') || '-'}
                                                  </td>
                                              )}
-                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                 <button
-                                                     onClick={() => deletePlayer(player.id)}
-                                                     className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
-                                                 >
-                                                     Eliminar
-                                                 </button>
-                                             </td>
+                                                                                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                  <div className="relative">
+                                                                                                             <button
+                                                           onClick={() => toggleActionMenu(player.id)}
+                                                           className="px-2 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-500 transition-colors"
+                                                       >
+                                                           ⋮
+                                                       </button>
+                                                      
+                                                      {actionMenuOpen === player.id && (
+                                                          <>
+                                                              <div className="absolute right-0 mt-2 w-32 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50">
+                                                                  <div className="py-1">
+                                                                      <button
+                                                                          onClick={() => editPlayer(player.id)}
+                                                                          className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+                                                                      >
+                                                                          ✏️ Editar
+                                                                      </button>
+                                                                      <button
+                                                                          onClick={() => {
+                                                                              deletePlayer(player.id)
+                                                                              setActionMenuOpen(null)
+                                                                          }}
+                                                                          className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900 transition-colors"
+                                                                      >
+                                                                          🗑️ Eliminar
+                                                                      </button>
+                                                                  </div>
+                                                              </div>
+                                                              {/* Overlay para cerrar menú */}
+                                                              <div 
+                                                                  className="fixed inset-0 z-40" 
+                                                                  onClick={() => setActionMenuOpen(null)}
+                                                              />
+                                                          </>
+                                                      )}
+                                                  </div>
+                                              </td>
                                          </tr>
                                      ))}
                                 </tbody>

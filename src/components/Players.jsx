@@ -42,6 +42,22 @@ const Players = () => {
     const [showColumnMenu, setShowColumnMenu] = useState(false)
     const [actionMenuOpen, setActionMenuOpen] = useState(null)
     const [editingPlayer, setEditingPlayer] = useState(null)
+    const [showPlayerHistoryModal, setShowPlayerHistoryModal] = useState(false)
+    const [selectedPlayerForHistory, setSelectedPlayerForHistory] = useState(null)
+    const [playerHistory, setPlayerHistory] = useState({
+        attendance: [],
+        payments: [],
+        totalUmpirePaid: 0,
+        totalInscripcionPaid: 0,
+        gamesPlayed: 0,
+        gamesAttended: 0,
+        attendanceRate: 0
+    })
+    const [loadingHistory, setLoadingHistory] = useState(false)
+    const [expandedSections, setExpandedSections] = useState({
+        attendance: false,
+        payments: false
+    })
 
     // Hook para navegación programática
     const navigate = useNavigate()
@@ -59,6 +75,194 @@ const Players = () => {
             return () => clearTimeout(timer)
         }
     }, [success])
+
+    /**
+     * Obtiene la información histórica completa de un jugador
+     * @param {number} playerId - ID del jugador
+     * @param {number} teamId - ID del equipo
+     */
+    const fetchPlayerHistory = async (playerId, teamId) => {
+        setLoadingHistory(true)
+        try {
+            // Si no hay equipo seleccionado, obtener todos los equipos del jugador
+            let teamIds = [teamId]
+            if (!teamId) {
+                // Obtener todos los equipos del usuario para buscar asistencia y pagos
+                const { data: userTeams } = await supabase
+                    .from('equipos')
+                    .select('id')
+                    .eq('propietario_id', session.user.id)
+                
+                if (userTeams && userTeams.length > 0) {
+                    teamIds = userTeams.map(team => team.id)
+                } else {
+                    // Si no hay equipos, usar un array vacío
+                    teamIds = []
+                }
+            }
+
+            // Obtener asistencia a partidos (de todos los equipos si no hay equipo específico)
+            let attendanceQuery = supabase
+                .from('asistencia_partidos')
+                .select(`
+                    partido_id,
+                    partidos (
+                        id,
+                        equipo_contrario,
+                        fecha_partido,
+                        lugar,
+                        finalizado,
+                        resultado,
+                        carreras_equipo_local,
+                        carreras_equipo_contrario
+                    )
+                `)
+                .eq('jugador_id', playerId)
+
+            if (teamIds.length > 0) {
+                attendanceQuery = attendanceQuery.in('equipo_id', teamIds)
+            }
+
+            const { data: attendanceData, error: attendanceError } = await attendanceQuery
+
+            if (attendanceError) {
+                console.error('Error al obtener asistencia:', attendanceError)
+            }
+
+            // Obtener pagos realizados (de todos los equipos si no hay equipo específico)
+            let paymentsQuery = supabase
+                .from('pagos')
+                .select(`
+                    id,
+                    monto_umpire,
+                    monto_inscripcion,
+                    fecha_pago,
+                    partidos (
+                        id,
+                        equipo_contrario,
+                        fecha_partido
+                    )
+                `)
+                .eq('jugador_id', playerId)
+                .order('fecha_pago', { ascending: false })
+
+            if (teamIds.length > 0) {
+                paymentsQuery = paymentsQuery.in('equipo_id', teamIds)
+            }
+
+            const { data: paymentsData, error: paymentsError } = await paymentsQuery
+
+            if (paymentsError) {
+                console.error('Error al obtener pagos:', paymentsError)
+            }
+
+            // Obtener todos los partidos de los equipos para calcular estadísticas
+            let gamesQuery = supabase
+                .from('partidos')
+                .select('id, fecha_partido, finalizado')
+                .order('fecha_partido', { ascending: false })
+
+            if (teamIds.length > 0) {
+                gamesQuery = gamesQuery.in('equipo_id', teamIds)
+            }
+
+            const { data: allGamesData, error: gamesError } = await gamesQuery
+
+            if (gamesError) {
+                console.error('Error al obtener partidos:', gamesError)
+            }
+
+            // Calcular estadísticas
+            let attendance = attendanceData || []
+            let payments = paymentsData || []
+            const allGames = allGamesData || []
+            
+            // Ordenar asistencia por fecha del partido (más reciente primero)
+            attendance = attendance.sort((a, b) => {
+                const dateA = new Date(a.partidos?.fecha_partido || 0)
+                const dateB = new Date(b.partidos?.fecha_partido || 0)
+                return dateB - dateA
+            })
+            
+            // Los pagos ya vienen ordenados por fecha_pago desde la consulta
+            
+            const totalUmpirePaid = payments.reduce((sum, payment) => sum + (payment.monto_umpire || 0), 0)
+            const totalInscripcionPaid = payments.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0)
+            const gamesPlayed = allGames.length // Total de partidos de todos los equipos
+            const gamesAttended = attendance.length // Total de asistencias del jugador
+            const attendanceRate = gamesPlayed > 0 ? (gamesAttended / gamesPlayed * 100).toFixed(1) : 0
+
+            console.log('Datos del historial:', {
+                attendance: attendance.length,
+                payments: payments.length,
+                gamesPlayed,
+                gamesAttended,
+                attendanceRate
+            })
+
+            setPlayerHistory({
+                attendance,
+                payments,
+                totalUmpirePaid,
+                totalInscripcionPaid,
+                gamesPlayed,
+                gamesAttended,
+                attendanceRate
+            })
+
+        } catch (error) {
+            console.error('Error al obtener historial del jugador:', error)
+            setError('Error al cargar el historial del jugador')
+        } finally {
+            setLoadingHistory(false)
+        }
+    }
+
+    /**
+     * Abre el modal con la información histórica del jugador
+     * @param {Object} player - Objeto del jugador
+     */
+    const openPlayerHistoryModal = async (player) => {
+        setSelectedPlayerForHistory(player)
+        setShowPlayerHistoryModal(true)
+        setActionMenuOpen(null) // Cerrar el menú de acciones
+        
+        // Usar el equipo del jugador si está asignado, o el equipo seleccionado, o null para buscar en todos
+        const teamId = player.equipo_id || selectedTeam || null
+        await fetchPlayerHistory(player.id, teamId)
+    }
+
+    /**
+     * Cierra el modal de historial del jugador
+     */
+    const closePlayerHistoryModal = () => {
+        setShowPlayerHistoryModal(false)
+        setSelectedPlayerForHistory(null)
+        setPlayerHistory({
+            attendance: [],
+            payments: [],
+            totalUmpirePaid: 0,
+            totalInscripcionPaid: 0,
+            gamesPlayed: 0,
+            gamesAttended: 0,
+            attendanceRate: 0
+        })
+        setExpandedSections({
+            attendance: false,
+            payments: false
+        })
+    }
+
+    /**
+     * Maneja la expansión/contracción de secciones del historial
+     * @param {string} section - Nombre de la sección ('attendance' o 'payments')
+     */
+    const toggleSection = (section) => {
+        setExpandedSections(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }))
+    }
 
     /**
      * Obtiene los jugadores del usuario autenticado
@@ -864,6 +1068,12 @@ const Players = () => {
                                                               <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50">
                                                                   <div className="py-1">
                                                                       <button
+                                                                          onClick={() => openPlayerHistoryModal(player)}
+                                                                          className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+                                                                      >
+                                                                          📊 Ver Historial
+                                                                      </button>
+                                                                      <button
                                                                           onClick={() => editPlayer(player.id)}
                                                                           className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
                                                                       >
@@ -898,6 +1108,217 @@ const Players = () => {
                 </div>
             </div>
 
+                        {/* Modal de Historial del Jugador */}
+            {showPlayerHistoryModal && selectedPlayerForHistory && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-neutral-900 border border-gray-600 rounded-lg w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
+                        {/* Header fijo */}
+                        <div className="flex justify-between items-center p-6 border-b border-gray-600">
+                            <h2 className="text-2xl font-semibold text-white">
+                                Historial de {selectedPlayerForHistory.nombre}
+                            </h2>
+                            <button
+                                onClick={closePlayerHistoryModal}
+                                className="text-gray-400 hover:text-white text-2xl"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        {/* Contenido con scroll */}
+                        <div className="flex-1 overflow-y-auto p-6">
+                            {loadingHistory ? (
+                                <div className="text-center py-8">
+                                    <p className="text-gray-300">Cargando historial...</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-6">
+                                    {/* Estadísticas Generales */}
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                        <div className="bg-gray-800 p-4 rounded-lg text-center">
+                                            <div className="text-2xl font-bold text-blue-400">{playerHistory.gamesPlayed}</div>
+                                            <div className="text-sm text-gray-300">Total Partidos</div>
+                                        </div>
+                                        <div className="bg-gray-800 p-4 rounded-lg text-center">
+                                            <div className="text-2xl font-bold text-green-400">{playerHistory.gamesAttended}</div>
+                                            <div className="text-sm text-gray-300">Asistencias</div>
+                                        </div>
+                                        <div className="bg-gray-800 p-4 rounded-lg text-center">
+                                            <div className="text-2xl font-bold text-yellow-400">{playerHistory.attendanceRate}%</div>
+                                            <div className="text-sm text-gray-300">Tasa de Asistencia</div>
+                                        </div>
+                                        <div className="bg-gray-800 p-4 rounded-lg text-center">
+                                            <div className="text-2xl font-bold text-purple-400">{playerHistory.payments.length}</div>
+                                            <div className="text-sm text-gray-300">Pagos Realizados</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Resumen de Pagos */}
+                                    <div className="bg-gray-800 p-4 rounded-lg">
+                                        <h3 className="text-lg font-semibold text-white mb-4">Resumen de Pagos</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="bg-gray-700 p-3 rounded">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-gray-300">Total Umpire:</span>
+                                                    <span className="text-green-400 font-semibold">
+                                                        ${playerHistory.totalUmpirePaid.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="bg-gray-700 p-3 rounded">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-gray-300">Total Inscripción:</span>
+                                                    <span className="text-blue-400 font-semibold">
+                                                        ${playerHistory.totalInscripcionPaid.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                                                         {/* Historial de Asistencias */}
+                                     <div className="bg-gray-800 p-4 rounded-lg">
+                                         <button
+                                             onClick={() => toggleSection('attendance')}
+                                             className="w-full flex justify-between items-center text-left"
+                                         >
+                                             <h3 className="text-lg font-semibold text-white">Historial de Asistencias</h3>
+                                             <div className="flex items-center space-x-2">
+                                                 <span className="text-sm text-gray-400">
+                                                     {playerHistory.attendance.length} registros
+                                                 </span>
+                                                 <svg 
+                                                     className={`w-5 h-5 text-gray-400 transition-transform ${expandedSections.attendance ? 'rotate-180' : ''}`}
+                                                     fill="none" 
+                                                     stroke="currentColor" 
+                                                     viewBox="0 0 24 24"
+                                                 >
+                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                 </svg>
+                                             </div>
+                                         </button>
+                                         
+                                         {expandedSections.attendance && (
+                                             <div className="mt-4">
+                                                 {playerHistory.attendance.length === 0 ? (
+                                                     <p className="text-gray-400 text-center py-4">No hay registros de asistencia</p>
+                                                 ) : (
+                                                     <div className="space-y-2">
+                                                         {playerHistory.attendance.map((attendance, index) => (
+                                                             <div key={index} className="bg-gray-700 p-3 rounded flex justify-between items-center">
+                                                                 <div>
+                                                                     <div className="font-medium text-white">
+                                                                         vs {attendance.partidos?.equipo_contrario}
+                                                                     </div>
+                                                                     <div className="text-sm text-gray-300">
+                                                                         {new Date(attendance.partidos?.fecha_partido).toLocaleDateString()}
+                                                                     </div>
+                                                                     <div className="text-xs text-gray-400">
+                                                                         {attendance.partidos?.lugar}
+                                                                     </div>
+                                                                 </div>
+                                                                 <div className="text-right">
+                                                                     {attendance.partidos?.finalizado ? (
+                                                                         <div className="text-sm">
+                                                                             <div className={`font-semibold ${
+                                                                                 attendance.partidos.resultado === 'Victoria' ? 'text-green-400' :
+                                                                                 attendance.partidos.resultado === 'Derrota' ? 'text-red-400' :
+                                                                                 'text-yellow-400'
+                                                                             }`}>
+                                                                                 {attendance.partidos.resultado}
+                                                                             </div>
+                                                                             <div className="text-gray-300">
+                                                                                 {attendance.partidos.carreras_equipo_local} - {attendance.partidos.carreras_equipo_contrario}
+                                                                             </div>
+                                                                         </div>
+                                                                     ) : (
+                                                                         <span className="text-yellow-400 text-sm">Pendiente</span>
+                                                                     )}
+                                                                 </div>
+                                                             </div>
+                                                         ))}
+                                                     </div>
+                                                 )}
+                                             </div>
+                                         )}
+                                     </div>
+
+                                                                         {/* Historial de Pagos */}
+                                     <div className="bg-gray-800 p-4 rounded-lg">
+                                         <button
+                                             onClick={() => toggleSection('payments')}
+                                             className="w-full flex justify-between items-center text-left"
+                                         >
+                                             <h3 className="text-lg font-semibold text-white">Historial de Pagos</h3>
+                                             <div className="flex items-center space-x-2">
+                                                 <span className="text-sm text-gray-400">
+                                                     {playerHistory.payments.length} registros
+                                                 </span>
+                                                 <svg 
+                                                     className={`w-5 h-5 text-gray-400 transition-transform ${expandedSections.payments ? 'rotate-180' : ''}`}
+                                                     fill="none" 
+                                                     stroke="currentColor" 
+                                                     viewBox="0 0 24 24"
+                                                 >
+                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                 </svg>
+                                             </div>
+                                         </button>
+                                         
+                                         {expandedSections.payments && (
+                                             <div className="mt-4">
+                                                 {playerHistory.payments.length === 0 ? (
+                                                     <p className="text-gray-400 text-center py-4">No hay registros de pagos</p>
+                                                 ) : (
+                                                     <div className="space-y-2">
+                                                         {playerHistory.payments.map((payment, index) => (
+                                                             <div key={index} className="bg-gray-700 p-3 rounded">
+                                                                 <div className="flex justify-between items-start mb-2">
+                                                                     <div>
+                                                                         <div className="font-medium text-white">
+                                                                             vs {payment.partidos?.equipo_contrario}
+                                                                         </div>
+                                                                         <div className="text-sm text-gray-300">
+                                                                             {new Date(payment.fecha_pago).toLocaleDateString()}
+                                                                         </div>
+                                                                     </div>
+                                                                     <div className="text-right">
+                                                                         <div className="text-sm text-gray-300">
+                                                                             {new Date(payment.fecha_pago).toLocaleTimeString()}
+                                                                         </div>
+                                                                     </div>
+                                                                 </div>
+                                                                 <div className="grid grid-cols-2 gap-2 text-sm">
+                                                                     {payment.monto_umpire > 0 && (
+                                                                         <div className="bg-green-900 p-2 rounded">
+                                                                             <span className="text-green-300">Umpire:</span>
+                                                                             <span className="text-green-400 font-semibold ml-2">
+                                                                                 ${payment.monto_umpire.toLocaleString()}
+                                                                             </span>
+                                                                         </div>
+                                                                     )}
+                                                                     {payment.monto_inscripcion > 0 && (
+                                                                         <div className="bg-blue-900 p-2 rounded">
+                                                                             <span className="text-blue-300">Inscripción:</span>
+                                                                             <span className="text-blue-400 font-semibold ml-2">
+                                                                                 ${payment.monto_inscripcion.toLocaleString()}
+                                                                             </span>
+                                                                         </div>
+                                                                     )}
+                                                                 </div>
+                                                             </div>
+                                                         ))}
+                                                     </div>
+                                                 )}
+                                             </div>
+                                         )}
+                                     </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
             
         </div>
     )

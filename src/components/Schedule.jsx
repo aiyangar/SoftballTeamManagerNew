@@ -8,6 +8,12 @@ import { useTeam } from '../context/TeamContext';
 const Schedule = () => {
     const { session } = UserAuth();
     const { teams, selectedTeam, handleTeamChange: contextHandleTeamChange } = useTeam();
+    
+    // Obtener el nombre del equipo local
+    const getLocalTeamName = () => {
+        const localTeam = teams.find(team => team.id === selectedTeam);
+        return localTeam ? localTeam.nombre_equipo : 'Tu Equipo';
+    };
     const [players, setPlayers] = useState([]);
     const [games, setGames] = useState([]);
     const [newGame, setNewGame] = useState({
@@ -28,6 +34,12 @@ const Schedule = () => {
     const [showAttendanceForm, setShowAttendanceForm] = useState({});
     const [editingGame, setEditingGame] = useState(null);
     const [paymentTotals, setPaymentTotals] = useState({});
+    const [showScoreForm, setShowScoreForm] = useState(false);
+    const [selectedGameForScore, setSelectedGameForScore] = useState(null);
+    const [scoreData, setScoreData] = useState({
+        carreras_equipo_local: 0,
+        carreras_equipo_contrario: 0
+    });
 
 
 
@@ -240,27 +252,72 @@ const Schedule = () => {
         }
     };
 
-    const finalizeGame = async (gameId) => {
-        if (!confirm('¿Estás seguro de que quieres finalizar este partido? No se podrán registrar más pagos.')) {
-            return;
-        }
+    const openScoreForm = (game) => {
+        setSelectedGameForScore(game);
+        setScoreData({
+            carreras_equipo_local: game.carreras_equipo_local || 0,
+            carreras_equipo_contrario: game.carreras_equipo_contrario || 0
+        });
+        setShowScoreForm(true);
+        setActionMenuOpen(null);
+    };
+
+    const closeScoreForm = () => {
+        setShowScoreForm(false);
+        setSelectedGameForScore(null);
+        setScoreData({ carreras_equipo_local: 0, carreras_equipo_contrario: 0 });
+    };
+
+    const handleScoreSubmit = async (e) => {
+        e.preventDefault();
+        if (!selectedGameForScore) return;
 
         setLoading(true);
-        const { error } = await supabase
-            .from('partidos')
-            .update({ finalizado: true })
-            .eq('id', gameId);
+        try {
+            // Calcular el resultado
+            let resultado = 'Pendiente';
+            if (scoreData.carreras_equipo_local > scoreData.carreras_equipo_contrario) {
+                resultado = 'Victoria';
+            } else if (scoreData.carreras_equipo_local < scoreData.carreras_equipo_contrario) {
+                resultado = 'Derrota';
+            } else {
+                resultado = 'Empate';
+            }
 
-        if (error) {
-            setError('Error al finalizar el partido: ' + error.message);
-        } else {
-            setGameFinalizationStatus(prev => ({
-                ...prev,
-                [gameId]: true
-            }));
-            alert('Partido finalizado con éxito. No se pueden registrar más pagos.');
+            const { error } = await supabase
+                .from('partidos')
+                .update({
+                    carreras_equipo_local: scoreData.carreras_equipo_local,
+                    carreras_equipo_contrario: scoreData.carreras_equipo_contrario,
+                    resultado: resultado,
+                    finalizado: true
+                })
+                .eq('id', selectedGameForScore.id);
+
+            if (error) {
+                setError('Error al finalizar el partido: ' + error.message);
+            } else {
+                setSuccess(`Partido finalizado con éxito. Resultado: ${resultado}`);
+                setGameFinalizationStatus(prev => ({
+                    ...prev,
+                    [selectedGameForScore.id]: true
+                }));
+                closeScoreForm();
+                await fetchGames(selectedTeam);
+            }
+        } catch (error) {
+            setError('Error inesperado al finalizar el partido');
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
+    };
+
+    const handleScoreInputChange = (e) => {
+        const { name, value } = e.target;
+        setScoreData(prev => ({
+            ...prev,
+            [name]: parseInt(value) || 0
+        }));
     };
 
     const handleAttendanceChange = (gameId, playerId) => {
@@ -473,10 +530,26 @@ const Schedule = () => {
                                 <div key={game.id} className="border border-gray-600 rounded-lg p-4">
                                                                          <div className="flex justify-between items-start">
                                          <div className="flex-1">
-                                             <h3 className="font-bold text-lg">{game.equipo_contrario}</h3>
-                                             <p>Fecha: {new Date(game.fecha_partido).toLocaleDateString()}</p>
-                                             <p>Lugar: {game.lugar}</p>
-                                             <p>Umpire: ${game.umpire || 550}</p>
+                                                                                           <h3 className="font-bold text-lg">{game.equipo_contrario}</h3>
+                                              <p>Fecha: {new Date(game.fecha_partido).toLocaleDateString()}</p>
+                                              <p>Lugar: {game.lugar}</p>
+                                              <p>Umpire: ${game.umpire || 550}</p>
+                                              
+                                                                                             {/* Mostrar marcador si el partido está finalizado */}
+                                               {gameFinalizationStatus[game.id] && game.resultado && (
+                                                   <div className="mt-2 p-2 bg-gray-700 rounded">
+                                                       <p className="text-sm font-semibold text-white">
+                                                           Marcador: {game.carreras_equipo_local || 0} - {game.carreras_equipo_contrario || 0}
+                                                       </p>
+                                                       <p className={`text-xs ${
+                                                           game.resultado === 'Victoria' ? 'text-green-400' :
+                                                           game.resultado === 'Derrota' ? 'text-red-400' :
+                                                           'text-yellow-400'
+                                                       }`}>
+                                                           Resultado: {game.resultado}
+                                                       </p>
+                                                   </div>
+                                               )}
                                              
                                                                                            {/* Información de Pagos Acumulados */}
                                                                                                                                                                                            {paymentTotals[game.id] && (
@@ -491,14 +564,21 @@ const Schedule = () => {
                                                                  ${paymentTotals[game.id].totalUmpire.toLocaleString()} / ${game.umpire?.toLocaleString() || '550'}
                                                              </span>
                                                          </div>
-                                                         <div className="w-full bg-gray-700 rounded-full h-1.5">
-                                                             <div 
-                                                                 className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
-                                                                 style={{ 
-                                                                     width: `${Math.min((paymentTotals[game.id].totalUmpire / (game.umpire || 550)) * 100, 100)}%` 
-                                                                 }}
-                                                             ></div>
-                                                         </div>
+                                                                                                                   <div className="w-full bg-gray-700 rounded-full h-1.5">
+                                                              <div 
+                                                                  className="h-1.5 rounded-full transition-all duration-300"
+                                                                  style={{ 
+                                                                      width: `${Math.min((paymentTotals[game.id].totalUmpire / (game.umpire || 550)) * 100, 100)}%`,
+                                                                      backgroundColor: paymentTotals[game.id].totalUmpire >= (game.umpire || 550) 
+                                                                          ? '#10B981' // Verde cuando se alcanza el objetivo
+                                                                          : paymentTotals[game.id].totalUmpire >= (game.umpire || 550) * 0.8
+                                                                          ? '#F59E0B' // Amarillo cuando está cerca (80%+)
+                                                                          : paymentTotals[game.id].totalUmpire >= (game.umpire || 550) * 0.5
+                                                                          ? '#F97316' // Naranja cuando está a la mitad (50%+)
+                                                                          : '#DC2626' // Rojo por defecto
+                                                                  }}
+                                                              ></div>
+                                                          </div>
                                                          <div className="flex justify-between text-xs mt-1">
                                                              <span className="text-gray-400">
                                                                  {paymentTotals[game.id].totalUmpire >= (game.umpire || 550) ? '✅ Completado' : '💰 Recaudado'}
@@ -560,14 +640,14 @@ const Schedule = () => {
                                                             >
                                                                 💰 Registrar Pagos
                                                             </button>
-                                                            {!gameFinalizationStatus[game.id] && (
-                                                                <button
-                                                                    onClick={() => finalizeGame(game.id)}
-                                                                    className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900 transition-colors"
-                                                                >
-                                                                    🔒 Finalizar Partido
-                                                                </button>
-                                                            )}
+                                                                                                                         {!gameFinalizationStatus[game.id] && (
+                                                                 <button
+                                                                     onClick={() => openScoreForm(game)}
+                                                                     className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900 transition-colors"
+                                                                 >
+                                                                     🏁 Finalizar Partido
+                                                                 </button>
+                                                             )}
                                                         </div>
                                                     </div>
                                                     {/* Overlay para cerrar menú */}
@@ -660,15 +740,106 @@ const Schedule = () => {
                 </div>
             )}
 
-            {/* Payment Form Modal */}
-            {showPaymentForm && selectedGameForPayment && (
-                <PaymentForm
-                    gameId={selectedGameForPayment}
-                    teamId={selectedTeam}
-                    onClose={closePaymentForm}
-                    onPaymentComplete={handlePaymentComplete}
-                />
-            )}
+                         {/* Payment Form Modal */}
+             {showPaymentForm && selectedGameForPayment && (
+                 <PaymentForm
+                     gameId={selectedGameForPayment}
+                     teamId={selectedTeam}
+                     onClose={closePaymentForm}
+                     onPaymentComplete={handlePaymentComplete}
+                 />
+             )}
+
+             {/* Score Form Modal */}
+             {showScoreForm && selectedGameForScore && (
+                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                     <div className="bg-neutral-900 border border-gray-600 rounded-lg p-6 w-full max-w-md mx-4">
+                         <div className="flex justify-between items-center mb-4">
+                             <h2 className="text-xl font-semibold text-white">Finalizar Partido</h2>
+                             <button
+                                 onClick={closeScoreForm}
+                                 className="text-gray-400 hover:text-white text-2xl"
+                             >
+                                 ×
+                             </button>
+                         </div>
+                         
+                                                   <div className="mb-4 p-3 bg-gray-800 rounded">
+                              <p className="text-gray-300 text-xs">Fecha: {new Date(selectedGameForScore.fecha_partido).toLocaleDateString()}</p>
+                          </div>
+
+                         <form onSubmit={handleScoreSubmit} className="space-y-4">
+                                                           <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                      <label className="block text-white mb-2 text-sm">{getLocalTeamName()}</label>
+                                      <input
+                                          type="number"
+                                          name="carreras_equipo_local"
+                                          value={scoreData.carreras_equipo_local}
+                                          onChange={handleScoreInputChange}
+                                          min="0"
+                                          className="w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white text-center text-lg font-semibold"
+                                          required
+                                      />
+                                  </div>
+                                  <div>
+                                      <label className="block text-white mb-2 text-sm">{selectedGameForScore.equipo_contrario}</label>
+                                      <input
+                                          type="number"
+                                          name="carreras_equipo_contrario"
+                                          value={scoreData.carreras_equipo_contrario}
+                                          onChange={handleScoreInputChange}
+                                          min="0"
+                                          className="w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white text-center text-lg font-semibold"
+                                          required
+                                      />
+                                  </div>
+                              </div>
+
+                                                           {/* Preview del resultado */}
+                              <div className="p-3 bg-gray-800 rounded text-center">
+                                  <p className="text-white text-sm mb-1">Resultado:</p>
+                                  <p className="text-2xl font-bold text-white">
+                                      {scoreData.carreras_equipo_local} - {scoreData.carreras_equipo_contrario}
+                                  </p>
+                                  <p className={`text-sm font-semibold ${
+                                      scoreData.carreras_equipo_local > scoreData.carreras_equipo_contrario ? 'text-green-400' :
+                                      scoreData.carreras_equipo_local < scoreData.carreras_equipo_contrario ? 'text-red-400' :
+                                      'text-yellow-400'
+                                  }`}>
+                                      {scoreData.carreras_equipo_local > scoreData.carreras_equipo_contrario ? 'Victoria' :
+                                       scoreData.carreras_equipo_local < scoreData.carreras_equipo_contrario ? 'Derrota' :
+                                       'Empate'}
+                                  </p>
+                              </div>
+
+                             <div className="bg-yellow-900 border border-yellow-600 text-yellow-200 px-4 py-3 rounded text-sm">
+                                 <div className="flex items-center space-x-2">
+                                     <span className="text-yellow-300">⚠️</span>
+                                     <span>Al finalizar el partido no se podrán registrar más pagos ni modificar la asistencia.</span>
+                                 </div>
+                             </div>
+
+                             <div className="flex space-x-3">
+                                 <button
+                                     type="button"
+                                     onClick={closeScoreForm}
+                                     className="flex-1 px-4 py-3 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+                                 >
+                                     Cancelar
+                                 </button>
+                                 <button
+                                     type="submit"
+                                     disabled={loading}
+                                     className="flex-1 px-4 py-3 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                                 >
+                                     {loading ? 'Finalizando...' : 'Finalizar Partido'}
+                                 </button>
+                             </div>
+                         </form>
+                     </div>
+                 </div>
+             )}
         </div>
     );
 };

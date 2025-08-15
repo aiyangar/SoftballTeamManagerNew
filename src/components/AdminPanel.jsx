@@ -70,12 +70,12 @@ const AdminPanel = () => {
                 </div>
                 <div className="bg-red-900 border border-red-600 text-red-200 px-4 py-3 rounded">
                     <p className="font-semibold mb-2">No tienes permisos para acceder al panel de administración.</p>
-                    <p className="text-sm">Para acceder, debes:</p>
-                    <ol className="list-decimal list-inside text-sm mt-2 space-y-1">
-                        <li>Cambiar el email en la línea 119 del archivo AdminPanel.jsx</li>
-                        <li>Reemplazar 'admin@tuempresa.com' con tu email real</li>
-                        <li>Recargar la página</li>
-                    </ol>
+                                         <p className="text-sm">Para acceder, debes:</p>
+                     <ol className="list-decimal list-inside text-sm mt-2 space-y-1">
+                         <li>Configurar la variable VITE_ADMIN_EMAIL en el archivo .env</li>
+                         <li>Agregar tu email real como valor de la variable</li>
+                         <li>Reiniciar el servidor de desarrollo</li>
+                     </ol>
                 </div>
             </div>
         );
@@ -100,15 +100,7 @@ const AdminPanel = () => {
                 </div>
             )}
 
-            {/* Información del administrador */}
-            <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8">
-                <h2 className="text-xl font-semibold mb-4 text-white">Información del Administrador</h2>
-                <div className="space-y-2 text-gray-300">
-                    <p><strong>Email:</strong> {session?.user?.email}</p>
-                    <p><strong>ID de Usuario:</strong> {session?.user?.id}</p>
-                    <p><strong>Último Acceso:</strong> {session?.user?.last_sign_in_at ? new Date(session.user.last_sign_in_at).toLocaleString() : 'N/A'}</p>
-                </div>
-            </div>
+            
 
             {/* Botón para crear usuario */}
             <div className="mb-8">

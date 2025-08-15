@@ -116,14 +116,14 @@ const Menu = () => {
                                 </Link>
                                 
                                                                  {/* Enlace de administración (solo para administradores) */}
-                                 {session?.user?.email === 'admin@tuempresa.com' && (
-                                    <Link
-                                        to="/admin"
-                                        className="block w-full text-left px-3 py-2 text-yellow-400 hover:bg-yellow-900 rounded transition-colors"
-                                        onClick={() => setShowMenu(false)}
-                                    >
-                                        ⚙️ Panel de Administración
-                                    </Link>
+                                 {session?.user?.email === import.meta.env.VITE_ADMIN_EMAIL && (
+                                                                         <Link
+                                         to="/admin"
+                                         className="block w-full text-left px-3 py-2 text-yellow-400 hover:bg-yellow-900 rounded transition-colors"
+                                         onClick={() => setShowMenu(false)}
+                                     >
+                                         ⚙️ Administración
+                                     </Link>
                                 )}
                             </div>
                             

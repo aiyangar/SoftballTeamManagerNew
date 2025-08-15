@@ -27,35 +27,16 @@ const Menu = () => {
         }
     }
 
-    /**
-     * Maneja el regreso a la página anterior
-     */
-    const handleGoBack = () => {
-        navigate(-1)
-    }
-
     return (
         <div className="flex items-center space-x-4">
-            {/* Botón para regresar */}
-            <button
-                onClick={handleGoBack}
-                className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors flex items-center space-x-2"
-            >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                <span>Volver</span>
-            </button>
-
             {/* Menú desplegable */}
             <div className="relative">
                 <button
                     onClick={() => setShowMenu(!showMenu)}
                     className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors flex items-center space-x-2"
                 >
-                    <span>Menú</span>
-                    <svg className={`w-4 h-4 transition-transform ${showMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
                 

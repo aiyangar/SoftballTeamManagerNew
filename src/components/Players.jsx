@@ -619,16 +619,17 @@ const Players = () => {
             )}
 
             {/* Botón para mostrar/ocultar formulario */}
-            {!showForm && (
-                <div className="mb-8">
-                    <button
-                        onClick={() => setShowForm(true)}
-                        className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
-                    >
-                        Nuevo Jugador
-                    </button>
-                </div>
-            )}
+            <div className="mb-8">
+                <button
+                    onClick={() => setShowForm(!showForm)}
+                    className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    <span>{showForm ? 'Cancelar' : 'Agregar Jugador'}</span>
+                </button>
+            </div>
 
             {/* Lista de jugadores */}
             <div className="bg-neutral-900 shadow rounded-lg p-6">

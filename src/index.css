@@ -48,6 +48,35 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* Estilos específicos para el dashboard */
+.dashboard-card {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.dashboard-card-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Mejoras para dispositivos móviles */
+@media (max-width: 768px) {
+  .dashboard-card {
+    min-height: auto !important;
+  }
+  
+  .dashboard-card-content {
+    font-size: 0.875rem;
+  }
+}
+
+/* Asegurar que el contenido no se desborde en pantallas pequeñas */
+@media (max-width: 640px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

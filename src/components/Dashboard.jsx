@@ -298,15 +298,15 @@ const Dashboard = () => {
 
       {/* Información del Equipo */}
       {selectedTeam && (
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 dashboard-grid">
                      {/* Card: Total de Jugadores */}
            <Link to="/players" className="block">
-             <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer h-64">
+             <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer min-h-64 flex flex-col dashboard-card">
                <div className="flex items-center justify-between mb-3">
                  <h3 className="text-lg font-semibold text-white">Total de Jugadores</h3>
                  <div className="text-4xl text-blue-400 flex items-center justify-center w-16 h-16">👥</div>
                </div>
-               <div>
+               <div className="flex-1 flex items-center dashboard-card-content">
                  {loadingTeam ? (
                    <p className="text-gray-400">Cargando...</p>
                  ) : (
@@ -318,26 +318,26 @@ const Dashboard = () => {
 
                      {/* Card: Próximo Juego */}
            <Link to="/schedule" className="block">
-             <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer h-64">
+             <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer min-h-64 flex flex-col dashboard-card">
                <div className="flex items-center justify-between mb-3">
                  <h3 className="text-lg font-semibold text-white">Próximo Juego</h3>
                  <div className="text-4xl text-green-400 flex items-center justify-center w-16 h-16">⚾</div>
                </div>
-               <div>
+               <div className="flex-1 overflow-hidden dashboard-card-content">
                  {loadingTeam ? (
                    <p className="text-gray-400">Cargando...</p>
                  ) : teamInfo.nextGame ? (
                    <div className="space-y-2">
-                     <p className="text-white">
+                     <p className="text-white text-sm">
                        <span className="font-semibold">Oponente:</span> {teamInfo.nextGame.equipo_contrario}
                      </p>
-                     <p className="text-white">
+                     <p className="text-white text-sm">
                        <span className="font-semibold">Fecha:</span> {new Date(teamInfo.nextGame.fecha_partido).toLocaleDateString()}
                      </p>
-                     <p className="text-white">
+                     <p className="text-white text-sm">
                        <span className="font-semibold">Campo:</span> {teamInfo.nextGame.lugar}
                      </p>
-                     <p className="text-white">
+                     <p className="text-white text-sm">
                        <span className="font-semibold">Costo Umpire:</span> $550
                      </p>
                    </div>
@@ -350,12 +350,12 @@ const Dashboard = () => {
 
                      {/* Card: Total Pagado Registro */}
            <Link to="/teams" className="block">
-             <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer h-64">
+             <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer min-h-64 flex flex-col dashboard-card">
                <div className="flex items-center justify-between mb-3">
                  <h3 className="text-lg font-semibold text-white">Total Pagado Registro</h3>
                  <div className="text-4xl text-green-400 flex items-center justify-center w-16 h-16">💰</div>
                </div>
-               <div>
+               <div className="flex-1 flex flex-col justify-center dashboard-card-content">
                  {loadingTeam ? (
                    <p className="text-gray-400">Cargando...</p>
                  ) : (
@@ -375,26 +375,26 @@ const Dashboard = () => {
 
           {/* Card: Último Partido */}
           <Link to="/schedule" className="block">
-            <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer h-64">
+            <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer min-h-64 flex flex-col dashboard-card">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-semibold text-white">Último Partido</h3>
                 <div className="text-4xl text-yellow-400 flex items-center justify-center w-16 h-16">🏆</div>
               </div>
-              <div>
+              <div className="flex-1 overflow-hidden dashboard-card-content">
                 {loadingTeam ? (
                   <p className="text-gray-400">Cargando...</p>
                 ) : teamInfo.lastGame ? (
                   <div className="space-y-2">
-                    <p className="text-white">
+                    <p className="text-white text-sm">
                       <span className="font-semibold">Oponente:</span> {teamInfo.lastGame.equipo_contrario}
                     </p>
-                    <p className="text-white">
+                    <p className="text-white text-sm">
                       <span className="font-semibold">Fecha:</span> {new Date(teamInfo.lastGame.fecha_partido).toLocaleDateString()}
                     </p>
-                    <p className="text-white">
+                    <p className="text-white text-sm">
                       <span className="font-semibold">Marcador:</span> {teamInfo.lastGame.carreras_equipo_local || 0} - {teamInfo.lastGame.carreras_equipo_contrario || 0}
                     </p>
-                    <p className={`font-semibold ${
+                    <p className={`font-semibold text-sm ${
                       teamInfo.lastGame.resultado === 'Victoria' ? 'text-green-400' :
                       teamInfo.lastGame.resultado === 'Derrota' ? 'text-red-400' :
                       'text-yellow-400'
@@ -411,31 +411,31 @@ const Dashboard = () => {
 
                                            {/* Card: Historial de Resultados */}
             <Link to="/schedule" className="block">
-              <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer h-64">
+              <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer min-h-64 flex flex-col dashboard-card">
                <div className="flex items-center justify-between mb-3">
                  <h3 className="text-lg font-semibold text-white">Historial de Resultados</h3>
                  <div className="text-4xl text-purple-400 flex items-center justify-center w-16 h-16">📊</div>
                </div>
-              <div>
+              <div className="flex-1 flex flex-col justify-center dashboard-card-content">
                 {loadingTeam ? (
                   <p className="text-gray-400">Cargando...</p>
                 ) : (
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-white">Victorias:</span>
+                      <span className="text-white text-sm">Victorias:</span>
                       <span className="text-green-400 font-bold">{teamInfo.gameStats.wins}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-white">Derrotas:</span>
+                      <span className="text-white text-sm">Derrotas:</span>
                       <span className="text-red-400 font-bold">{teamInfo.gameStats.losses}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-white">Empates:</span>
+                      <span className="text-white text-sm">Empates:</span>
                       <span className="text-yellow-400 font-bold">{teamInfo.gameStats.ties}</span>
                     </div>
                     <div className="border-t border-gray-600 pt-2 mt-2">
                       <div className="flex justify-between items-center">
-                        <span className="text-white font-semibold">Total:</span>
+                        <span className="text-white font-semibold text-sm">Total:</span>
                         <span className="text-blue-400 font-bold">
                           {teamInfo.gameStats.wins + teamInfo.gameStats.losses + teamInfo.gameStats.ties}
                         </span>
@@ -449,29 +449,29 @@ const Dashboard = () => {
 
                                                                                        {/* Card: Top Contribuyentes */}
              <Link to="/players" className="block">
-               <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer h-64">
+               <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer min-h-64 flex flex-col dashboard-card">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-lg font-semibold text-white">Top Contribuyentes</h3>
                   <div className="text-4xl text-orange-400 flex items-center justify-center w-16 h-16">🏅</div>
                 </div>
-               <div>
+               <div className="flex-1 overflow-hidden dashboard-card-content">
                  {loadingTeam ? (
                    <p className="text-gray-400">Cargando...</p>
                  ) : teamInfo.topContributors.length > 0 ? (
-                   <div className="space-y-3">
+                   <div className="space-y-2">
                      {teamInfo.topContributors.map((contributor, index) => (
                        <div key={index} className="flex justify-between items-center p-2 bg-gray-800 rounded">
-                         <div className="flex items-center space-x-2">
-                           <span className={`text-lg font-bold ${
+                         <div className="flex items-center space-x-2 min-w-0 flex-1">
+                           <span className={`text-lg font-bold flex-shrink-0 ${
                              index === 0 ? 'text-yellow-400' : 
                              index === 1 ? 'text-gray-300' : 
                              'text-orange-600'
                            }`}>
                              {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
                            </span>
-                           <span className="text-white font-medium">{contributor.name}</span>
+                           <span className="text-white font-medium text-sm truncate">{contributor.name}</span>
                          </div>
-                         <span className="text-green-400 font-bold">
+                         <span className="text-green-400 font-bold text-sm flex-shrink-0 ml-2">
                            ${contributor.amount.toLocaleString()}
                          </span>
                        </div>
@@ -486,29 +486,29 @@ const Dashboard = () => {
 
                                                                                                {/* Card: Top Asistencias */}
               <Link to="/players" className="block">
-                <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer h-64">
+                <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer min-h-64 flex flex-col dashboard-card">
                  <div className="flex items-center justify-between mb-3">
                    <h3 className="text-lg font-semibold text-white">Top Asistencias</h3>
                    <div className="text-4xl text-blue-400 flex items-center justify-center w-16 h-16">📋</div>
                  </div>
-                <div>
+                <div className="flex-1 overflow-hidden dashboard-card-content">
                   {loadingTeam ? (
                     <p className="text-gray-400">Cargando...</p>
                   ) : teamInfo.topAttendance.length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {teamInfo.topAttendance.map((attendance, index) => (
                         <div key={index} className="flex justify-between items-center p-2 bg-gray-800 rounded">
-                          <div className="flex items-center space-x-2">
-                            <span className={`text-lg font-bold ${
+                          <div className="flex items-center space-x-2 min-w-0 flex-1">
+                            <span className={`text-lg font-bold flex-shrink-0 ${
                               index === 0 ? 'text-yellow-400' : 
                               index === 1 ? 'text-gray-300' : 
                               'text-orange-600'
                             }`}>
                               {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
                             </span>
-                            <span className="text-white font-medium">{attendance.name}</span>
+                            <span className="text-white font-medium text-sm truncate">{attendance.name}</span>
                           </div>
-                          <span className="text-blue-400 font-bold">
+                          <span className="text-blue-400 font-bold text-sm flex-shrink-0 ml-2">
                             {attendance.count} partidos
                           </span>
                         </div>
@@ -523,26 +523,26 @@ const Dashboard = () => {
 
                                                                                                {/* Card: Estadísticas Generales */}
               <Link to="/schedule" className="block">
-                <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer h-64">
+                <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer min-h-64 flex flex-col dashboard-card">
                  <div className="flex items-center justify-between mb-3">
                    <h3 className="text-lg font-semibold text-white">Estadísticas Generales</h3>
                    <div className="text-4xl text-purple-400 flex items-center justify-center w-16 h-16">📈</div>
                  </div>
-                <div>
+                <div className="flex-1 flex flex-col justify-center dashboard-card-content">
                   {loadingTeam ? (
                     <p className="text-gray-400">Cargando...</p>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <div className="flex justify-between items-center p-2 bg-gray-800 rounded">
-                        <span className="text-white">Total Partidos:</span>
+                        <span className="text-white text-sm">Total Partidos:</span>
                         <span className="text-purple-400 font-bold">{teamInfo.totalGames}</span>
                       </div>
                       <div className="flex justify-between items-center p-2 bg-gray-800 rounded">
-                        <span className="text-white">Promedio Asistencia:</span>
-                        <span className="text-blue-400 font-bold">{teamInfo.averageAttendance} jugadores</span>
+                        <span className="text-white text-sm">Promedio Asistencia:</span>
+                        <span className="text-blue-400 font-bold text-sm">{teamInfo.averageAttendance} jugadores</span>
                       </div>
                       <div className="flex justify-between items-center p-2 bg-gray-800 rounded">
-                        <span className="text-white">Porcentaje Victoria:</span>
+                        <span className="text-white text-sm">Porcentaje Victoria:</span>
                         <span className="text-green-400 font-bold">
                           {teamInfo.totalGames > 0 ? Math.round((teamInfo.gameStats.wins / teamInfo.totalGames) * 100) : 0}%
                         </span>

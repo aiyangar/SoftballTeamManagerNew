@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { UserAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
 import PaymentForm from './PaymentForm';
+import Menu from './Menu';
+import { useTeam } from '../context/TeamContext';
 
 const Schedule = () => {
     const { session } = UserAuth();
-    const [teams, setTeams] = useState([]);
+    const { teams, selectedTeam, handleTeamChange: contextHandleTeamChange } = useTeam();
     const [players, setPlayers] = useState([]);
     const [games, setGames] = useState([]);
-    const [selectedTeam, setSelectedTeam] = useState('');
     const [newGame, setNewGame] = useState({
         equipo_contrario: '',
         fecha_partido: '',
@@ -22,11 +22,7 @@ const Schedule = () => {
     const [selectedGameForPayment, setSelectedGameForPayment] = useState(null);
     const [gameFinalizationStatus, setGameFinalizationStatus] = useState({});
 
-    useEffect(() => {
-        if (session) {
-            fetchTeams();
-        }
-    }, [session]);
+
 
     const fetchTeams = async () => {
         const { data, error } = await supabase
@@ -42,7 +38,7 @@ const Schedule = () => {
     };
 
     const handleTeamChange = async (teamId) => {
-        setSelectedTeam(teamId);
+        contextHandleTeamChange(teamId);
         if (teamId) {
             fetchPlayers(teamId);
             fetchGames(teamId);
@@ -229,9 +225,7 @@ const Schedule = () => {
         <div className="max-w-4xl mx-auto p-6">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold">Gestión de Partidos</h1>
-                <Link to="/dashboard" className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900">
-                    Volver al Dashboard
-                </Link>
+                <Menu teams={teams} />
             </div>
 
             {/* Team Selector */}

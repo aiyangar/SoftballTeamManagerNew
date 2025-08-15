@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { UserAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
+import Menu from './Menu'
+import { useTeam } from '../context/TeamContext'
 
 /**
  * Componente para la gestión de jugadores
@@ -24,8 +26,7 @@ const Players = () => {
     const [success, setSuccess] = useState(null)
     const [players, setPlayers] = useState([])
     const [loadingPlayers, setLoadingPlayers] = useState(true)
-    const [teams, setTeams] = useState([])
-    const [loadingTeams, setLoadingTeams] = useState(true)
+    const { teams } = useTeam()
     const [positions, setPositions] = useState([])
     const [loadingPositions, setLoadingPositions] = useState(true)
     const [showForm, setShowForm] = useState(false)
@@ -301,7 +302,6 @@ const Players = () => {
     useEffect(() => {
         if (session?.user?.id) {
             fetchPlayers(session.user.id)
-            fetchTeams(session.user.id)
             fetchPositions()
         }
     }, [session])
@@ -316,12 +316,7 @@ const Players = () => {
         <div className="max-w-4xl mx-auto p-6">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold text-white">Gestión de Jugadores</h1>
-                <Link
-                    to="/dashboard"
-                    className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900"
-                >
-                    Volver al Dashboard
-                </Link>
+                <Menu teams={teams} />
             </div>
 
             {/* Mensajes de error y éxito */}
@@ -541,14 +536,7 @@ const Players = () => {
                 </div>
             </div>
 
-            {/* Información del usuario */}
-            {session?.user && (
-                <div className="bg-neutral-700 p-4 rounded-lg mt-8">
-                    <h3 className="font-medium mb-2 text-white">Información del Usuario</h3>
-                    <p className="text-gray-300"><strong>Usuario:</strong> {session.user.email}</p>
-                    <p className="text-gray-300"><strong>ID de Usuario:</strong> {session.user.id}</p>
-                </div>
-            )}
+            
         </div>
     )
 }

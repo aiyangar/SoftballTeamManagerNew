@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { UserAuth } from '../context/AuthContext'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import Menu from './Menu'
+import { useTeam } from '../context/TeamContext'
 
 /**
  * Componente Dashboard - Página principal para usuarios autenticados
@@ -14,16 +16,13 @@ const Dashboard = () => {
   const navigate = useNavigate()
 
   // Estados para la información del equipo
-  const [teams, setTeams] = useState([])
-  const [selectedTeam, setSelectedTeam] = useState('')
+  const { teams, selectedTeam, loadingTeams } = useTeam()
   const [teamInfo, setTeamInfo] = useState({
     totalPlayers: 0,
     nextGame: null,
     totalRegistrationPaid: 0
   })
   const [loadingTeam, setLoadingTeam] = useState(false)
-  const [loadingTeams, setLoadingTeams] = useState(false)
-  const [showMenu, setShowMenu] = useState(false)
 
   // Logs para debugging
   console.log('Estado de sesión en Dashboard:', session)
@@ -31,11 +30,11 @@ const Dashboard = () => {
   console.log('Equipos cargados:', teams)
 
   useEffect(() => {
-    if (session && !loading) {
-      console.log('Iniciando carga de equipos...')
-      fetchTeams()
+    if (selectedTeam) {
+      console.log('Team selected, fetching team info...')
+      fetchTeamInfo(selectedTeam)
     }
-  }, [session, loading])
+  }, [selectedTeam])
 
   const fetchTeams = async () => {
     console.log('Fetching teams for user:', session?.user?.id)
@@ -58,14 +57,19 @@ const Dashboard = () => {
       if (data && data.length === 1) {
         console.log('Auto-selecting single team:', data[0].id)
         handleTeamChange(data[0].id)
+      } else if (data && data.length > 1 && !selectedTeam) {
+        // Si hay múltiples equipos y no hay uno seleccionado, mostrar mensaje
+        console.log('Multiple teams available, user needs to select one')
       }
     }
     setLoadingTeams(false)
   }
 
+  const { handleTeamChange: contextHandleTeamChange } = useTeam()
+
   const handleTeamChange = async (teamId) => {
     console.log('Team selected:', teamId)
-    setSelectedTeam(teamId)
+    contextHandleTeamChange(teamId)
     if (teamId) {
       setLoadingTeam(true)
       await fetchTeamInfo(teamId)
@@ -137,103 +141,29 @@ const Dashboard = () => {
     }
   }
 
-  /**
-   * Maneja el proceso de cerrar sesión
-   * Cierra la sesión y redirige al usuario a la página de signin
-   */
-  const handleSignOut = async () => {
-    try {
-      await signOut() // Cerrar sesión en Supabase
-      navigate('/signin') // Redirigir a la página de inicio de sesión
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error)
-    }
-  }
+
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        
-        {/* Menú desplegable */}
-        <div className="relative">
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors flex items-center space-x-2"
-          >
-            <span>Menú</span>
-            <svg className={`w-4 h-4 transition-transform ${showMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          
-          {showMenu && (
-            <div className="absolute right-0 mt-2 w-64 bg-neutral-900 border border-gray-600 rounded-lg shadow-lg z-50">
-              <div className="p-4">
-                <h3 className="text-white font-semibold mb-3">Navegación</h3>
-                
-                {/* Selector de Equipo (solo si hay más de un equipo) */}
-                {teams.length > 1 && (
-                  <div className="mb-4">
-                    <label className="block text-white text-sm mb-2">Seleccionar Equipo</label>
-                    <select
-                      value={selectedTeam}
-                      onChange={(e) => handleTeamChange(e.target.value)}
-                      className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white text-sm"
-                    >
-                      <option value="">Selecciona un equipo</option>
-                      {teams.map((team) => (
-                        <option key={team.id} value={team.id}>{team.nombre_equipo}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-                
-                {/* Enlaces de navegación */}
-                <div className="space-y-2">
-                  <Link 
-                    to="/teams"
-                    className="block w-full text-left px-3 py-2 text-white hover:bg-gray-800 rounded transition-colors"
-                    onClick={() => setShowMenu(false)}
-                  >
-                    🏟️ Gestionar Equipos
-                  </Link>
-                  <Link 
-                    to="/players"
-                    className="block w-full text-left px-3 py-2 text-white hover:bg-gray-800 rounded transition-colors"
-                    onClick={() => setShowMenu(false)}
-                  >
-                    👥 Gestionar Jugadores
-                  </Link>
-                  <Link
-                    to="/schedule"
-                    className="block w-full text-left px-3 py-2 text-white hover:bg-gray-800 rounded transition-colors"
-                    onClick={() => setShowMenu(false)}
-                  >
-                    ⚾ Gestionar Partidos
-                  </Link>
-                </div>
-                
-                <div className="border-t border-gray-600 mt-4 pt-4">
-                  <button 
-                    onClick={handleSignOut}
-                    className="block w-full text-left px-3 py-2 text-red-400 hover:bg-red-900 rounded transition-colors"
-                  >
-                    🚪 Cerrar Sesión
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+             <div className="flex justify-between items-center mb-8">
+         <h1 className="text-3xl font-bold">Dashboard</h1>
+         
+         <Menu />
+       </div>
 
-      {/* Mensaje de Bienvenida */}
-      <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8">
-        <h2 className="text-xl font-semibold text-white">
-          Bienvenido, {session?.user?.email}
-        </h2>
-      </div>
+             {/* Mensaje de Bienvenida */}
+       <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8">
+         <h2 className="text-xl font-semibold text-white">
+           Bienvenido, {session?.user?.email}
+         </h2>
+         {selectedTeam && (
+           <p className="text-gray-300 mt-2">
+             Trabajando con: <span className="font-semibold text-blue-400">
+               {teams.find(team => team.id === selectedTeam)?.nombre_equipo}
+             </span>
+           </p>
+         )}
+       </div>
 
       {/* Información del Equipo */}
       {selectedTeam && (
@@ -300,40 +230,39 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Mensaje cuando no hay equipo seleccionado */}
-      {!selectedTeam && !loadingTeams && (
-        <div className="bg-neutral-900 shadow rounded-lg p-8 text-center">
-          {teams.length === 0 ? (
-            <div>
-              <p className="text-gray-400 mb-4">No tienes equipos registrados</p>
-              <Link 
-                to="/teams"
-                className="inline-block px-6 py-3 bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
-              >
-                Crear Equipo
-              </Link>
-            </div>
-          ) : (
-            <div>
-              <p className="text-gray-400 mb-4">Selecciona un equipo para ver la información</p>
-              <button
-                onClick={() => setShowMenu(true)}
-                className="inline-block px-6 py-3 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
-              >
-                Seleccionar Equipo
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+             {/* Mensaje cuando no hay equipo seleccionado */}
+       {!selectedTeam && !loadingTeams && (
+         <div className="bg-neutral-900 shadow rounded-lg p-8 text-center">
+           {teams.length === 0 ? (
+             <div>
+               <p className="text-gray-400 mb-4">No tienes equipos registrados</p>
+               <Link 
+                 to="/teams"
+                 className="inline-block px-6 py-3 bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
+               >
+                 Crear Equipo
+               </Link>
+             </div>
+           ) : (
+             <div>
+               <p className="text-gray-400 mb-4">Tienes múltiples equipos. Selecciona uno para trabajar:</p>
+               <div className="space-y-3">
+                 {teams.map(team => (
+                   <button
+                     key={team.id}
+                     onClick={() => handleTeamChange(team.id)}
+                     className="block w-full px-6 py-3 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors"
+                   >
+                     {team.nombre_equipo}
+                   </button>
+                 ))}
+               </div>
+             </div>
+           )}
+         </div>
+       )}
 
-      {/* Overlay para cerrar menú */}
-      {showMenu && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setShowMenu(false)}
-        />
-      )}
+      
     </div>
   )
 }

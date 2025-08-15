@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { UserAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
+import Menu from './Menu'
+import { useTeam } from '../context/TeamContext'
 
 /**
  * Componente para la gestión de equipos
@@ -14,8 +16,7 @@ const Teams = () => {
     const [inscripcion, setInscripcion] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
-    const [teams, setTeams] = useState([]) // Estado para almacenar los equipos
-    const [loadingTeams, setLoadingTeams] = useState(true) // Estado de carga para equipos
+    const { teams } = useTeam() // Usar el contexto del equipo
 
     // Hook para navegación programática
     const navigate = useNavigate()
@@ -110,23 +111,7 @@ const Teams = () => {
         }
     }
 
-    // Effect para cargar los equipos cuando el componente se monta
-    useEffect(() => {
-        const loadTeams = async () => {
-            if (session?.user?.id) {
-                setLoadingTeams(true)
-                const result = await fetchTeams(session.user.id)
-                if (result.success) {
-                    setTeams(result.data)
-                } else {
-                    console.error('Error al cargar equipos:', result.error)
-                }
-                setLoadingTeams(false)
-            }
-        }
 
-        loadTeams()
-    }, [session?.user?.id])
 
     /**
      * Maneja el envío del formulario de creación de equipo
@@ -154,10 +139,7 @@ const Teams = () => {
                 setName('')
                 setInscripcion('')
                 // Recargar la lista de equipos
-                const teamsResult = await fetchTeams(session.user.id)
-                if (teamsResult.success) {
-                    setTeams(teamsResult.data)
-                }
+                // Los equipos se actualizan automáticamente a través del contexto
                 // Mostrar mensaje de éxito (podrías usar un toast aquí)
                 alert('Equipo creado exitosamente')
             } else {
@@ -176,12 +158,7 @@ const Teams = () => {
         <div className="max-w-4xl mx-auto p-6">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold">Gestión de Equipos</h1>
-                <Link 
-                    to="/dashboard"
-                    className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900"
-                >
-                    Volver al Dashboard
-                </Link>
+                <Menu teams={teams} />
             </div>
 
             {/* Formulario de creación de equipo */}

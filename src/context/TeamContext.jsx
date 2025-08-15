@@ -25,7 +25,7 @@ export const TeamProvider = ({ children }) => {
     try {
       const { data, error } = await supabase
         .from('equipos')
-        .select('id, nombre_equipo')
+        .select('*')
         .eq('propietario_id', session.user.id)
 
       if (error) {
@@ -33,12 +33,40 @@ export const TeamProvider = ({ children }) => {
         return
       }
 
-      setTeams(data || [])
+      // Obtener información adicional para cada equipo
+      const teamsWithInfo = await Promise.all(
+        data.map(async (team) => {
+          // Obtener cantidad de jugadores
+          const { data: players, error: playersError } = await supabase
+            .from('jugadores')
+            .select('id')
+            .eq('equipo_id', team.id)
+
+          // Obtener total pagado para registro (solo monto_inscripcion, no monto_umpire)
+          const { data: payments, error: paymentsError } = await supabase
+            .from('pagos')
+            .select('monto_inscripcion')
+            .eq('equipo_id', team.id)
+            .not('monto_inscripcion', 'is', null)
+
+          const totalPlayers = playersError ? 0 : (players?.length || 0)
+          const totalRegistrationPaid = paymentsError ? 0 : 
+            (payments?.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0) || 0)
+
+          return {
+            ...team,
+            totalPlayers,
+            totalRegistrationPaid
+          }
+        })
+      )
+
+      setTeams(teamsWithInfo || [])
       
       // Si solo hay un equipo, seleccionarlo automáticamente
-      if (data && data.length === 1) {
-        console.log('Auto-selecting single team:', data[0].id)
-        setSelectedTeam(data[0].id)
+      if (teamsWithInfo && teamsWithInfo.length === 1) {
+        console.log('Auto-selecting single team:', teamsWithInfo[0].id)
+        setSelectedTeam(teamsWithInfo[0].id)
       }
     } catch (error) {
       console.error('Error in fetchTeams:', error)

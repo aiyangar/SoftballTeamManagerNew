@@ -16,7 +16,7 @@ const Teams = () => {
     const [inscripcion, setInscripcion] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
-    const { teams } = useTeam() // Usar el contexto del equipo
+    const { teams, loadingTeams, fetchTeams } = useTeam() // Usar el contexto del equipo
 
     // Hook para navegación programática
     const navigate = useNavigate()
@@ -24,59 +24,7 @@ const Teams = () => {
     // Obtener sesión del usuario autenticado
     const { session } = UserAuth()
 
-    /**
-     * Obtiene los equipos del usuario autenticado con información adicional
-     * @param {string} propietarioId - ID del usuario propietario
-     * @returns {Object} - Resultado de la operación
-     */
-    const fetchTeams = async (propietarioId) => {
-        try {
-            const { data, error } = await supabase
-                .from('equipos')
-                .select('*')
-                .eq('propietario_id', propietarioId)
-                .order('id', { ascending: false })
 
-            if (error) {
-                console.error('Error al obtener equipos:', error)
-                return { success: false, error: error.message }
-            }
-
-            // Obtener información adicional para cada equipo
-            const teamsWithInfo = await Promise.all(
-                data.map(async (team) => {
-                    // Obtener cantidad de jugadores
-                    const { data: players, error: playersError } = await supabase
-                        .from('jugadores')
-                        .select('id')
-                        .eq('equipo_id', team.id)
-
-                                         // Obtener total pagado para registro (solo monto_inscripcion, no monto_umpire)
-                     const { data: payments, error: paymentsError } = await supabase
-                         .from('pagos')
-                         .select('monto_inscripcion')
-                         .eq('equipo_id', team.id)
-                         .not('monto_inscripcion', 'is', null)
-
-                    const totalPlayers = playersError ? 0 : (players?.length || 0)
-                    const totalRegistrationPaid = paymentsError ? 0 : 
-                        (payments?.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0) || 0)
-
-                    return {
-                        ...team,
-                        totalPlayers,
-                        totalRegistrationPaid
-                    }
-                })
-            )
-
-            console.log('Equipos obtenidos con información:', teamsWithInfo)
-            return { success: true, data: teamsWithInfo }
-        } catch (error) {
-            console.error('Error inesperado al obtener equipos:', error)
-            return { success: false, error: error.message }
-        }
-    }
 
     /**
      * Crea un nuevo equipo en la base de datos
@@ -139,7 +87,7 @@ const Teams = () => {
                 setName('')
                 setInscripcion('')
                 // Recargar la lista de equipos
-                // Los equipos se actualizan automáticamente a través del contexto
+                await fetchTeams()
                 // Mostrar mensaje de éxito (podrías usar un toast aquí)
                 alert('Equipo creado exitosamente')
             } else {
@@ -158,7 +106,7 @@ const Teams = () => {
         <div className="max-w-4xl mx-auto p-6">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold">Gestión de Equipos</h1>
-                <Menu teams={teams} />
+                                 <Menu />
             </div>
 
             {/* Formulario de creación de equipo */}
@@ -235,15 +183,15 @@ const Teams = () => {
                                          <div className="grid grid-cols-2 gap-4 text-sm">
                                              <div className="flex items-center space-x-2">
                                                  <span className="text-blue-400">👥</span>
-                                                 <span className="text-gray-300">
-                                                     <span className="font-semibold">{team.totalPlayers}</span> jugadores
-                                                 </span>
+                                                                                                   <span className="text-gray-300">
+                                                      <span className="font-semibold">{team.totalPlayers || 0}</span> jugadores
+                                                  </span>
                                              </div>
                                              <div className="flex items-center space-x-2">
                                                  <span className="text-green-400">💰</span>
-                                                 <span className="text-gray-300">
-                                                     <span className="font-semibold">${team.totalRegistrationPaid.toLocaleString()}</span> pagado
-                                                 </span>
+                                                                                                   <span className="text-gray-300">
+                                                      <span className="font-semibold">${(team.totalRegistrationPaid || 0).toLocaleString()}</span> pagado
+                                                  </span>
                                              </div>
                                          </div>
                                      </div>

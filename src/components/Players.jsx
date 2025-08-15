@@ -26,7 +26,7 @@ const Players = () => {
     const [success, setSuccess] = useState(null)
     const [players, setPlayers] = useState([])
     const [loadingPlayers, setLoadingPlayers] = useState(true)
-    const { teams } = useTeam()
+    const { teams, selectedTeam } = useTeam()
     const [positions, setPositions] = useState([])
     const [loadingPositions, setLoadingPositions] = useState(true)
     const [showForm, setShowForm] = useState(false)
@@ -114,17 +114,36 @@ const Players = () => {
             const { data, error } = await supabase
                 .from('posiciones')
                 .select('*')
-                .order('nombre_posicion', { ascending: true })
 
             if (error) {
                 console.error('Error al obtener posiciones:', error)
                 return { success: false, error: error.message }
             }
 
-            console.log('Posiciones obtenidas:', data)
-            setPositions(data)
+            // Ordenar posiciones según el orden específico del béisbol
+            const orderMap = {
+                'Pitcher': 1,
+                'Catcher': 2,
+                '1B': 3,
+                '2B': 4,
+                '3B': 5,
+                'SS': 6,
+                'LF': 7,
+                'CF': 8,
+                'RF': 9,
+                'SF': 10
+            }
+
+            const sortedPositions = data.sort((a, b) => {
+                const orderA = orderMap[a.nombre_posicion] || 999
+                const orderB = orderMap[b.nombre_posicion] || 999
+                return orderA - orderB
+            })
+
+            console.log('Posiciones obtenidas y ordenadas:', sortedPositions)
+            setPositions(sortedPositions)
             setLoadingPositions(false)
-            return { success: true, data: data }
+            return { success: true, data: sortedPositions }
         } catch (error) {
             console.error('Error inesperado al obtener posiciones:', error)
             return { success: false, error: error.message }
@@ -250,7 +269,8 @@ const Players = () => {
         setNumero('')
         setTelefono('')
         setEmail('')
-        setEquipoId('')
+        // Mantener el equipo seleccionado actualmente
+        setEquipoId(selectedTeam || '')
         setSelectedPositions([])
         setError(null)
         setSuccess(null)
@@ -306,6 +326,13 @@ const Players = () => {
         }
     }, [session])
 
+    // Establecer el equipo seleccionado por defecto cuando cambie
+    useEffect(() => {
+        if (selectedTeam) {
+            setEquipoId(selectedTeam)
+        }
+    }, [selectedTeam])
+
     // Si no hay sesión, redirigir al login
     if (!session) {
         navigate('/signin')
@@ -316,7 +343,7 @@ const Players = () => {
         <div className="max-w-4xl mx-auto p-6">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold text-white">Gestión de Jugadores</h1>
-                <Menu teams={teams} />
+                                 <Menu />
             </div>
 
             {/* Mensajes de error y éxito */}

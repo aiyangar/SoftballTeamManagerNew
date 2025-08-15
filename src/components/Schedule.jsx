@@ -13,7 +13,8 @@ const Schedule = () => {
     const [newGame, setNewGame] = useState({
         equipo_contrario: '',
         fecha_partido: '',
-        lugar: ''
+        lugar: '',
+        umpire: 550
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -21,6 +22,7 @@ const Schedule = () => {
     const [showPaymentForm, setShowPaymentForm] = useState(false);
     const [selectedGameForPayment, setSelectedGameForPayment] = useState(null);
     const [gameFinalizationStatus, setGameFinalizationStatus] = useState({});
+    const [showGameForm, setShowGameForm] = useState(false);
 
 
 
@@ -92,7 +94,10 @@ const Schedule = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setNewGame({ ...newGame, [name]: value });
+        setNewGame({ 
+            ...newGame, 
+            [name]: name === 'umpire' ? parseFloat(value) || 0 : value 
+        });
     };
 
     const handleCreateGame = async (e) => {
@@ -113,7 +118,8 @@ const Schedule = () => {
             setError(error.message);
         } else {
             setGames([data[0], ...games]);
-            setNewGame({ equipo_contrario: '', fecha_partido: '', lugar: '' });
+            setNewGame({ equipo_contrario: '', fecha_partido: '', lugar: '', umpire: 550 });
+            setShowGameForm(false); // Ocultar el formulario después de crear el partido
         }
         setLoading(false);
     };
@@ -221,32 +227,42 @@ const Schedule = () => {
         }
     };
 
+    // Cargar datos cuando cambia el equipo seleccionado
+    useEffect(() => {
+        if (selectedTeam) {
+            fetchPlayers(selectedTeam);
+            fetchGames(selectedTeam);
+        } else {
+            setPlayers([]);
+            setGames([]);
+        }
+    }, [selectedTeam]);
+
     return (
         <div className="max-w-4xl mx-auto p-6">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold">Gestión de Partidos</h1>
-                <Menu teams={teams} />
+                                 <Menu />
             </div>
 
-            {/* Team Selector */}
-            <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8">
-                <h2 className="text-xl font-semibold mb-4 text-white">Seleccionar Equipo</h2>
-                <select
-                    value={selectedTeam}
-                    onChange={(e) => handleTeamChange(e.target.value)}
-                    className="w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white"
-                >
-                    <option value="">Selecciona un equipo</option>
-                    {teams.map((team) => (
-                        <option key={team.id} value={team.id}>{team.nombre_equipo}</option>
-                    ))}
-                </select>
-            </div>
-
-            {selectedTeam && (
+            {selectedTeam ? (
                 <>
+                    {/* Botón para mostrar/ocultar formulario */}
+                    <div className="mb-8">
+                        <button
+                            onClick={() => setShowGameForm(!showGameForm)}
+                            className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            <span>{showGameForm ? 'Cancelar' : 'Agregar Partido'}</span>
+                        </button>
+                    </div>
+
                     {/* Game Creation Form */}
-                    <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8">
+                    {showGameForm && (
+                        <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8">
                         <h2 className="text-xl font-semibold mb-4 text-white">Registrar Nuevo Partido</h2>
                         <form onSubmit={handleCreateGame} className="space-y-4">
                             <input
@@ -275,12 +291,37 @@ const Schedule = () => {
                                 className="w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white"
                                 required
                             />
-                            <button type="submit" disabled={loading} className="w-full mt-6 border border-gray-600 rounded-md p-3 bg-gray-800 text-white hover:bg-gray-900">
-                                {loading ? 'Registrando...' : 'Registrar Partido'}
-                            </button>
-                            {error && <p className="text-red-500 mt-2">{error}</p>}
-                        </form>
-                    </div>
+                            <input
+                                type="number"
+                                name="umpire"
+                                placeholder="Pago al Umpire"
+                                value={newGame.umpire}
+                                onChange={handleInputChange}
+                                className="w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white"
+                                min="0"
+                                step="0.01"
+                                required
+                            />
+                                                         <div className="flex space-x-4">
+                                 <button 
+                                     type="button"
+                                     onClick={() => setShowGameForm(false)}
+                                     className="flex-1 px-4 py-3 border border-gray-600 text-gray-300 rounded hover:bg-gray-800 transition-colors"
+                                 >
+                                     Cancelar
+                                 </button>
+                                 <button 
+                                     type="submit" 
+                                     disabled={loading} 
+                                     className="flex-1 px-4 py-3 bg-gray-800 text-white rounded hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                                 >
+                                     {loading ? 'Registrando...' : 'Registrar Partido'}
+                                 </button>
+                             </div>
+                             {error && <p className="text-red-500 mt-2">{error}</p>}
+                         </form>
+                     </div>
+                     )}
 
                     {/* Games List */}
                     <div className="bg-neutral-900 shadow rounded-lg p-6">
@@ -375,6 +416,11 @@ const Schedule = () => {
                         </div>
                     </div>
                 </>
+            ) : (
+                <div className="bg-neutral-900 shadow rounded-lg p-8 text-center">
+                    <p className="text-gray-400 mb-4">No hay equipo seleccionado</p>
+                    <p className="text-sm text-gray-500">Selecciona un equipo desde el Dashboard para gestionar partidos</p>
+                </div>
             )}
 
             {/* Payment Form Modal */}

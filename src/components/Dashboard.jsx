@@ -20,7 +20,14 @@ const Dashboard = () => {
   const [teamInfo, setTeamInfo] = useState({
     totalPlayers: 0,
     nextGame: null,
-    totalRegistrationPaid: 0
+    totalRegistrationPaid: 0,
+    lastGame: null,
+    gameStats: {
+      wins: 0,
+      losses: 0,
+      ties: 0
+    },
+    topContributors: []
   })
   const [loadingTeam, setLoadingTeam] = useState(false)
 
@@ -75,11 +82,18 @@ const Dashboard = () => {
       await fetchTeamInfo(teamId)
       setLoadingTeam(false)
     } else {
-      setTeamInfo({
-        totalPlayers: 0,
-        nextGame: null,
-        totalRegistrationPaid: 0
-      })
+             setTeamInfo({
+         totalPlayers: 0,
+         nextGame: null,
+         totalRegistrationPaid: 0,
+         lastGame: null,
+         gameStats: {
+           wins: 0,
+           losses: 0,
+           ties: 0
+         },
+         topContributors: []
+       })
     }
   }
 
@@ -115,6 +129,42 @@ const Dashboard = () => {
 
       console.log('Next game loaded:', nextGame)
 
+      // Obtener último partido jugado
+      const { data: lastGame, error: lastGameError } = await supabase
+        .from('partidos')
+        .select('id, equipo_contrario, fecha_partido, lugar, carreras_equipo_local, carreras_equipo_contrario, resultado, finalizado')
+        .eq('equipo_id', teamId)
+        .eq('finalizado', true)
+        .order('fecha_partido', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (lastGameError && lastGameError.code !== 'PGRST116') {
+        console.error('Error fetching last game:', lastGameError)
+      }
+
+      console.log('Last game loaded:', lastGame)
+
+      // Obtener estadísticas de partidos
+      const { data: allGames, error: statsError } = await supabase
+        .from('partidos')
+        .select('resultado')
+        .eq('equipo_id', teamId)
+        .eq('finalizado', true)
+
+      if (statsError) {
+        console.error('Error fetching game stats:', statsError)
+      }
+
+      console.log('All games loaded:', allGames)
+
+      // Calcular estadísticas
+      const gameStats = {
+        wins: allGames?.filter(game => game.resultado === 'Victoria').length || 0,
+        losses: allGames?.filter(game => game.resultado === 'Derrota').length || 0,
+        ties: allGames?.filter(game => game.resultado === 'Empate').length || 0
+      }
+
       // Obtener total pagado para registro del equipo
       const { data: payments, error: paymentsError } = await supabase
         .from('pagos')
@@ -128,13 +178,49 @@ const Dashboard = () => {
 
       console.log('Payments loaded:', payments)
 
-      const totalRegistrationPaid = payments.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0)
+             const totalRegistrationPaid = payments.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0)
 
-      setTeamInfo({
-        totalPlayers: players.length,
-        nextGame: nextGame || null,
-        totalRegistrationPaid
-      })
+       // Obtener los 3 jugadores que más han aportado
+       const { data: contributors, error: contributorsError } = await supabase
+         .from('pagos')
+         .select(`
+           monto_inscripcion,
+           jugadores!inner(nombre)
+         `)
+         .eq('equipo_id', teamId)
+         .not('monto_inscripcion', 'is', null)
+         .gt('monto_inscripcion', 0)
+
+       if (contributorsError) {
+         console.error('Error fetching contributors:', contributorsError)
+       }
+
+       console.log('Contributors loaded:', contributors)
+
+       // Agrupar por jugador y sumar sus aportaciones
+       const playerContributions = {}
+       contributors?.forEach(payment => {
+         const playerName = payment.jugadores.nombre
+         if (!playerContributions[playerName]) {
+           playerContributions[playerName] = 0
+         }
+         playerContributions[playerName] += payment.monto_inscripcion || 0
+       })
+
+       // Ordenar por cantidad y tomar los top 3
+       const topContributors = Object.entries(playerContributions)
+         .map(([name, amount]) => ({ name, amount }))
+         .sort((a, b) => b.amount - a.amount)
+         .slice(0, 3)
+
+       setTeamInfo({
+         totalPlayers: players.length,
+         nextGame: nextGame || null,
+         totalRegistrationPaid,
+         lastGame: lastGame || null,
+         gameStats,
+         topContributors
+       })
 
     } catch (error) {
       console.error('Error fetching team info:', error)
@@ -167,7 +253,7 @@ const Dashboard = () => {
 
       {/* Información del Equipo */}
       {selectedTeam && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Card: Total de Jugadores */}
           <div className="bg-neutral-900 shadow rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
@@ -224,6 +310,111 @@ const Dashboard = () => {
                 <p className="text-gray-400">Cargando...</p>
               ) : (
                 <p className="text-3xl font-bold text-green-400">${teamInfo.totalRegistrationPaid.toLocaleString()}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Card: Último Partido */}
+          <div className="bg-neutral-900 shadow rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">Último Partido</h3>
+              <div className="text-4xl text-yellow-400 flex items-center justify-center w-16 h-16">🏆</div>
+            </div>
+            <div>
+              {loadingTeam ? (
+                <p className="text-gray-400">Cargando...</p>
+              ) : teamInfo.lastGame ? (
+                <div className="space-y-2">
+                  <p className="text-white">
+                    <span className="font-semibold">Oponente:</span> {teamInfo.lastGame.equipo_contrario}
+                  </p>
+                  <p className="text-white">
+                    <span className="font-semibold">Fecha:</span> {new Date(teamInfo.lastGame.fecha_partido).toLocaleDateString()}
+                  </p>
+                  <p className="text-white">
+                    <span className="font-semibold">Marcador:</span> {teamInfo.lastGame.carreras_equipo_local || 0} - {teamInfo.lastGame.carreras_equipo_contrario || 0}
+                  </p>
+                  <p className={`font-semibold ${
+                    teamInfo.lastGame.resultado === 'Victoria' ? 'text-green-400' :
+                    teamInfo.lastGame.resultado === 'Derrota' ? 'text-red-400' :
+                    'text-yellow-400'
+                  }`}>
+                    {teamInfo.lastGame.resultado}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-gray-400">No hay partidos jugados</p>
+              )}
+            </div>
+          </div>
+
+          {/* Card: Historial de Resultados */}
+          <div className="bg-neutral-900 shadow rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">Historial de Resultados</h3>
+              <div className="text-4xl text-purple-400 flex items-center justify-center w-16 h-16">📊</div>
+            </div>
+            <div>
+              {loadingTeam ? (
+                <p className="text-gray-400">Cargando...</p>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-white">Victorias:</span>
+                    <span className="text-green-400 font-bold">{teamInfo.gameStats.wins}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white">Derrotas:</span>
+                    <span className="text-red-400 font-bold">{teamInfo.gameStats.losses}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white">Empates:</span>
+                    <span className="text-yellow-400 font-bold">{teamInfo.gameStats.ties}</span>
+                  </div>
+                  <div className="border-t border-gray-600 pt-2 mt-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white font-semibold">Total:</span>
+                      <span className="text-blue-400 font-bold">
+                        {teamInfo.gameStats.wins + teamInfo.gameStats.losses + teamInfo.gameStats.ties}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Card: Top Contribuyentes */}
+          <div className="bg-neutral-900 shadow rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">Top Contribuyentes</h3>
+              <div className="text-4xl text-orange-400 flex items-center justify-center w-16 h-16">🏅</div>
+            </div>
+            <div>
+              {loadingTeam ? (
+                <p className="text-gray-400">Cargando...</p>
+              ) : teamInfo.topContributors.length > 0 ? (
+                <div className="space-y-3">
+                  {teamInfo.topContributors.map((contributor, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-gray-800 rounded">
+                      <div className="flex items-center space-x-2">
+                        <span className={`text-lg font-bold ${
+                          index === 0 ? 'text-yellow-400' : 
+                          index === 1 ? 'text-gray-300' : 
+                          'text-orange-600'
+                        }`}>
+                          {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                        </span>
+                        <span className="text-white font-medium">{contributor.name}</span>
+                      </div>
+                      <span className="text-green-400 font-bold">
+                        ${contributor.amount.toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400">No hay contribuciones registradas</p>
               )}
             </div>
           </div>

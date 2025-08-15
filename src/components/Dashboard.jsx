@@ -32,7 +32,10 @@ const Dashboard = () => {
       losses: 0,
       ties: 0
     },
-    topContributors: []
+    topContributors: [],
+    topAttendance: [],
+    totalGames: 0,
+    averageAttendance: 0
   })
   const [loadingTeam, setLoadingTeam] = useState(false)
 
@@ -74,20 +77,23 @@ const Dashboard = () => {
       await fetchTeamInfo(teamId)
       setLoadingTeam(false)
     } else {
-             setTeamInfo({
-         totalPlayers: 0,
-         nextGame: null,
-         totalRegistrationPaid: 0,
-         totalRegistrationRequired: 0,
-         remainingRegistration: 0,
-         lastGame: null,
-         gameStats: {
-           wins: 0,
-           losses: 0,
-           ties: 0
-         },
-         topContributors: []
-       })
+                          setTeamInfo({
+          totalPlayers: 0,
+          nextGame: null,
+          totalRegistrationPaid: 0,
+          totalRegistrationRequired: 0,
+          remainingRegistration: 0,
+          lastGame: null,
+          gameStats: {
+            wins: 0,
+            losses: 0,
+            ties: 0
+          },
+          topContributors: [],
+          topAttendance: [],
+          totalGames: 0,
+          averageAttendance: 0
+        })
     }
   }
 
@@ -202,22 +208,57 @@ const Dashboard = () => {
          playerContributions[playerName] += payment.monto_inscripcion || 0
        })
 
-       // Ordenar por cantidad y tomar los top 3
-       const topContributors = Object.entries(playerContributions)
-         .map(([name, amount]) => ({ name, amount }))
-         .sort((a, b) => b.amount - a.amount)
-         .slice(0, 3)
+               // Ordenar por cantidad y tomar los top 3
+        const topContributors = Object.entries(playerContributions)
+          .map(([name, amount]) => ({ name, amount }))
+          .sort((a, b) => b.amount - a.amount)
+          .slice(0, 3)
 
-       setTeamInfo({
-         totalPlayers: players.length,
-         nextGame: nextGame || null,
-         totalRegistrationPaid,
-         totalRegistrationRequired,
-         remainingRegistration,
-         lastGame: lastGame || null,
-         gameStats,
-         topContributors
-       })
+        // Obtener top 3 jugadores con más asistencias
+        const { data: attendanceData, error: attendanceError } = await supabase
+          .from('asistencia_partidos')
+          .select(`
+            jugadores!inner(nombre)
+          `)
+          .eq('equipo_id', teamId)
+
+        if (attendanceError) {
+          console.error('Error fetching attendance data:', attendanceError)
+        }
+
+        // Contar asistencias por jugador
+        const playerAttendance = {}
+        attendanceData?.forEach(attendance => {
+          const playerName = attendance.jugadores.nombre
+          if (!playerAttendance[playerName]) {
+            playerAttendance[playerName] = 0
+          }
+          playerAttendance[playerName] += 1
+        })
+
+        // Ordenar por asistencias y tomar los top 3
+        const topAttendance = Object.entries(playerAttendance)
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 3)
+
+        // Calcular estadísticas adicionales
+        const totalGames = allGames?.length || 0
+        const averageAttendance = totalGames > 0 ? Math.round((attendanceData?.length || 0) / totalGames) : 0
+
+        setTeamInfo({
+          totalPlayers: players.length,
+          nextGame: nextGame || null,
+          totalRegistrationPaid,
+          totalRegistrationRequired,
+          remainingRegistration,
+          lastGame: lastGame || null,
+          gameStats,
+          topContributors,
+          topAttendance,
+          totalGames,
+          averageAttendance
+        })
 
     } catch (error) {
       console.error('Error fetching team info:', error)
@@ -250,7 +291,7 @@ const Dashboard = () => {
 
       {/* Información del Equipo */}
       {selectedTeam && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {/* Card: Total de Jugadores */}
           <div className="bg-neutral-900 shadow rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
@@ -389,40 +430,105 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Card: Top Contribuyentes */}
-          <div className="bg-neutral-900 shadow rounded-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Top Contribuyentes</h3>
-              <div className="text-4xl text-orange-400 flex items-center justify-center w-16 h-16">🏅</div>
-            </div>
-            <div>
-              {loadingTeam ? (
-                <p className="text-gray-400">Cargando...</p>
-              ) : teamInfo.topContributors.length > 0 ? (
-                <div className="space-y-3">
-                  {teamInfo.topContributors.map((contributor, index) => (
-                    <div key={index} className="flex justify-between items-center p-2 bg-gray-800 rounded">
-                      <div className="flex items-center space-x-2">
-                        <span className={`text-lg font-bold ${
-                          index === 0 ? 'text-yellow-400' : 
-                          index === 1 ? 'text-gray-300' : 
-                          'text-orange-600'
-                        }`}>
-                          {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
-                        </span>
-                        <span className="text-white font-medium">{contributor.name}</span>
-                      </div>
-                      <span className="text-green-400 font-bold">
-                        ${contributor.amount.toLocaleString()}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-400">No hay contribuciones registradas</p>
-              )}
-            </div>
-          </div>
+                     {/* Card: Top Contribuyentes */}
+           <div className="bg-neutral-900 shadow rounded-lg p-6">
+             <div className="flex items-center justify-between mb-4">
+               <h3 className="text-lg font-semibold text-white">Top Contribuyentes</h3>
+               <div className="text-4xl text-orange-400 flex items-center justify-center w-16 h-16">🏅</div>
+             </div>
+             <div>
+               {loadingTeam ? (
+                 <p className="text-gray-400">Cargando...</p>
+               ) : teamInfo.topContributors.length > 0 ? (
+                 <div className="space-y-3">
+                   {teamInfo.topContributors.map((contributor, index) => (
+                     <div key={index} className="flex justify-between items-center p-2 bg-gray-800 rounded">
+                       <div className="flex items-center space-x-2">
+                         <span className={`text-lg font-bold ${
+                           index === 0 ? 'text-yellow-400' : 
+                           index === 1 ? 'text-gray-300' : 
+                           'text-orange-600'
+                         }`}>
+                           {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                         </span>
+                         <span className="text-white font-medium">{contributor.name}</span>
+                       </div>
+                       <span className="text-green-400 font-bold">
+                         ${contributor.amount.toLocaleString()}
+                       </span>
+                     </div>
+                   ))}
+                 </div>
+               ) : (
+                 <p className="text-gray-400">No hay contribuciones registradas</p>
+               )}
+             </div>
+           </div>
+
+           {/* Card: Top Asistencias */}
+           <div className="bg-neutral-900 shadow rounded-lg p-6">
+             <div className="flex items-center justify-between mb-4">
+               <h3 className="text-lg font-semibold text-white">Top Asistencias</h3>
+               <div className="text-4xl text-blue-400 flex items-center justify-center w-16 h-16">📋</div>
+             </div>
+             <div>
+               {loadingTeam ? (
+                 <p className="text-gray-400">Cargando...</p>
+               ) : teamInfo.topAttendance.length > 0 ? (
+                 <div className="space-y-3">
+                   {teamInfo.topAttendance.map((attendance, index) => (
+                     <div key={index} className="flex justify-between items-center p-2 bg-gray-800 rounded">
+                       <div className="flex items-center space-x-2">
+                         <span className={`text-lg font-bold ${
+                           index === 0 ? 'text-yellow-400' : 
+                           index === 1 ? 'text-gray-300' : 
+                           'text-orange-600'
+                         }`}>
+                           {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                         </span>
+                         <span className="text-white font-medium">{attendance.name}</span>
+                       </div>
+                       <span className="text-blue-400 font-bold">
+                         {attendance.count} partidos
+                       </span>
+                     </div>
+                   ))}
+                 </div>
+               ) : (
+                 <p className="text-gray-400">No hay asistencias registradas</p>
+               )}
+             </div>
+           </div>
+
+           {/* Card: Estadísticas Generales */}
+           <div className="bg-neutral-900 shadow rounded-lg p-6">
+             <div className="flex items-center justify-between mb-4">
+               <h3 className="text-lg font-semibold text-white">Estadísticas Generales</h3>
+               <div className="text-4xl text-purple-400 flex items-center justify-center w-16 h-16">📈</div>
+             </div>
+             <div>
+               {loadingTeam ? (
+                 <p className="text-gray-400">Cargando...</p>
+               ) : (
+                 <div className="space-y-3">
+                   <div className="flex justify-between items-center p-2 bg-gray-800 rounded">
+                     <span className="text-white">Total Partidos:</span>
+                     <span className="text-purple-400 font-bold">{teamInfo.totalGames}</span>
+                   </div>
+                   <div className="flex justify-between items-center p-2 bg-gray-800 rounded">
+                     <span className="text-white">Promedio Asistencia:</span>
+                     <span className="text-blue-400 font-bold">{teamInfo.averageAttendance} jugadores</span>
+                   </div>
+                   <div className="flex justify-between items-center p-2 bg-gray-800 rounded">
+                     <span className="text-white">Porcentaje Victoria:</span>
+                     <span className="text-green-400 font-bold">
+                       {teamInfo.totalGames > 0 ? Math.round((teamInfo.gameStats.wins / teamInfo.totalGames) * 100) : 0}%
+                     </span>
+                   </div>
+                 </div>
+               )}
+             </div>
+           </div>
         </div>
       )}
 

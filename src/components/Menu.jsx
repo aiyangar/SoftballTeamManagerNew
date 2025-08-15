@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { UserAuth } from '../context/AuthContext'
 import { useTeam } from '../context/TeamContext'
 
@@ -27,15 +27,35 @@ const Menu = () => {
         }
     }
 
+    /**
+     * Maneja la navegación al Dashboard
+     */
+    const handleGoToDashboard = () => {
+        navigate('/dashboard')
+    }
+
     return (
         <div className="flex items-center space-x-4">
+            {/* Botón fijo para ir al Dashboard */}
+            <button 
+                onClick={handleGoToDashboard}
+                className="!px-4 !py-2 !bg-black !text-white !rounded hover:!bg-gray-900 !transition-colors !flex !items-center !space-x-2"
+                title="Ir al Dashboard"
+                style={{ backgroundColor: '#000000', color: 'white' }}
+            >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'white' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+            </button>
+
             {/* Menú desplegable */}
             <div className="relative">
                 <button
                     onClick={() => setShowMenu(!showMenu)}
-                    className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors flex items-center space-x-2"
+                    className="!px-4 !py-2 !bg-black !text-white !rounded hover:!bg-gray-900 !transition-colors !flex !items-center !space-x-2"
+                    style={{ backgroundColor: '#000000', color: 'white' }}
                 >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'white' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
@@ -62,15 +82,17 @@ const Menu = () => {
                                 </div>
                             )}
                             
-                            {/* Enlaces de navegación */}
-                            <div className="space-y-2">
-                                <Link 
-                                    to="/dashboard"
-                                    className="block w-full text-left px-3 py-2 text-white hover:bg-gray-800 rounded transition-colors"
-                                    onClick={() => setShowMenu(false)}
-                                >
-                                    🏠 Dashboard
-                                </Link>
+                                                         {/* Enlaces de navegación */}
+                             <div className="space-y-2">
+                                 <button 
+                                     onClick={() => {
+                                         navigate('/dashboard')
+                                         setShowMenu(false)
+                                     }}
+                                     className="block w-full text-left px-3 py-2 text-white hover:bg-gray-800 rounded transition-colors"
+                                 >
+                                     🏠 Dashboard
+                                 </button>
                                 <Link 
                                     to="/teams"
                                     className="block w-full text-left px-3 py-2 text-white hover:bg-gray-800 rounded transition-colors"

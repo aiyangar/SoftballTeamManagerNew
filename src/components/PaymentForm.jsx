@@ -152,9 +152,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
             setShowUpdateWarning(false);
             // Refresh existing payments
             fetchExistingPayments();
-            if (onPaymentComplete) {
-                onPaymentComplete();
-            }
+            // No llamar a onPaymentComplete para mantener el modal abierto
         }
         
         setLoading(false);

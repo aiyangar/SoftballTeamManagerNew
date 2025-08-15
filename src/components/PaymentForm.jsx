@@ -123,8 +123,15 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
             return;
         }
 
+        // Verificar que al menos se ingrese un monto, pero permitir solo inscripción si el umpire está completo
         if (!montoUmpire && !montoRegistro) {
             setError('Por favor, ingresa al menos un monto.');
+            return;
+        }
+
+        // Si el umpire está completo, solo permitir inscripción
+        if (paymentTotals.totalUmpire >= paymentTotals.umpireTarget && montoUmpire && parseFloat(montoUmpire) > 0) {
+            setError('El objetivo del umpire ya ha sido alcanzado. Solo puedes registrar inscripción.');
             return;
         }
 
@@ -142,7 +149,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
             partido_id: gameId,
             equipo_id: teamId,
             fecha_pago: new Date().toISOString(),
-            monto_umpire: montoUmpire ? parseFloat(montoUmpire) : 0,
+            monto_umpire: (montoUmpire && paymentTotals.totalUmpire < paymentTotals.umpireTarget) ? parseFloat(montoUmpire) : 0,
             monto_inscripcion: montoRegistro ? parseFloat(montoRegistro) : 0,
             concepto: `Pago partido vs ${gameInfo?.equipo_contrario || 'Equipo contrario'}`,
             metodo_pago: metodoPago
@@ -218,14 +225,21 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                                          ${paymentTotals.totalUmpire.toLocaleString()} / ${paymentTotals.umpireTarget.toLocaleString()}
                                      </span>
                                  </div>
-                                 <div className="w-full bg-gray-700 rounded-full h-2">
-                                     <div 
-                                         className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                                         style={{ 
-                                             width: `${Math.min((paymentTotals.totalUmpire / paymentTotals.umpireTarget) * 100, 100)}%` 
-                                         }}
-                                     ></div>
-                                 </div>
+                                                                   <div className="w-full bg-gray-700 rounded-full h-2">
+                                      <div 
+                                          className="h-2 rounded-full transition-all duration-300"
+                                          style={{ 
+                                              width: `${Math.min((paymentTotals.totalUmpire / paymentTotals.umpireTarget) * 100, 100)}%`,
+                                                                                         backgroundColor: paymentTotals.totalUmpire >= paymentTotals.umpireTarget 
+                                                   ? '#10B981' // Verde cuando se alcanza el objetivo
+                                                   : paymentTotals.totalUmpire >= paymentTotals.umpireTarget * 0.8
+                                                   ? '#F59E0B' // Amarillo cuando está cerca (80%+)
+                                                   : paymentTotals.totalUmpire >= paymentTotals.umpireTarget * 0.5
+                                                   ? '#F97316' // Naranja cuando está a la mitad (50%+)
+                                                   : '#DC2626' // Rojo por defecto
+                                          }}
+                                      ></div>
+                                  </div>
                                  <div className="flex justify-between text-xs mt-1">
                                      <span className="text-gray-400">
                                          {paymentTotals.totalUmpire >= paymentTotals.umpireTarget ? '✅ Completado' : '💰 Recaudado'}
@@ -293,18 +307,28 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                          )}
                     </div>
 
-                                         <div>
-                         <label className="block text-white mb-2">Monto Umpire ($)</label>
-                                                   <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={montoUmpire}
-                              onChange={(e) => setMontoUmpire(e.target.value)}
-                              placeholder="0.00"
-                              className="w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white"
-                          />
-                     </div>
+                                                                                   <div>
+                          <label className="block text-white mb-2">Monto Umpire ($)</label>
+                                                    <input
+                               type="number"
+                               step="0.01"
+                               min="0"
+                               value={montoUmpire}
+                               onChange={(e) => setMontoUmpire(e.target.value)}
+                               placeholder="0.00"
+                               disabled={paymentTotals.totalUmpire >= paymentTotals.umpireTarget}
+                               className={`w-full p-3 border border-gray-600 rounded-md text-white ${
+                                   paymentTotals.totalUmpire >= paymentTotals.umpireTarget 
+                                       ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
+                                       : 'bg-gray-800'
+                               }`}
+                           />
+                           {paymentTotals.totalUmpire >= paymentTotals.umpireTarget && (
+                               <div className="text-green-400 text-xs mt-1">
+                                   ✅ Objetivo del umpire alcanzado
+                               </div>
+                           )}
+                      </div>
 
                                          <div>
                          <label className="block text-white mb-2">Monto Registro ($)</label>

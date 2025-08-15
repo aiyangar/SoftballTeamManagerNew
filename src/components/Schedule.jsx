@@ -27,6 +27,7 @@ const Schedule = () => {
     const [actionMenuOpen, setActionMenuOpen] = useState(null);
     const [showAttendanceForm, setShowAttendanceForm] = useState({});
     const [editingGame, setEditingGame] = useState(null);
+    const [paymentTotals, setPaymentTotals] = useState({});
 
 
 
@@ -93,6 +94,9 @@ const Schedule = () => {
                 return acc;
             }, {});
             setGameFinalizationStatus(finalizationStatus);
+            
+            // Fetch payment totals for each game
+            await fetchPaymentTotals(data);
         }
     };
 
@@ -230,7 +234,10 @@ const Schedule = () => {
 
     const handlePaymentComplete = () => {
         closePaymentForm();
-        // Optionally refresh data or show success message
+        // Refresh payment totals after payment is completed
+        if (games.length > 0) {
+            fetchPaymentTotals(games);
+        }
     };
 
     const finalizeGame = async (gameId) => {
@@ -319,6 +326,28 @@ const Schedule = () => {
                 [gameId]: playerIds
             }));
         }
+    };
+
+    const fetchPaymentTotals = async (gamesData) => {
+        const totals = {};
+        
+        for (const game of gamesData) {
+            const { data, error } = await supabase
+                .from('pagos')
+                .select('monto_umpire, monto_inscripcion')
+                .eq('partido_id', game.id);
+            
+            if (error) {
+                console.error('Error fetching payment totals for game:', game.id, error);
+                totals[game.id] = { totalUmpire: 0, totalInscripcion: 0 };
+            } else {
+                const totalUmpire = data.reduce((sum, payment) => sum + (payment.monto_umpire || 0), 0);
+                const totalInscripcion = data.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0);
+                totals[game.id] = { totalUmpire, totalInscripcion };
+            }
+        }
+        
+        setPaymentTotals(totals);
     };
 
     // Cargar datos cuando cambia el equipo seleccionado
@@ -442,13 +471,62 @@ const Schedule = () => {
                         <div className="space-y-4">
                             {games.map(game => (
                                 <div key={game.id} className="border border-gray-600 rounded-lg p-4">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <h3 className="font-bold text-lg">{game.equipo_contrario}</h3>
-                                            <p>Fecha: {new Date(game.fecha_partido).toLocaleDateString()}</p>
-                                            <p>Lugar: {game.lugar}</p>
-                                            <p>Umpire: ${game.umpire || 550}</p>
-                                        </div>
+                                                                         <div className="flex justify-between items-start">
+                                         <div className="flex-1">
+                                             <h3 className="font-bold text-lg">{game.equipo_contrario}</h3>
+                                             <p>Fecha: {new Date(game.fecha_partido).toLocaleDateString()}</p>
+                                             <p>Lugar: {game.lugar}</p>
+                                             <p>Umpire: ${game.umpire || 550}</p>
+                                             
+                                                                                           {/* Información de Pagos Acumulados */}
+                                              {paymentTotals[game.id] && (
+                                                  <div className="mt-3 p-3 bg-gray-800 rounded-lg">
+                                                      <h4 className="font-semibold text-white text-sm mb-2 text-center">Estado de Pagos</h4>
+                                                     
+                                                     {/* Umpire */}
+                                                     <div className="mb-2">
+                                                         <div className="flex justify-between items-center mb-1">
+                                                             <span className="text-gray-300 text-xs">Umpire:</span>
+                                                             <span className="text-white text-sm font-semibold">
+                                                                 ${paymentTotals[game.id].totalUmpire.toLocaleString()} / ${game.umpire?.toLocaleString() || '550'}
+                                                             </span>
+                                                         </div>
+                                                         <div className="w-full bg-gray-700 rounded-full h-1.5">
+                                                             <div 
+                                                                 className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
+                                                                 style={{ 
+                                                                     width: `${Math.min((paymentTotals[game.id].totalUmpire / (game.umpire || 550)) * 100, 100)}%` 
+                                                                 }}
+                                                             ></div>
+                                                         </div>
+                                                         <div className="flex justify-between text-xs mt-1">
+                                                             <span className="text-gray-400">
+                                                                 {paymentTotals[game.id].totalUmpire >= (game.umpire || 550) ? '✅ Completado' : '💰 Recaudado'}
+                                                             </span>
+                                                             <span className="text-gray-400">
+                                                                 {paymentTotals[game.id].totalUmpire >= (game.umpire || 550) 
+                                                                     ? 'Meta alcanzada' 
+                                                                     : `Faltan $${((game.umpire || 550) - paymentTotals[game.id].totalUmpire).toLocaleString()}`
+                                                                 }
+                                                             </span>
+                                                         </div>
+                                                     </div>
+                                                     
+                                                     {/* Inscripción */}
+                                                     <div>
+                                                         <div className="flex justify-between items-center">
+                                                             <span className="text-gray-300 text-xs">Inscripción:</span>
+                                                             <span className="text-white text-sm font-semibold">
+                                                                 ${paymentTotals[game.id].totalInscripcion.toLocaleString()}
+                                                             </span>
+                                                         </div>
+                                                         <div className="text-xs text-gray-400 mt-1">
+                                                             Total recaudado
+                                                         </div>
+                                                     </div>
+                                                 </div>
+                                             )}
+                                         </div>
                                         <div className="relative">
                                             <button
                                                 onClick={() => toggleActionMenu(game.id)}

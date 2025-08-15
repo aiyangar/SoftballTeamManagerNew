@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { UserAuth } from '../context/AuthContext'
 import { useTeam } from '../context/TeamContext'
 

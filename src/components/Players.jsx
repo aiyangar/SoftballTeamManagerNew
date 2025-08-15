@@ -41,6 +41,7 @@ const Players = () => {
     })
     const [showColumnMenu, setShowColumnMenu] = useState(false)
     const [actionMenuOpen, setActionMenuOpen] = useState(null)
+    const [editingPlayer, setEditingPlayer] = useState(null)
 
     // Hook para navegación programática
     const navigate = useNavigate()
@@ -162,7 +163,7 @@ const Players = () => {
     }
 
     /**
-     * Registra un nuevo jugador
+     * Registra un nuevo jugador o actualiza uno existente
      * @param {Object} playerData - Datos del jugador
      * @returns {Object} - Resultado de la operación
      */
@@ -184,29 +185,69 @@ const Players = () => {
                 throw new Error('Un jugador puede tener máximo 3 posiciones')
             }
 
-            // Insertar jugador
-            const { data: newPlayer, error: playerError } = await supabase
-                .from('jugadores')
-                .insert([{
-                    nombre: playerData.nombre,
-                    numero: parseInt(playerData.numero),
-                    telefono: playerData.telefono || null,
-                    email: playerData.email || null,
-                    equipo_id: playerData.equipo_id || null,
-                    propietario_id: session.user.id // Incluir el propietario_id
-                }])
-                .select()
-
-            if (playerError) {
-                throw new Error(`Error al registrar jugador: ${playerError.message}`)
+            let playerResult
+            
+            if (editingPlayer) {
+                // Actualizar jugador existente
+                const { data: updatedPlayer, error: playerError } = await supabase
+                    .from('jugadores')
+                    .update({
+                        nombre: playerData.nombre,
+                        numero: parseInt(playerData.numero),
+                        telefono: playerData.telefono || null,
+                        email: playerData.email || null,
+                        equipo_id: playerData.equipo_id || null
+                    })
+                    .eq('id', editingPlayer.id)
+                    .select()
+                
+                if (playerError) {
+                    throw new Error(`Error al actualizar jugador: ${playerError.message}`)
+                }
+                
+                playerResult = updatedPlayer[0]
+            } else {
+                // Insertar nuevo jugador
+                const { data: newPlayer, error: playerError } = await supabase
+                    .from('jugadores')
+                    .insert([{
+                        nombre: playerData.nombre,
+                        numero: parseInt(playerData.numero),
+                        telefono: playerData.telefono || null,
+                        email: playerData.email || null,
+                        equipo_id: playerData.equipo_id || null,
+                        propietario_id: session.user.id // Incluir el propietario_id
+                    }])
+                    .select()
+                
+                if (playerError) {
+                    throw new Error(`Error al registrar jugador: ${playerError.message}`)
+                }
+                
+                playerResult = newPlayer[0]
             }
 
-            console.log('Jugador registrado:', newPlayer[0])
+            // Esta línea ya no es necesaria porque playerError se maneja dentro de cada bloque
+
+            console.log(editingPlayer ? 'Jugador actualizado:' : 'Jugador registrado:', playerResult)
+
+            // Manejar posiciones
+            if (editingPlayer) {
+                // Para edición: eliminar posiciones existentes y agregar las nuevas
+                const { error: deleteError } = await supabase
+                    .from('jugador_posiciones')
+                    .delete()
+                    .eq('jugador_id', editingPlayer.id)
+
+                if (deleteError) {
+                    console.error('Error al eliminar posiciones existentes:', deleteError)
+                }
+            }
 
             // Si hay posiciones seleccionadas, registrarlas
-            if (selectedPositions.length > 0 && newPlayer[0]) {
+            if (selectedPositions.length > 0 && playerResult) {
                 const positionData = selectedPositions.map(positionId => ({
-                    jugador_id: newPlayer[0].id,
+                    jugador_id: playerResult.id,
                     posicion_id: positionId,
                     equipo_id: playerData.equipo_id || null
                 }))
@@ -217,15 +258,15 @@ const Players = () => {
 
                 if (positionError) {
                     console.error('Error al registrar posiciones:', positionError)
-                    // No lanzamos error aquí porque el jugador ya se registró
+                    // No lanzamos error aquí porque el jugador ya se registró/actualizó
                 }
             }
 
-            setSuccess('Jugador registrado exitosamente')
+            setSuccess(editingPlayer ? 'Jugador actualizado exitosamente' : 'Jugador registrado exitosamente')
             resetForm()
             fetchPlayers(session.user.id) // Recargar lista de jugadores
 
-            return { success: true, data: newPlayer[0] }
+            return { success: true, data: playerResult }
         } catch (error) {
             console.error('Error al registrar jugador:', error)
             setError(error.message)
@@ -285,6 +326,8 @@ const Players = () => {
         setSelectedPositions([])
         setError(null)
         setSuccess(null)
+        setEditingPlayer(null)
+        setShowForm(false)
     }
 
     /**
@@ -414,11 +457,24 @@ const Players = () => {
         setActionMenuOpen(actionMenuOpen === playerId ? null : playerId)
     }
 
-    // Función para editar jugador (placeholder por ahora)
+    // Función para editar jugador
     const editPlayer = (playerId) => {
-        console.log('Editar jugador:', playerId)
-        setActionMenuOpen(null)
-        // Aquí se implementaría la lógica de edición
+        const player = players.find(p => p.id === playerId)
+        if (player) {
+            setEditingPlayer(player)
+            setName(player.nombre)
+            setNumero(player.numero.toString())
+            setTelefono(player.telefono || '')
+            setEmail(player.email || '')
+            setEquipoId(player.equipo_id || '')
+            
+            // Obtener las posiciones del jugador
+            const playerPositions = player.jugador_posiciones?.map(jp => jp.posiciones.id) || []
+            setSelectedPositions(playerPositions)
+            
+            setShowForm(true)
+            setActionMenuOpen(null)
+        }
     }
 
     // Si no hay sesión, redirigir al login
@@ -430,7 +486,7 @@ const Players = () => {
     return (
         <div className="max-w-4xl mx-auto p-6">
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold text-white">Gestión de Jugadores</h1>
+                <h1 className="text-3xl font-bold text-white">Jugadores</h1>
                                  <Menu />
             </div>
 
@@ -449,7 +505,9 @@ const Players = () => {
             {/* Formulario de registro */}
             {showForm && (
                 <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8">
-                    <h2 className="text-xl font-semibold mb-4 text-white">Registrar Nuevo Jugador</h2>
+                    <h2 className="text-xl font-semibold mb-4 text-white">
+                        {editingPlayer ? 'Editar Jugador' : 'Registrar Nuevo Jugador'}
+                    </h2>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -547,13 +605,13 @@ const Players = () => {
                             >
                                 Cancelar
                             </button>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                            >
-                                {loading ? 'Registrando...' : 'Registrar Jugador'}
-                            </button>
+                                                         <button
+                                 type="submit"
+                                 disabled={loading}
+                                 className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                             >
+                                 {loading ? (editingPlayer ? 'Actualizando...' : 'Registrando...') : (editingPlayer ? 'Actualizar Jugador' : 'Registrar Jugador')}
+                             </button>
                         </div>
                     </form>
                 </div>

@@ -24,6 +24,8 @@ const Dashboard = () => {
     totalPlayers: 0,
     nextGame: null,
     totalRegistrationPaid: 0,
+    totalRegistrationRequired: 0,
+    remainingRegistration: 0,
     lastGame: null,
     gameStats: {
       wins: 0,
@@ -76,6 +78,8 @@ const Dashboard = () => {
          totalPlayers: 0,
          nextGame: null,
          totalRegistrationPaid: 0,
+         totalRegistrationRequired: 0,
+         remainingRegistration: 0,
          lastGame: null,
          gameStats: {
            wins: 0,
@@ -146,6 +150,18 @@ const Dashboard = () => {
         ties: allGames?.filter(game => game.resultado === 'Empate').length || 0
       }
 
+      // Obtener información del equipo (incluyendo inscripción)
+      const { data: teamData, error: teamError } = await supabase
+        .from('equipos')
+        .select('inscripcion')
+        .eq('id', teamId)
+        .single()
+
+      if (teamError) {
+        console.error('Error fetching team data:', teamError)
+        return
+      }
+
       // Obtener total pagado para registro del equipo
       const { data: payments, error: paymentsError } = await supabase
         .from('pagos')
@@ -157,7 +173,9 @@ const Dashboard = () => {
         return
       }
 
-             const totalRegistrationPaid = payments.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0)
+      const totalRegistrationPaid = payments.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0)
+      const totalRegistrationRequired = teamData.inscripcion || 0
+      const remainingRegistration = Math.max(0, totalRegistrationRequired - totalRegistrationPaid)
 
        // Obtener los 3 jugadores que más han aportado
        const { data: contributors, error: contributorsError } = await supabase
@@ -194,6 +212,8 @@ const Dashboard = () => {
          totalPlayers: players.length,
          nextGame: nextGame || null,
          totalRegistrationPaid,
+         totalRegistrationRequired,
+         remainingRegistration,
          lastGame: lastGame || null,
          gameStats,
          topContributors
@@ -286,7 +306,15 @@ const Dashboard = () => {
               {loadingTeam ? (
                 <p className="text-gray-400">Cargando...</p>
               ) : (
-                <p className="text-3xl font-bold text-green-400">${teamInfo.totalRegistrationPaid.toLocaleString()}</p>
+                <div className="space-y-2">
+                  <p className="text-3xl font-bold text-green-400">${teamInfo.totalRegistrationPaid.toLocaleString()}</p>
+                  <div className="text-sm text-gray-300">
+                    <p>Total requerido: ${teamInfo.totalRegistrationRequired.toLocaleString()}</p>
+                    <p className={teamInfo.remainingRegistration > 0 ? 'text-red-400' : 'text-green-400'}>
+                      Faltan: ${teamInfo.remainingRegistration.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
           </div>

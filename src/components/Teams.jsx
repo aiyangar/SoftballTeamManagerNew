@@ -19,6 +19,7 @@ const Teams = () => {
     const [success, setSuccess] = useState(null)
     const [showForm, setShowForm] = useState(false)
     const [actionMenuOpen, setActionMenuOpen] = useState(null)
+    const [editingTeam, setEditingTeam] = useState(null) // Para manejar la edición
     const { teams, loadingTeams, fetchTeams } = useTeam() // Usar el contexto del equipo
 
     // Hook para navegación programática
@@ -71,6 +72,36 @@ const Teams = () => {
     }
 
     /**
+     * Actualiza un equipo existente en la base de datos
+     * @param {number} teamId - ID del equipo a actualizar
+     * @param {string} nombreEquipo - Nuevo nombre del equipo
+     * @param {string} inscripcion - Nuevo monto de inscripción del equipo
+     * @returns {Object} - Resultado de la operación
+     */
+    const updateTeam = async (teamId, nombreEquipo, inscripcion) => {
+        try {
+            const { data, error } = await supabase
+                .from('equipos')
+                .update({
+                    nombre_equipo: nombreEquipo,
+                    inscripcion: inscripcion ? parseFloat(inscripcion) : null
+                })
+                .eq('id', teamId)
+                .select()
+
+            if (error) {
+                console.error('Error al actualizar equipo:', error)
+                return { success: false, error: error.message }
+            }
+
+            return { success: true, data: data }
+        } catch (error) {
+            console.error('Error inesperado al actualizar equipo:', error)
+            return { success: false, error: error.message }
+        }
+    }
+
+    /**
      * Limpia el formulario y lo oculta
      */
     const resetForm = () => {
@@ -79,6 +110,19 @@ const Teams = () => {
         setError(null)
         setSuccess(null)
         setShowForm(false)
+        setEditingTeam(null) // Limpiar también el equipo en edición
+    }
+
+    /**
+     * Inicia la edición de un equipo
+     * @param {Object} team - Equipo a editar
+     */
+    const startEditing = (team) => {
+        setName(team.nombre_equipo)
+        setInscripcion(team.inscripcion ? team.inscripcion.toString() : '')
+        setEditingTeam(team)
+        setShowForm(true)
+        setActionMenuOpen(null) // Cerrar el menú de acciones
     }
 
     /**
@@ -90,38 +134,47 @@ const Teams = () => {
     }
 
     /**
-     * Maneja el envío del formulario de creación de equipo
+     * Maneja el envío del formulario de creación/edición de equipo
      * @param {Event} e - Evento del formulario
      */
-    const handleCreateTeam = async (e) => {
+    const handleSubmitTeam = async (e) => {
         e.preventDefault()
         setLoading(true)
         setError(null)
 
         // Verificar que el usuario esté autenticado
         if (!session?.user?.id) {
-            setError('Debes estar autenticado para crear un equipo')
+            setError('Debes estar autenticado para gestionar equipos')
             setLoading(false)
             return
         }
 
         try {
-            // Crear el equipo con el ID del usuario autenticado
-            const result = await createTeam(name, inscripcion, session.user.id)
+            let result
 
-            if (result.success) {
-                // Limpiar el formulario y ocultarlo
-                resetForm()
-                // Recargar la lista de equipos
-                await fetchTeams()
-                // Mostrar mensaje de éxito
-                setSuccess('Equipo creado exitosamente')
+            if (editingTeam) {
+                // Actualizar equipo existente
+                result = await updateTeam(editingTeam.id, name, inscripcion)
+                if (result.success) {
+                    resetForm()
+                    await fetchTeams()
+                    setSuccess('Equipo actualizado exitosamente')
+                } else {
+                    setError(result.error || 'Error al actualizar el equipo')
+                }
             } else {
-                // Mostrar error si la creación falló
-                setError(result.error || 'Error al crear el equipo')
+                // Crear nuevo equipo
+                result = await createTeam(name, inscripcion, session.user.id)
+                if (result.success) {
+                    resetForm()
+                    await fetchTeams()
+                    setSuccess('Equipo creado exitosamente')
+                } else {
+                    setError(result.error || 'Error al crear el equipo')
+                }
             }
         } catch (error) {
-            console.error('Error inesperado en handleCreateTeam:', error)
+            console.error('Error inesperado en handleSubmitTeam:', error)
             setError(error.message || 'Error inesperado')
         } finally {
             setLoading(false)
@@ -150,7 +203,13 @@ const Teams = () => {
             {/* Botón para mostrar/ocultar formulario */}
             <div className="mb-8">
                 <button
-                    onClick={() => setShowForm(!showForm)}
+                    onClick={() => {
+                        if (showForm) {
+                            resetForm() // Limpiar formulario si está abierto
+                        } else {
+                            setShowForm(true)
+                        }
+                    }}
                     className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-2"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,11 +219,13 @@ const Teams = () => {
                 </button>
             </div>
 
-            {/* Formulario de creación de equipo */}
+            {/* Formulario de creación/edición de equipo */}
             {showForm && (
                 <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8">
-                    <h2 className="text-xl font-semibold mb-6 text-white">Crear Nuevo Equipo</h2>
-                    <form onSubmit={handleCreateTeam} className='space-y-4'>
+                    <h2 className="text-xl font-semibold mb-6 text-white">
+                        {editingTeam ? 'Editar Equipo' : 'Crear Nuevo Equipo'}
+                    </h2>
+                    <form onSubmit={handleSubmitTeam} className='space-y-4'>
                         <div>
                             <label className="block text-sm font-medium text-gray-300 mb-2">
                                 Nombre del Equipo *
@@ -200,7 +261,7 @@ const Teams = () => {
                             disabled={loading} 
                             className='w-full mt-6 border border-gray-600 rounded-md p-3 bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
                         >
-                            {loading ? 'Creando equipo...' : 'Crear Equipo'}
+                            {loading ? (editingTeam ? 'Actualizando equipo...' : 'Creando equipo...') : (editingTeam ? 'Actualizar Equipo' : 'Crear Equipo')}
                         </button>
                         
                         {error && (
@@ -297,10 +358,7 @@ const Teams = () => {
                                                 <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50">
                                                     <div className="py-1">
                                                         <button
-                                                            onClick={() => {
-                                                                alert('Función de editar equipo - próximamente')
-                                                                setActionMenuOpen(null)
-                                                            }}
+                                                            onClick={() => startEditing(team)}
                                                             className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
                                                         >
                                                             ✏️ Editar

@@ -207,6 +207,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                              onClose();
                          }}
                          className="text-gray-400 hover:text-white text-2xl"
+                         title="Cerrar formulario de pago"
                      >
                          ×
                      </button>

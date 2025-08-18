@@ -1056,12 +1056,13 @@ const Players = () => {
                                              )}
                                                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                   <div className="relative">
-                                                                                                             <button
-                                                           onClick={() => toggleActionMenu(player.id)}
-                                                           className="px-3 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-500 transition-colors"
-                                                       >
-                                                           ⋮
-                                                       </button>
+                                                                                                                                     <button
+                            onClick={() => toggleActionMenu(player.id)}
+                            className="px-3 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-500 transition-colors"
+                            title="Opciones del jugador"
+                        >
+                            ⋮
+                        </button>
                                                       
                                                       {actionMenuOpen === player.id && (
                                                           <>
@@ -1120,6 +1121,7 @@ const Players = () => {
                             <button
                                 onClick={closePlayerHistoryModal}
                                 className="text-gray-400 hover:text-white text-2xl"
+                                title="Cerrar historial"
                             >
                                 ×
                             </button>

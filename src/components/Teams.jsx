@@ -349,6 +349,7 @@ const Teams = () => {
                                         <button
                                             onClick={() => toggleActionMenu(team.id)}
                                             className="px-3 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-500 transition-colors"
+                                            title="Opciones del equipo"
                                         >
                                             ⋮
                                         </button>

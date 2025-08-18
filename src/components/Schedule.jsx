@@ -708,6 +708,7 @@ const Schedule = () => {
                                                             toggleActionMenu(game.id);
                                                         }}
                                                         className="px-3 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-500 transition-colors"
+                                                        title="Opciones del partido"
                                                     >
                                                         ⋮
                                                     </button>
@@ -781,6 +782,7 @@ const Schedule = () => {
                                                      <button
                                                          onClick={() => toggleAttendanceForm(game.id)}
                                                          className="text-gray-400 hover:text-white"
+                                                         title="Cerrar formulario de asistencia"
                                                      >
                                                          ✕
                                                      </button>
@@ -868,6 +870,7 @@ const Schedule = () => {
                              <button
                                  onClick={closeGameDetailsModal}
                                  className="text-gray-400 hover:text-white text-2xl"
+                                 title="Cerrar detalles del partido"
                              >
                                  ×
                              </button>
@@ -1025,6 +1028,7 @@ const Schedule = () => {
                             <button
                                 onClick={closeScoreForm}
                                 className="text-gray-400 hover:text-white text-2xl"
+                                title="Cerrar formulario de resultado"
                             >
                                 ×
                             </button>

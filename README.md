@@ -66,6 +66,7 @@ Una aplicación web moderna para la gestión completa de equipos de softball, de
    ```env
    VITE_SUPABASE_URL=tu_url_de_supabase
    VITE_SUPABASE_ANON_KEY=tu_clave_anonima_de_supabase
+   VITE_ADMIN_EMAIL=correo_electronico_del_administrador
    ```
 
 4. **Ejecutar en modo desarrollo**

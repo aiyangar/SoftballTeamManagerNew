@@ -32,15 +32,6 @@ const Players = () => {
     const [loadingPositions, setLoadingPositions] = useState(true)
     const [showForm, setShowForm] = useState(false)
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
-    const [visibleColumns, setVisibleColumns] = useState({
-        numero: true,
-        nombre: true,
-        posiciones: true,
-        telefono: false,
-        email: false,
-        equipo: false
-    })
-    const [showColumnMenu, setShowColumnMenu] = useState(false)
     const [actionMenuOpen, setActionMenuOpen] = useState(null)
     const [editingPlayer, setEditingPlayer] = useState(null)
     const [showPlayerHistoryModal, setShowPlayerHistoryModal] = useState(false)
@@ -663,13 +654,7 @@ const Players = () => {
         return abbreviations[positionName] || positionName
     }
 
-    // Función para manejar la visibilidad de columnas
-    const toggleColumn = (column) => {
-        setVisibleColumns(prev => ({
-            ...prev,
-            [column]: !prev[column]
-        }))
-    }
+
 
     // Función para manejar el menú de acciones
     const toggleActionMenu = (playerId) => {
@@ -861,103 +846,42 @@ const Players = () => {
 
             {/* Lista de jugadores */}
             <div className="bg-neutral-900 shadow rounded-lg p-6">
-                                 <div className="flex items-center justify-between mb-6">
-                     <h2 className="text-xl font-semibold text-white">Jugadores Registrados</h2>
-                     <div className="flex items-center space-x-4">
-                         {selectedTeam && teams.length > 0 && (
-                             <div className="text-sm text-gray-300">
-                                 <span className="text-gray-400">Equipo: </span>
-                                 <span className="font-medium text-blue-400">
-                                     {teams.find(team => team.id === selectedTeam)?.nombre_equipo}
-                                 </span>
-                             </div>
-                         )}
-                         
-                         {/* Menú de columnas */}
-                         <div className="relative">
-                             <button
-                                 className="px-3 py-1 bg-gray-700 text-white text-sm rounded hover:bg-gray-600 transition-colors flex items-center space-x-1"
-                                 onClick={() => setShowColumnMenu(!showColumnMenu)}
-                             >
-                                 <span>Columnas</span>
-                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                 </svg>
-                             </button>
-                             
-                             {showColumnMenu && (
-                                 <>
-                                     <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50">
-                                         <div className="p-3">
-                                             <h4 className="text-white text-sm font-medium mb-2">Mostrar/Ocultar Columnas</h4>
-                                             <div className="space-y-2">
-                                                 <label className="flex items-center space-x-2">
-                                                     <input
-                                                         type="checkbox"
-                                                         checked={visibleColumns.numero}
-                                                         onChange={() => toggleColumn('numero')}
-                                                         className="rounded border-gray-600 text-gray-500 focus:ring-gray-500 bg-gray-700"
-                                                     />
-                                                     <span className="text-sm text-gray-300">Número</span>
-                                                 </label>
-                                                 <label className="flex items-center space-x-2">
-                                                     <input
-                                                         type="checkbox"
-                                                         checked={visibleColumns.nombre}
-                                                         onChange={() => toggleColumn('nombre')}
-                                                         className="rounded border-gray-600 text-gray-500 focus:ring-gray-500 bg-gray-700"
-                                                     />
-                                                     <span className="text-sm text-gray-300">Nombre</span>
-                                                 </label>
-                                                 <label className="flex items-center space-x-2">
-                                                     <input
-                                                         type="checkbox"
-                                                         checked={visibleColumns.posiciones}
-                                                         onChange={() => toggleColumn('posiciones')}
-                                                         className="rounded border-gray-600 text-gray-500 focus:ring-gray-500 bg-gray-700"
-                                                     />
-                                                     <span className="text-sm text-gray-300">Posiciones</span>
-                                                 </label>
-                                                 <label className="flex items-center space-x-2">
-                                                     <input
-                                                         type="checkbox"
-                                                         checked={visibleColumns.telefono}
-                                                         onChange={() => toggleColumn('telefono')}
-                                                         className="rounded border-gray-600 text-gray-500 focus:ring-gray-500 bg-gray-700"
-                                                     />
-                                                     <span className="text-sm text-gray-300">Teléfono</span>
-                                                 </label>
-                                                 <label className="flex items-center space-x-2">
-                                                     <input
-                                                         type="checkbox"
-                                                         checked={visibleColumns.email}
-                                                         onChange={() => toggleColumn('email')}
-                                                         className="rounded border-gray-600 text-gray-500 focus:ring-gray-500 bg-gray-700"
-                                                     />
-                                                     <span className="text-sm text-gray-300">Email</span>
-                                                 </label>
-                                                 <label className="flex items-center space-x-2">
-                                                     <input
-                                                         type="checkbox"
-                                                         checked={visibleColumns.equipo}
-                                                         onChange={() => toggleColumn('equipo')}
-                                                         className="rounded border-gray-600 text-gray-500 focus:ring-gray-500 bg-gray-700"
-                                                     />
-                                                     <span className="text-sm text-gray-300">Equipo</span>
-                                                 </label>
-                                             </div>
-                                         </div>
-                                     </div>
-                                     {/* Overlay para cerrar menú */}
-                                     <div 
-                                         className="fixed inset-0 z-40" 
-                                         onClick={() => setShowColumnMenu(false)}
-                                     />
-                                 </>
-                             )}
-                         </div>
-                     </div>
-                 </div>
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold text-white">Jugadores Registrados</h2>
+                    <div className="flex items-center space-x-4">
+                        {selectedTeam && teams.length > 0 && (
+                            <div className="text-sm text-gray-300">
+                                <span className="text-gray-400">Equipo: </span>
+                                <span className="font-medium text-blue-400">
+                                    {teams.find(team => team.id === selectedTeam)?.nombre_equipo}
+                                </span>
+                            </div>
+                        )}
+                        
+                        {/* Botón de ordenamiento */}
+                        <div className="flex items-center space-x-2">
+                            <span className="text-sm text-gray-300">Ordenar por:</span>
+                            <select
+                                value={sortConfig.key || ''}
+                                onChange={(e) => handleSort(e.target.value)}
+                                className="px-3 py-1 bg-gray-700 text-white text-sm rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                            >
+                                <option value="">Seleccionar</option>
+                                <option value="nombre">Nombre</option>
+                                <option value="numero">Número</option>
+                            </select>
+                            {sortConfig.key && (
+                                <button
+                                    onClick={() => setSortConfig({ key: sortConfig.key, direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })}
+                                    className="px-2 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-500"
+                                >
+                                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+                
                 <div>
                     {loadingPlayers ? (
                         <div className="text-center py-8">
@@ -970,154 +894,104 @@ const Players = () => {
                             <p className="text-sm text-gray-400 mt-1">Registra tu primer jugador usando el botón de arriba.</p>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                                                         <table className="min-w-full divide-y divide-gray-600">
-                                 <thead className="bg-gray-800">
-                                     <tr>
-                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                             #
-                                         </th>
-                                         {visibleColumns.nombre && (
-                                             <th 
-                                                 className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
-                                                 onClick={() => handleSort('nombre')}
-                                             >
-                                                 <div className="flex items-center space-x-1">
-                                                     <span>Nombre</span>
-                                                     {sortConfig.key === 'nombre' && (
-                                                         <span className="text-blue-400">
-                                                             {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                                                         </span>
-                                                     )}
-                                                 </div>
-                                             </th>
-                                         )}
-                                         {visibleColumns.numero && (
-                                             <th 
-                                                 className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
-                                                 onClick={() => handleSort('numero')}
-                                             >
-                                                 <div className="flex items-center space-x-1">
-                                                     <span>Número</span>
-                                                     {sortConfig.key === 'numero' && (
-                                                         <span className="text-blue-400">
-                                                             {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                                                         </span>
-                                                     )}
-                                                 </div>
-                                             </th>
-                                         )}
-                                         {visibleColumns.telefono && (
-                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                                 Teléfono
-                                             </th>
-                                         )}
-                                         {visibleColumns.email && (
-                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                                 Email
-                                             </th>
-                                         )}
-                                         {visibleColumns.equipo && (
-                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                                 Equipo
-                                             </th>
-                                         )}
-                                         {visibleColumns.posiciones && (
-                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                                 Posiciones
-                                             </th>
-                                         )}
-                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                             Acciones
-                                         </th>
-                                     </tr>
-                                 </thead>
-                                <tbody className="bg-gray-700 divide-y divide-gray-600">
-                                                                         {sortedPlayers.map((player, index) => (
-                                         <tr key={player.id} className="hover:bg-gray-800">
-                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                                 {index + 1}
-                                             </td>
-                                             {visibleColumns.nombre && (
-                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
-                                                     {player.nombre}
-                                                 </td>
-                                             )}
-                                             {visibleColumns.numero && (
-                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                                     {player.numero}
-                                                 </td>
-                                             )}
-                                             {visibleColumns.telefono && (
-                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                                     {player.telefono || '-'}
-                                                 </td>
-                                             )}
-                                             {visibleColumns.email && (
-                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                                     {player.email || '-'}
-                                                 </td>
-                                             )}
-                                             {visibleColumns.equipo && (
-                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                                     {player.equipos?.nombre_equipo || '-'}
-                                                 </td>
-                                             )}
-                                             {visibleColumns.posiciones && (
-                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                                     {player.jugador_posiciones?.map(jp => getPositionAbbreviation(jp.posiciones.nombre_posicion)).join(', ') || '-'}
-                                                 </td>
-                                             )}
-                                                                                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                  <div className="relative">
-                                                                                                                                     <button
-                            onClick={() => toggleActionMenu(player.id)}
-                            className="px-3 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-500 transition-colors"
-                            title="Opciones del jugador"
-                        >
-                            ⋮
-                        </button>
-                                                      
-                                                      {actionMenuOpen === player.id && (
-                                                          <>
-                                                              <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50">
-                                                                  <div className="py-1">
-                                                                      <button
-                                                                          onClick={() => openPlayerHistoryModal(player)}
-                                                                          className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
-                                                                      >
-                                                                          📊 Ver Historial
-                                                                      </button>
-                                                                      <button
-                                                                          onClick={() => editPlayer(player.id)}
-                                                                          className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
-                                                                      >
-                                                                          ✏️ Editar
-                                                                      </button>
-                                                                      <button
-                                                                          onClick={() => {
-                                                                              deletePlayer(player.id)
-                                                                              setActionMenuOpen(null)
-                                                                          }}
-                                                                          className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900 transition-colors"
-                                                                      >
-                                                                          🗑️ Eliminar
-                                                                      </button>
-                                                                  </div>
-                                                              </div>
-                                                              {/* Overlay para cerrar menú */}
-                                                              <div 
-                                                                  className="fixed inset-0 z-40" 
-                                                                  onClick={() => setActionMenuOpen(null)}
-                                                              />
-                                                          </>
-                                                      )}
-                                                  </div>
-                                              </td>
-                                         </tr>
-                                     ))}
-                                </tbody>
-                            </table>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            {sortedPlayers.map((player, index) => (
+                                <div key={player.id} className="bg-gray-800 border border-gray-600 rounded-lg p-4 hover:bg-gray-700 transition-colors">
+                                    {/* Header de la ficha */}
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center space-x-2">
+                                            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                                {player.numero || '#'}
+                                            </div>
+                                            <h3 className="text-white font-semibold truncate">{player.nombre}</h3>
+                                        </div>
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => toggleActionMenu(player.id)}
+                                                className="p-1 text-gray-400 hover:text-white transition-colors"
+                                                title="Opciones del jugador"
+                                            >
+                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                                </svg>
+                                            </button>
+                                            
+                                            {actionMenuOpen === player.id && (
+                                                <>
+                                                    <div className="absolute right-0 mt-2 w-48 bg-gray-700 border border-gray-600 rounded-lg shadow-lg z-50">
+                                                        <div className="py-1">
+                                                            <button
+                                                                onClick={() => openPlayerHistoryModal(player)}
+                                                                className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-600 transition-colors"
+                                                            >
+                                                                📊 Ver Historial
+                                                            </button>
+                                                            <button
+                                                                onClick={() => editPlayer(player.id)}
+                                                                className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-600 transition-colors"
+                                                            >
+                                                                ✏️ Editar
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    deletePlayer(player.id)
+                                                                    setActionMenuOpen(null)
+                                                                }}
+                                                                className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900 transition-colors"
+                                                            >
+                                                                🗑️ Eliminar
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    {/* Overlay para cerrar menú */}
+                                                    <div 
+                                                        className="fixed inset-0 z-40" 
+                                                        onClick={() => setActionMenuOpen(null)}
+                                                    />
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Información del jugador */}
+                                    <div className="space-y-2">
+                                        {/* Posiciones */}
+                                        {player.jugador_posiciones && player.jugador_posiciones.length > 0 && (
+                                            <div className="flex flex-wrap gap-1">
+                                                {player.jugador_posiciones.map((jp, idx) => (
+                                                    <span key={idx} className="px-2 py-1 bg-blue-900 text-blue-200 text-xs rounded-full">
+                                                        {getPositionAbbreviation(jp.posiciones.nombre_posicion)}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        
+                                        {/* Equipo */}
+                                        {player.equipos && (
+                                            <div className="text-sm">
+                                                <span className="text-gray-400">Equipo: </span>
+                                                <span className="text-blue-400 font-medium">{player.equipos.nombre_equipo}</span>
+                                            </div>
+                                        )}
+                                        
+                                        {/* Teléfono */}
+                                        {player.telefono && (
+                                            <div className="text-sm">
+                                                <span className="text-gray-400">📞 </span>
+                                                <span className="text-gray-300">{player.telefono}</span>
+                                            </div>
+                                        )}
+                                        
+                                        {/* Email */}
+                                        {player.email && (
+                                            <div className="text-sm">
+                                                <span className="text-gray-400">✉️ </span>
+                                                <span className="text-gray-300 truncate">{player.email}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>

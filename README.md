@@ -2,6 +2,8 @@
 
 Una aplicación web moderna para la gestión completa de equipos de softball, desarrollada con React y Supabase.
 
+**Versión Actual: 0.8.0**
+
 ## 🏟️ Características
 
 ### Gestión de Equipos
@@ -31,6 +33,12 @@ Una aplicación web moderna para la gestión completa de equipos de softball, de
 - Registro e inicio de sesión seguro
 - Protección de rutas
 - Gestión de sesiones con Supabase
+
+### Interfaz de Usuario
+- Modales optimizados con scroll interno y sin interferir con el scroll principal
+- Footer de versión visible en todas las páginas principales
+- Diseño responsivo y moderno con Tailwind CSS
+- Componentes reutilizables y modulares
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -93,7 +101,10 @@ src/
 │   ├── Schedule.jsx     # Programación de partidos
 │   ├── Signin.jsx       # Inicio de sesión
 │   ├── Signup.jsx       # Registro de usuarios
-│   └── Teams.jsx        # Gestión de equipos
+│   ├── Teams.jsx        # Gestión de equipos
+│   └── VersionFooter.jsx # Footer con información de versión
+├── hooks/               # Hooks personalizados
+│   └── useModal.js      # Hook para manejo de modales
 ├── context/             # Contextos de React
 │   ├── AuthContext.jsx  # Contexto de autenticación
 │   └── TeamContext.jsx  # Contexto de equipos
@@ -124,6 +135,32 @@ src/
 - Supabase para backend como servicio (BaaS)
 - Sistema de rutas protegidas para seguridad
 - Componentes modulares y reutilizables
+- Modales optimizados con hook personalizado `useModal`
+- Footer de versión consistente en todas las páginas principales
+
+## 🆕 Changelog
+
+### Versión 0.8.0
+- ✅ **Nuevas Funcionalidades:**
+  - Agregado componente `VersionFooter` que muestra el número de versión en todas las páginas
+  - Implementado hook personalizado `useModal` para gestión mejorada de modales
+  - Optimización de modales con scroll interno y eliminación del scroll principal
+  - Modales con altura del 90% del viewport y centrados en pantalla
+
+- ✅ **Mejoras en UI/UX:**
+  - Estructura consistente de modales con `modal-container`, `modal-header` y `modal-content`
+  - Mejor experiencia de usuario en dispositivos móviles
+  - Footer de versión fijo en la parte inferior de todas las páginas principales
+
+- ✅ **Componentes Actualizados:**
+  - `Dashboard.jsx` - Agregado footer de versión
+  - `Teams.jsx` - Agregado footer de versión
+  - `Players.jsx` - Agregado footer de versión y modal optimizado
+  - `Schedule.jsx` - Agregado footer de versión y modales optimizados
+  - `AdminPanel.jsx` - Agregado footer de versión
+  - `Signin.jsx` - Agregado footer de versión
+  - `Signup.jsx` - Agregado footer de versión
+  - `PaymentForm.jsx` - Modal optimizado (sin footer por ser modal)
 
 ## 🤝 Contribución
 

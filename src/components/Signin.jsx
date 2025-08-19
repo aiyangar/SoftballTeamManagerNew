@@ -52,11 +52,11 @@ const Signin = () => {
 
     return (
         <>
-            <div>
-                <form onSubmit={handleSignIn} className='max-w-md m-auto pt-24'>
-                    <h2 className="font-bold pb-2 text-2xl">Iniciar Sesión</h2>
-                    <p className="text-gray-600 mb-6">
-                        ¿No tienes una cuenta? <Link to="/signup" className="text-blue-500 hover:text-blue-700">Regístrate</Link>
+            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+                <form onSubmit={handleSignIn} className='max-w-md w-full mx-4'>
+                    <h2 className="font-bold pb-2 text-2xl text-white">Iniciar Sesión</h2>
+                    <p className="text-gray-400 mb-6">
+                        ¿No tienes una cuenta? <Link to="/signup" className="text-blue-400 hover:text-blue-300">Regístrate</Link>
                     </p>
                     
                     <div className='flex flex-col py-4'>
@@ -65,7 +65,7 @@ const Signin = () => {
                             name="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className='p-3 border mt-6 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500' 
+                            className='p-3 border mt-6 border-gray-600 bg-gray-800 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500' 
                             type="email" 
                             placeholder='Email' 
                             required
@@ -75,7 +75,7 @@ const Signin = () => {
                             name="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className='p-3 border mt-6 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500' 
+                            className='p-3 border mt-6 border-gray-600 bg-gray-800 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500' 
                             type="password" 
                             placeholder='Contraseña' 
                             required
@@ -83,13 +83,13 @@ const Signin = () => {
                         <button 
                             type='submit' 
                             disabled={loading} 
-                            className='mt-6 border border-gray-300 rounded-md p-3 bg-blue-500 text-white hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
+                            className='mt-6 border border-gray-600 rounded-md p-3 bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors'
                         >
                             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                         </button>
                         
                         {error && (
-                            <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                            <div className="mt-4 p-3 bg-red-900 border border-red-600 text-red-200 rounded">
                                 {error}
                             </div>
                         )}

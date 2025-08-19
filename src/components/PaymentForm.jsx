@@ -198,7 +198,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50">
             <div className="bg-neutral-900 rounded-lg w-full max-w-md mx-4 modal-container">
                 <div className="modal-header p-6 border-b border-gray-600">
                     <div className="flex justify-between items-center">

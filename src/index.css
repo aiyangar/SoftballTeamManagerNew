@@ -7,12 +7,29 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #0f0f0f;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Fondo oscuro para toda la aplicación */
+html {
+  background-color: #0f0f0f;
+}
+
+body {
+  background-color: #0f0f0f;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  background-color: #0f0f0f;
+  min-height: 100vh;
 }
 
 a {
@@ -64,22 +81,63 @@ body.modal-open {
   overflow: hidden;
 }
 
+/* Overlay oscuro para modales */
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+}
+
 /* Estilos para modales con scroll interno */
 .modal-container {
   height: 90vh;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
+  background-color: #111827;
 }
 
 .modal-header {
   flex-shrink: 0;
+  background-color: #111827;
 }
 
 .modal-content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  background-color: #111827;
+}
+
+/* Asegurar que todos los elementos tengan fondo oscuro */
+* {
+  box-sizing: border-box;
+}
+
+/* Estilos para inputs y selects en modo oscuro */
+input, select, textarea {
+  background-color: #374151 !important;
+  border-color: #4B5563 !important;
+  color: #F9FAFB !important;
+}
+
+input::placeholder, select::placeholder, textarea::placeholder {
+  color: #9CA3AF !important;
+}
+
+/* Estilos para botones en modo oscuro */
+button {
+  background-color: #374151 !important;
+  border-color: #4B5563 !important;
+  color: #F9FAFB !important;
+}
+
+button:hover {
+  background-color: #4B5563 !important;
+}
+
+button:disabled {
+  background-color: #1F2937 !important;
+  color: #6B7280 !important;
 }
 
 /* Mejoras para dispositivos móviles */
@@ -105,15 +163,22 @@ body.modal-open {
   }
 }
 
+/* Forzar tema oscuro en toda la aplicación */
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #0f0f0f;
+  }
+  body {
+    background-color: #0f0f0f;
+  }
+  #root {
+    background-color: #0f0f0f;
   }
   a:hover {
-    color: #747bff;
+    color: #535bf2;
   }
   button {
-    background-color: #f9f9f9;
+    background-color: #1a1a1a;
   }
 }

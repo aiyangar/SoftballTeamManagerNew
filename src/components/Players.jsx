@@ -1125,7 +1125,7 @@ const Players = () => {
 
                         {/* Modal de Historial del Jugador */}
             {showPlayerHistoryModal && selectedPlayerForHistory && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50">
                     <div className="bg-neutral-900 border border-gray-600 rounded-lg w-full max-w-4xl mx-4 modal-container">
                         {/* Header fijo */}
                         <div className="modal-header p-6 border-b border-gray-600">

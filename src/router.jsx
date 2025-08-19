@@ -8,6 +8,7 @@ import Players from "./components/Players";
 import Schedule from "./components/Schedule";
 import AdminPanel from "./components/AdminPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout.jsx";
 
 /**
  * Configuración de rutas de la aplicación
@@ -26,7 +27,9 @@ export const router = createBrowserRouter([
         path: "/teams", 
         element: (
             <ProtectedRoute>
-                <Teams />
+                <Layout>
+                    <Teams />
+                </Layout>
             </ProtectedRoute>
         ) 
     },
@@ -36,7 +39,9 @@ export const router = createBrowserRouter([
         path: "/players", 
         element: (
             <ProtectedRoute>
-                <Players />
+                <Layout>
+                    <Players />
+                </Layout>
             </ProtectedRoute>
         ) 
     },
@@ -45,7 +50,9 @@ export const router = createBrowserRouter([
         path: "/schedule",
         element: (
             <ProtectedRoute>
-                <Schedule />
+                <Layout>
+                    <Schedule />
+                </Layout>
             </ProtectedRoute>
         )
     },
@@ -55,7 +62,9 @@ export const router = createBrowserRouter([
         path: "/dashboard", 
         element: (
             <ProtectedRoute>
-                <Dashboard />
+                <Layout>
+                    <Dashboard />
+                </Layout>
             </ProtectedRoute>
         ) 
     },
@@ -65,7 +74,9 @@ export const router = createBrowserRouter([
         path: "/admin", 
         element: (
             <ProtectedRoute>
-                <AdminPanel />
+                <Layout>
+                    <AdminPanel />
+                </Layout>
             </ProtectedRoute>
         ) 
     },

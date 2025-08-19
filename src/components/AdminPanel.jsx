@@ -64,10 +64,9 @@ const AdminPanel = () => {
 
     if (!isAdmin) {
         return (
-            <div className="max-w-6xl mx-auto p-6">
+            <div>
                 <div className="flex justify-between items-center mb-8">
                     <h1 className="text-3xl font-bold text-white">Panel de Administración</h1>
-                    <Menu />
                 </div>
                 <div className="bg-red-900 border border-red-600 text-red-200 px-4 py-3 rounded">
                     <p className="font-semibold mb-2">No tienes permisos para acceder al panel de administración.</p>
@@ -84,10 +83,9 @@ const AdminPanel = () => {
 
     return (
         <>
-            <div className="max-w-6xl mx-auto p-6">
+            <div>
                 <div className="flex justify-between items-center mb-8">
                     <h1 className="text-3xl font-bold text-white">Panel de Administración</h1>
-                    <Menu />
                 </div>
 
                 {/* Mensajes de error y éxito */}

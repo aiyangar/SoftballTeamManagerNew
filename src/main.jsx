@@ -39,12 +39,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthContextProvider>
       <TeamProvider>
-        <div>
-          <h1 className="text-center pt-4 text-3xl">
-            SoftBall Team Manager
-          </h1>
-          <RouterProvider router={router} />
-        </div>
+        <RouterProvider router={router} />
       </TeamProvider>
     </AuthContextProvider>
   </StrictMode>,

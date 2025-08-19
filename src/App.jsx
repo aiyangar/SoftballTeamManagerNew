@@ -39,6 +39,8 @@ export default function App() {
     )
   }
 
+
+
   // No renderizar nada mientras se maneja la navegación
   return null
 }

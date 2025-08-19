@@ -7,6 +7,8 @@ import { router } from './router.jsx'
 import { AuthContextProvider } from './context/AuthContext.jsx'
 import { TeamProvider } from './context/TeamContext.jsx'
 
+import { SpeedInsights } from "@vercel/speed-insights/next"
+
 // Manejador de errores global para capturar errores de CSS y otros
 window.addEventListener('error', (event) => {
   // Filtrar errores relacionados con selectores CSS inválidos
@@ -42,5 +44,6 @@ createRoot(document.getElementById('root')).render(
         <RouterProvider router={router} />
       </TeamProvider>
     </AuthContextProvider>
+    <SpeedInsights/>
   </StrictMode>,
 )

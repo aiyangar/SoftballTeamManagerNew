@@ -66,7 +66,7 @@ const AdminPanel = () => {
         return (
             <div>
                 <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold text-white">Panel de Administración</h1>
+                    <h1 className="text-2xl font-bold text-white">Panel de Administración</h1>
                 </div>
                 <div className="bg-red-900 border border-red-600 text-red-200 px-4 py-3 rounded">
                     <p className="font-semibold mb-2">No tienes permisos para acceder al panel de administración.</p>
@@ -85,7 +85,7 @@ const AdminPanel = () => {
         <>
             <div>
                 <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold text-white">Panel de Administración</h1>
+                    <h1 className="text-2xl font-bold text-white">Panel de Administración</h1>
                 </div>
 
                 {/* Mensajes de error y éxito */}

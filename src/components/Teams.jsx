@@ -185,9 +185,9 @@ const Teams = () => {
     return (
         <>
             <div>
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold text-white">Gestión de Equipos</h1>
-            </div>
+                                <div className="flex justify-between items-center mb-8">
+                        <h1 className="text-2xl font-bold text-white">Gestión de Equipos</h1>
+                    </div>
 
             {/* Mensajes de error y éxito */}
             {error && (

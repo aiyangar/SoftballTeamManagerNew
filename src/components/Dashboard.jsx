@@ -278,9 +278,9 @@ const Dashboard = () => {
     return (
     <>
       <div>
-             <div className="flex justify-between items-center mb-8">
-         <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-       </div>
+                                 <div className="flex justify-between items-center mb-8">
+                      <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+                    </div>
 
              {/* Mensaje de Bienvenida */}
        <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Link } from 'react-router-dom';
+import { useModal } from '../hooks/useModal';
 
 const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
     const [players, setPlayers] = useState([]);
@@ -19,6 +20,9 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
         umpireTarget: 0
     });
     const [successMessage, setSuccessMessage] = useState('');
+
+    // Usar el hook para manejar el modal
+    useModal(true); // Siempre true porque este componente es un modal
 
     useEffect(() => {
         fetchPlayers();
@@ -195,25 +199,29 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-neutral-900 rounded-lg p-6 w-full max-w-md mx-4">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-semibold text-white">Registrar Pago</h2>
-                                         <button
-                         onClick={() => {
-                             // Recargar datos antes de cerrar
-                             if (onPaymentComplete) {
-                                 onPaymentComplete();
-                             }
-                             onClose();
-                         }}
-                         className="text-gray-400 hover:text-white text-2xl"
-                     >
-                         ×
-                     </button>
+            <div className="bg-neutral-900 rounded-lg w-full max-w-md mx-4 modal-container">
+                <div className="modal-header p-6 border-b border-gray-600">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-semibold text-white">Registrar Pago</h2>
+                        <button
+                            onClick={() => {
+                                // Recargar datos antes de cerrar
+                                if (onPaymentComplete) {
+                                    onPaymentComplete();
+                                }
+                                onClose();
+                            }}
+                            className="text-gray-400 hover:text-white text-2xl"
+                            title="Cerrar formulario de pago"
+                        >
+                            ×
+                        </button>
+                    </div>
                 </div>
 
-                                 {gameInfo && (
-                     <div className="mb-6 p-4 bg-gray-800 rounded-lg">
+                <div className="modal-content p-6">
+                    {gameInfo && (
+                        <div className="mb-6 p-4 bg-gray-800 rounded-lg">
                          <h3 className="font-semibold text-white mb-2">Información del Partido</h3>
                          <p className="text-gray-300">vs {gameInfo.equipo_contrario}</p>
                          <p className="text-gray-300">Fecha: {new Date(gameInfo.fecha_partido).toLocaleDateString()}</p>
@@ -275,7 +283,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                      </div>
                  )}
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-white mb-2">Seleccionar Jugador</label>
                         {players.length === 0 ? (
@@ -420,8 +428,9 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                          >
                              {loading ? 'Registrando...' : 'Registrar Pago'}
                          </button>
-                     </div>
+                    </div>
                 </form>
+                </div>
             </div>
         </div>
     );

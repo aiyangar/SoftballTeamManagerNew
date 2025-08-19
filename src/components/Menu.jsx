@@ -54,6 +54,7 @@ const Menu = () => {
                     onClick={() => setShowMenu(!showMenu)}
                     className="!px-4 !py-2 !bg-black !text-white !rounded hover:!bg-gray-900 !transition-colors !flex !items-center !space-x-2"
                     style={{ backgroundColor: '#000000', color: 'white' }}
+                    title="Abrir menú de navegación"
                 >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'white' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />

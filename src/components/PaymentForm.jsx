@@ -324,6 +324,8 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                                                                                    <div>
                           <label className="block text-white mb-2">Monto Umpire ($)</label>
                                                     <input
+                               id="montoUmpire"
+                               name="montoUmpire"
                                type="number"
                                step="0.01"
                                min="0"
@@ -347,6 +349,8 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                                          <div>
                          <label className="block text-white mb-2">Monto Registro ($)</label>
                                                                               <input
+                               id="montoRegistro"
+                               name="montoRegistro"
                                type="number"
                                step="0.01"
                                min="0"

@@ -128,6 +128,8 @@ const AdminPanel = () => {
                         </div>
                         <form onSubmit={createUser} className="space-y-4">
                             <input
+                                id="newUserEmail"
+                                name="newUserEmail"
                                 type="email"
                                 placeholder="Email del usuario"
                                 value={newUser.email}
@@ -136,6 +138,8 @@ const AdminPanel = () => {
                                 required
                             />
                             <input
+                                id="newUserPassword"
+                                name="newUserPassword"
                                 type="password"
                                 placeholder="Contraseña temporal"
                                 value={newUser.password}

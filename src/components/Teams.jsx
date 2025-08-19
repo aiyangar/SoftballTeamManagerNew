@@ -232,6 +232,8 @@ const Teams = () => {
                                 Nombre del Equipo *
                             </label>
                             <input 
+                                id="teamName"
+                                name="teamName"
                                 type="text" 
                                 placeholder='Ej: Tigres del Norte' 
                                 value={name} 
@@ -246,6 +248,8 @@ const Teams = () => {
                                 Monto de Inscripción ($)
                             </label>
                             <input 
+                                id="teamInscripcion"
+                                name="teamInscripcion"
                                 type="number" 
                                 step="0.01"
                                 min="0"

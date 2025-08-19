@@ -62,6 +62,8 @@ const Signin = () => {
                     
                     <div className='flex flex-col py-4'>
                         <input 
+                            id="email"
+                            name="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className='p-3 border mt-6 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500' 
@@ -70,6 +72,8 @@ const Signin = () => {
                             required
                         />
                         <input 
+                            id="password"
+                            name="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className='p-3 border mt-6 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500' 

@@ -735,6 +735,8 @@ const Players = () => {
                                     Nombre *
                                 </label>
                                 <input
+                                    id="playerName"
+                                    name="playerName"
                                     type="text"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
@@ -747,6 +749,8 @@ const Players = () => {
                                     Número *
                                 </label>
                                 <input
+                                    id="playerNumber"
+                                    name="playerNumber"
                                     type="number"
                                     min="0"
                                     max="99"
@@ -761,6 +765,8 @@ const Players = () => {
                                     Teléfono
                                 </label>
                                 <input
+                                    id="playerPhone"
+                                    name="playerPhone"
                                     type="tel"
                                     value={telefono}
                                     onChange={(e) => setTelefono(e.target.value)}
@@ -772,6 +778,8 @@ const Players = () => {
                                     Email
                                 </label>
                                 <input
+                                    id="playerEmail"
+                                    name="playerEmail"
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -806,6 +814,8 @@ const Players = () => {
                                 {positions.map(position => (
                                     <label key={position.id} className="flex items-center space-x-2">
                                         <input
+                                            id={`position-${position.id}`}
+                                            name={`position-${position.id}`}
                                             type="checkbox"
                                             checked={selectedPositions.includes(position.id)}
                                             onChange={() => handlePositionToggle(position.id)}

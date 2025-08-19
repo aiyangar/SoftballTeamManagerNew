@@ -5,7 +5,6 @@ import PaymentForm from './PaymentForm';
 import Menu from './Menu';
 import { useTeam } from '../context/TeamContext';
 import { useModal } from '../hooks/useModal';
-import VersionFooter from './VersionFooter';
 
 const Schedule = () => {
     const authContext = UserAuth();
@@ -1124,9 +1123,6 @@ const Schedule = () => {
                 </div>
             )}
             </div>
-            
-            {/* Footer con versión */}
-            <VersionFooter />
         </>
     );
 };

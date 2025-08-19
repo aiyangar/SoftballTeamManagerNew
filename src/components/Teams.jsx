@@ -4,7 +4,6 @@ import { UserAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
 import Menu from './Menu'
 import { useTeam } from '../context/TeamContext'
-import VersionFooter from './VersionFooter'
 
 /**
  * Componente para la gestión de equipos
@@ -395,9 +394,6 @@ const Teams = () => {
                 )}
             </div>
         </div>
-        
-        {/* Footer con versión */}
-        <VersionFooter />
     </>
     )
 }

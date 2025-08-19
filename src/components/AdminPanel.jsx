@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { UserAuth } from '../context/AuthContext';
-import VersionFooter from './VersionFooter';
 import Menu from './Menu';
 
 const AdminPanel = () => {
@@ -196,9 +195,6 @@ const AdminPanel = () => {
                     </div>
                 </div>
             </div>
-            
-            {/* Footer con versión */}
-            <VersionFooter />
         </>
     );
 };

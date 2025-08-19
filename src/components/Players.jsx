@@ -5,7 +5,6 @@ import { supabase } from '../supabaseClient'
 import Menu from './Menu'
 import { useTeam } from '../context/TeamContext'
 import { useModal } from '../hooks/useModal'
-import VersionFooter from './VersionFooter'
 
 /**
  * Componente para la gestión de jugadores
@@ -1340,9 +1339,6 @@ const Players = () => {
             )}
             
             </div>
-            
-            {/* Footer con versión */}
-            <VersionFooter />
         </>
     )
 }

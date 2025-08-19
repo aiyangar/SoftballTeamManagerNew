@@ -1,6 +1,5 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import VersionFooter from './VersionFooter'
 
 /**
  * Componente para el registro de nuevos usuarios
@@ -50,9 +49,6 @@ const Signup = () => {
               </div>
           </div>
       </div>
-      
-      {/* Footer con versión */}
-      <VersionFooter />
     </>
   )
 }

@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { UserAuth } from '../context/AuthContext.jsx'
-import VersionFooter from './VersionFooter'
 
 /**
  * Componente para el inicio de sesión de usuarios existentes
@@ -97,9 +96,6 @@ const Signin = () => {
                     </div>
                 </form>
             </div>
-            
-            {/* Footer con versión */}
-            <VersionFooter />
         </>
     )
 }

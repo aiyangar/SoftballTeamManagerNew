@@ -136,6 +136,11 @@ const Menu = () => {
                                     🚪 Cerrar Sesión
                                 </button>
                             </div>
+                            <div className="text-center pt-3">
+                                <p className="text-gray-400 text-xs">
+                                    Versión 0.8.0 - Softball Team Manager
+                                </p>
+                            </div>
                         </div>
                     </div>
                 )}

@@ -128,6 +128,21 @@ src/
 3. Configurar autenticación y políticas de seguridad
 4. Obtener las credenciales de la API y agregarlas al archivo `.env`
 
+## 📖 Documentación
+
+### Manual de Usuario
+Para instrucciones detalladas sobre cómo usar la aplicación, consulta el **[Manual de Usuario](MANUAL_USUARIO.md)** que incluye:
+
+- 🔐 **Acceso al Sistema**: Registro e inicio de sesión
+- 📋 **Flujo de Trabajo Completo**: 6 pasos principales para gestionar un equipo
+- 📊 **Dashboard y Reportes**: Información disponible y navegación
+- 🔧 **Funciones Adicionales**: Gestión de posiciones, historiales y múltiples equipos
+- ⚠️ **Notas Importantes**: Seguridad, funcionalidades y consejos de uso
+- 🆘 **Soporte**: Solución de problemas comunes
+
+### Documentación Técnica
+Para más información sobre el proyecto, consulta los archivos de documentación incluidos.
+
 ## 📝 Notas de Desarrollo
 
 - La aplicación utiliza React 19 con las últimas características

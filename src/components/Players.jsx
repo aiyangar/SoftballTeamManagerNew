@@ -4,6 +4,7 @@ import { UserAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
 import Menu from './Menu'
 import { useTeam } from '../context/TeamContext'
+import { useModal } from '../hooks/useModal'
 
 /**
  * Componente para la gestión de jugadores
@@ -58,6 +59,9 @@ const Players = () => {
         attendance: false,
         payments: false
     })
+
+    // Usar el hook para manejar el modal
+    useModal(showPlayerHistoryModal)
 
     // Hook para navegación programática
     const navigate = useNavigate()
@@ -1112,23 +1116,25 @@ const Players = () => {
                         {/* Modal de Historial del Jugador */}
             {showPlayerHistoryModal && selectedPlayerForHistory && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-neutral-900 border border-gray-600 rounded-lg w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
+                    <div className="bg-neutral-900 border border-gray-600 rounded-lg w-full max-w-4xl mx-4 modal-container">
                         {/* Header fijo */}
-                        <div className="flex justify-between items-center p-6 border-b border-gray-600">
-                            <h2 className="text-2xl font-semibold text-white">
-                                Historial de {selectedPlayerForHistory.nombre}
-                            </h2>
-                            <button
-                                onClick={closePlayerHistoryModal}
-                                className="text-gray-400 hover:text-white text-2xl"
-                                title="Cerrar historial"
-                            >
-                                ×
-                            </button>
+                        <div className="modal-header p-6 border-b border-gray-600">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-2xl font-semibold text-white">
+                                    Historial de {selectedPlayerForHistory.nombre}
+                                </h2>
+                                <button
+                                    onClick={closePlayerHistoryModal}
+                                    className="text-gray-400 hover:text-white text-2xl"
+                                    title="Cerrar historial"
+                                >
+                                    ×
+                                </button>
+                            </div>
                         </div>
 
                         {/* Contenido con scroll */}
-                        <div className="flex-1 overflow-y-auto p-6">
+                        <div className="modal-content p-6">
                             {loadingHistory ? (
                                 <div className="text-center py-8">
                                     <p className="text-gray-300">Cargando historial...</p>

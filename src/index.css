@@ -59,6 +59,29 @@ button:focus-visible {
   text-overflow: ellipsis;
 }
 
+/* Estilos para modales - eliminar scroll del body */
+body.modal-open {
+  overflow: hidden;
+}
+
+/* Estilos para modales con scroll interno */
+.modal-container {
+  height: 90vh;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  flex-shrink: 0;
+}
+
+.modal-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 /* Mejoras para dispositivos móviles */
 @media (max-width: 768px) {
   .dashboard-card {
@@ -67,6 +90,11 @@ button:focus-visible {
   
   .dashboard-card-content {
     font-size: 0.875rem;
+  }
+  
+  .modal-container {
+    height: 95vh;
+    max-height: 95vh;
   }
 }
 

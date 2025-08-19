@@ -4,6 +4,7 @@ import { UserAuth } from '../context/AuthContext';
 import PaymentForm from './PaymentForm';
 import Menu from './Menu';
 import { useTeam } from '../context/TeamContext';
+import { useModal } from '../hooks/useModal';
 
 const Schedule = () => {
     const authContext = UserAuth();
@@ -48,6 +49,9 @@ const Schedule = () => {
         attendance: [],
         payments: []
     });
+
+    // Usar el hook para manejar los modales
+    useModal(showGameDetailsModal || showScoreForm);
 
     // Limpiar mensaje de éxito después de 5 segundos
     useEffect(() => {
@@ -864,20 +868,23 @@ const Schedule = () => {
                          {/* Game Details Modal */}
              {showGameDetailsModal && selectedGameForDetails && (
                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                     <div className="bg-neutral-900 border border-gray-600 rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
-                         <div className="flex justify-between items-center mb-6">
-                             <h2 className="text-2xl font-semibold text-white">Detalles del Partido</h2>
-                             <button
-                                 onClick={closeGameDetailsModal}
-                                 className="text-gray-400 hover:text-white text-2xl"
-                                 title="Cerrar detalles del partido"
-                             >
-                                 ×
-                             </button>
+                     <div className="bg-neutral-900 border border-gray-600 rounded-lg w-full max-w-4xl mx-4 modal-container">
+                         <div className="modal-header p-6 border-b border-gray-600">
+                             <div className="flex justify-between items-center">
+                                 <h2 className="text-2xl font-semibold text-white">Detalles del Partido</h2>
+                                 <button
+                                     onClick={closeGameDetailsModal}
+                                     className="text-gray-400 hover:text-white text-2xl"
+                                     title="Cerrar detalles del partido"
+                                 >
+                                     ×
+                                 </button>
+                             </div>
                          </div>
                          
-                         {/* Información básica del partido */}
-                         <div className="mb-6 p-4 bg-gray-800 rounded-lg">
+                         <div className="modal-content p-6">
+                             {/* Información básica del partido */}
+                             <div className="mb-6 p-4 bg-gray-800 rounded-lg">
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                  <div>
                                      <h3 className="text-lg font-semibold text-white mb-2">{selectedGameForDetails.equipo_contrario}</h3>
@@ -1015,6 +1022,7 @@ const Schedule = () => {
                                  </div>
                              )}
                          </div>
+                         </div>
                      </div>
                  </div>
              )}
@@ -1022,23 +1030,26 @@ const Schedule = () => {
              {/* Score Form Modal */}
              {showScoreForm && selectedGameForScore && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-neutral-900 border border-gray-600 rounded-lg p-6 w-full max-w-md mx-4">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-semibold text-white">Finalizar Partido</h2>
-                            <button
-                                onClick={closeScoreForm}
-                                className="text-gray-400 hover:text-white text-2xl"
-                                title="Cerrar formulario de resultado"
-                            >
-                                ×
-                            </button>
+                    <div className="bg-neutral-900 border border-gray-600 rounded-lg w-full max-w-md mx-4 modal-container">
+                        <div className="modal-header p-6 border-b border-gray-600">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-xl font-semibold text-white">Finalizar Partido</h2>
+                                <button
+                                    onClick={closeScoreForm}
+                                    className="text-gray-400 hover:text-white text-2xl"
+                                    title="Cerrar formulario de resultado"
+                                >
+                                    ×
+                                </button>
+                            </div>
                         </div>
                         
-                        <div className="mb-4 p-3 bg-gray-800 rounded">
-                            <p className="text-gray-300 text-xs">Fecha: {new Date(selectedGameForScore.fecha_partido).toLocaleDateString()}</p>
-                        </div>
+                        <div className="modal-content p-6">
+                            <div className="mb-4 p-3 bg-gray-800 rounded">
+                                <p className="text-gray-300 text-xs">Fecha: {new Date(selectedGameForScore.fecha_partido).toLocaleDateString()}</p>
+                            </div>
 
-                        <form onSubmit={handleScoreSubmit} className="space-y-4">
+                            <form onSubmit={handleScoreSubmit} className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-white mb-2 text-sm">{getLocalTeamName()}</label>
@@ -1107,6 +1118,7 @@ const Schedule = () => {
                                 </button>
                             </div>
                         </form>
+                        </div>
                     </div>
                 </div>
             )}

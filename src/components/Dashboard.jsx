@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import Menu from './Menu'
 import { useTeam } from '../context/TeamContext'
+import VersionFooter from './VersionFooter'
 
 /**
  * Componente Dashboard - Página principal para usuarios autenticados
@@ -275,7 +276,8 @@ const Dashboard = () => {
 
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <>
+      <div className="max-w-6xl mx-auto p-6">
              <div className="flex justify-between items-center mb-8">
          <h1 className="text-3xl font-bold">Dashboard</h1>
          
@@ -588,7 +590,11 @@ const Dashboard = () => {
        )}
 
       
-    </div>
+      </div>
+      
+      {/* Footer con versión */}
+      <VersionFooter />
+    </>
   )
 }
 

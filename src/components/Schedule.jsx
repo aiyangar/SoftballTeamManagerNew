@@ -5,6 +5,7 @@ import PaymentForm from './PaymentForm';
 import Menu from './Menu';
 import { useTeam } from '../context/TeamContext';
 import { useModal } from '../hooks/useModal';
+import VersionFooter from './VersionFooter';
 
 const Schedule = () => {
     const authContext = UserAuth();
@@ -490,7 +491,8 @@ const Schedule = () => {
     }, [selectedTeam]);
 
     return (
-        <div className="max-w-6xl mx-auto p-6">
+        <>
+            <div className="max-w-6xl mx-auto p-6">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold text-white">Gestión de Partidos</h1>
                 <Menu />
@@ -1122,7 +1124,11 @@ const Schedule = () => {
                     </div>
                 </div>
             )}
-        </div>
+            </div>
+            
+            {/* Footer con versión */}
+            <VersionFooter />
+        </>
     );
 };
 

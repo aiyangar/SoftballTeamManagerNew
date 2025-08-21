@@ -289,7 +289,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                 if (deleteError) {
                     console.error('Error al eliminar pago en 0:', deleteError);
                 } else {
-                    setSuccessMessage('✅ Pago borrado exitosamente. El jugador ha sido desmarcado y puede registrar un nuevo pago.');
+                    setSuccessMessage('Pago borrado exitosamente. El jugador ha sido desmarcado y puede registrar un nuevo pago.');
                     // Ocultar la advertencia de cancelación después del borrado exitoso
                     setShowCancelWarning(false);
                 }

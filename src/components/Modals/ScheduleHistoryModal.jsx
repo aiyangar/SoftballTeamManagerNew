@@ -17,6 +17,7 @@ import React, { useState, useEffect } from 'react'
  * @param {Function} onAttendanceChange - Función para cambiar asistencia
  * @param {Function} onRecordAttendance - Función para guardar asistencia
  * @param {Function} onLoadExistingAttendance - Función para cargar asistencia existente
+ * @param {Function} onReloadDetails - Función para recargar detalles del modal
  */
 const ScheduleHistoryModal = ({
     showModal,
@@ -33,7 +34,8 @@ const ScheduleHistoryModal = ({
     attendance,
     onAttendanceChange,
     onRecordAttendance,
-    onLoadExistingAttendance
+    onLoadExistingAttendance,
+    onReloadDetails
 }) => {
     const [isEditingAttendance, setIsEditingAttendance] = useState(false);
     const [localAttendance, setLocalAttendance] = useState([]);
@@ -45,7 +47,23 @@ const ScheduleHistoryModal = ({
             const currentAttendance = attendance[selectedGame.id] || [];
             setLocalAttendance(currentAttendance);
         }
-    }, [showModal, selectedGame, attendance]);
+    }, [showModal, selectedGame]);
+
+    // Resetear estado de edición cuando se cierra el modal
+    useEffect(() => {
+        if (!showModal) {
+            setIsEditingAttendance(false);
+            setLocalAttendance([]);
+        }
+    }, [showModal]);
+
+    // Sincronizar estado local cuando cambia el estado global (solo si no estamos editando)
+    useEffect(() => {
+        if (showModal && selectedGame && !isEditingAttendance) {
+            const currentAttendance = attendance[selectedGame.id] || [];
+            setLocalAttendance(currentAttendance);
+        }
+    }, [attendance, selectedGame, showModal, isEditingAttendance]);
 
     if (!showModal || !selectedGame) return null
 
@@ -71,10 +89,18 @@ const ScheduleHistoryModal = ({
                                         <span>Editar</span>
                                     </button>
                                     <button
-                                        onClick={() => {
-                                            setIsEditingAttendance(!isEditingAttendance);
+                                        onClick={async () => {
                                             if (!isEditingAttendance) {
-                                                onLoadExistingAttendance(selectedGame.id);
+                                                // Al activar el modo edición, cargar asistencia existente
+                                                const success = await onLoadExistingAttendance(selectedGame.id);
+                                                if (success) {
+                                                    setIsEditingAttendance(true);
+                                                }
+                                            } else {
+                                                // Al cancelar, resetear el estado local al estado global
+                                                setIsEditingAttendance(false);
+                                                const currentAttendance = attendance[selectedGame.id] || [];
+                                                setLocalAttendance(currentAttendance);
                                             }
                                         }}
                                         className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center space-x-2"
@@ -213,22 +239,40 @@ const ScheduleHistoryModal = ({
                             </h3>
                             {!gameFinalizationStatus && isEditingAttendance && (
                                 <div className="flex space-x-2">
-                                    <button
-                                        onClick={() => {
-                                            setLocalAttendance([]);
-                                            onAttendanceChange(selectedGame.id, []);
-                                        }}
-                                        className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
-                                    >
-                                        Limpiar
-                                    </button>
-                                    <button
-                                        onClick={async () => {
-                                            setLoading(true);
-                                            await onRecordAttendance(selectedGame.id);
-                                            setLoading(false);
-                                            setIsEditingAttendance(false);
-                                        }}
+                                                                         <button
+                                         onClick={() => {
+                                             console.log('=== DEBUG LIMPIAR ===');
+                                             console.log('Limpiando asistencia para partido:', selectedGame.id);
+                                             console.log('Estado local antes:', localAttendance);
+                                             setLocalAttendance([]);
+                                             // También limpiar el estado global
+                                             onAttendanceChange(selectedGame.id, []);
+                                             console.log('Estado local después:', []);
+                                             console.log('========================');
+                                         }}
+                                         className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+                                     >
+                                         Limpiar
+                                     </button>
+                                                                         <button
+                                         onClick={async () => {
+                                             console.log('=== DEBUG GUARDAR ===');
+                                             console.log('Guardando asistencia para partido:', selectedGame.id);
+                                             console.log('Estado local actual:', localAttendance);
+                                             console.log('Estado global actual:', attendance);
+                                             setLoading(true);
+                                             const success = await onRecordAttendance(selectedGame.id);
+                                             setLoading(false);
+                                             if (success) {
+                                                 setIsEditingAttendance(false);
+                                                 // Recargar datos del modal inmediatamente
+                                                 if (onReloadDetails) {
+                                                     await onReloadDetails();
+                                                 }
+                                             }
+                                             console.log('Resultado del guardado:', success);
+                                             console.log('========================');
+                                         }}
                                         disabled={loading}
                                         className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50"
                                     >
@@ -240,32 +284,76 @@ const ScheduleHistoryModal = ({
 
                         {isEditingAttendance && !gameFinalizationStatus ? (
                             // Modo edición
-                            <div className="p-4 bg-gray-800 rounded-lg">
-                                <h4 className="text-white font-semibold mb-3">Seleccionar Jugadores Asistentes</h4>
+                                                         <div className="p-4 bg-gray-800 rounded-lg">
+                                 <div className="flex justify-between items-center mb-3">
+                                     <h4 className="text-white font-semibold">Seleccionar Jugadores Asistentes</h4>
+                                     <div className="text-sm text-gray-300">
+                                         {localAttendance.length} de {players.length} seleccionados
+                                     </div>
+                                 </div>
+                                 
+                                 {/* Barra de progreso */}
+                                 {players.length > 0 && (
+                                     <div className="mb-4">
+                                         <div className="w-full bg-gray-700 rounded-full h-2">
+                                             <div 
+                                                 className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                                                 style={{ 
+                                                     width: `${(localAttendance.length / players.length) * 100}%` 
+                                                 }}
+                                             ></div>
+                                         </div>
+                                     </div>
+                                 )}
                                 {players.length === 0 ? (
                                     <div className="text-yellow-500 text-center">
                                         <p>No hay jugadores registrados en este equipo.</p>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                        {players.map(player => (
-                                            <label key={player.id} className="flex items-center space-x-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={localAttendance.includes(player.id)}
-                                                    onChange={() => {
-                                                        const newAttendance = localAttendance.includes(player.id)
-                                                            ? localAttendance.filter(id => id !== player.id)
-                                                            : [...localAttendance, player.id];
-                                                        setLocalAttendance(newAttendance);
-                                                        onAttendanceChange(selectedGame.id, newAttendance);
-                                                    }}
-                                                    className="form-checkbox h-5 w-5 text-blue-600"
-                                                />
-                                                <span className="text-white">{player.nombre}</span>
-                                            </label>
-                                        ))}
-                                    </div>
+                                                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                             {players.map(player => {
+                                                 const isSelected = localAttendance.includes(player.id);
+                                                 return (
+                                                     <label 
+                                                         key={player.id} 
+                                                         className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                                                             isSelected 
+                                                                 ? 'bg-green-700 border-2 border-green-500' 
+                                                                 : 'bg-gray-700 border-2 border-gray-600 hover:bg-gray-600'
+                                                         }`}
+                                                     >
+                                                         <input
+                                                             type="checkbox"
+                                                             checked={isSelected}
+                                                                                                                           onChange={() => {
+                                                                  const newAttendance = isSelected
+                                                                      ? localAttendance.filter(id => id !== player.id)
+                                                                      : [...localAttendance, player.id];
+                                                                  console.log('=== DEBUG CHECKBOX CHANGE ===');
+                                                                  console.log('Player ID:', player.id, 'Tipo:', typeof player.id);
+                                                                  console.log('Player Name:', player.nombre);
+                                                                  console.log('Is Selected:', isSelected);
+                                                                  console.log('Local Attendance antes:', localAttendance);
+                                                                  console.log('Local Attendance después:', newAttendance);
+                                                                  console.log('Game ID:', selectedGame.id);
+                                                                  console.log('================================');
+                                                                  setLocalAttendance(newAttendance);
+                                                                  // También actualizar el estado global
+                                                                  onAttendanceChange(selectedGame.id, newAttendance);
+                                                              }}
+                                                              onClick={(e) => e.stopPropagation()}
+                                                             className="form-checkbox h-5 w-5 text-green-600"
+                                                         />
+                                                         <span className={`font-medium ${isSelected ? 'text-white' : 'text-gray-300'}`}>
+                                                             {player.nombre}
+                                                         </span>
+                                                         {isSelected && (
+                                                             <span className="text-green-400 text-lg">✓</span>
+                                                         )}
+                                                     </label>
+                                                 );
+                                             })}
+                                         </div>
                                 )}
                             </div>
                         ) : (

@@ -41,6 +41,7 @@ const ScheduleCard = ({
         <div 
             className="bg-gray-800 border border-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-800 hover:border-gray-500 transition-all duration-300"
             onClick={() => onCardClick(game)}
+            data-game-id={game.id}
         >
             {gameFinalizationStatus[game.id] ? (
                 // Partido finalizado - Vista compacta

@@ -14,6 +14,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
     const [gameInfo, setGameInfo] = useState(null);
     const [existingPayments, setExistingPayments] = useState({});
     const [showUpdateWarning, setShowUpdateWarning] = useState(false);
+    const [showCancelWarning, setShowCancelWarning] = useState(false);
     const [paymentTotals, setPaymentTotals] = useState({
         totalUmpire: 0,
         totalInscripcion: 0,
@@ -25,9 +26,16 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
     useModal(true); // Siempre true porque este componente es un modal
 
     useEffect(() => {
-        fetchPlayers();
-        fetchGameInfo();
-        fetchExistingPayments();
+        const initializeForm = async () => {
+            // Primero limpiar pagos en 0
+            await cleanZeroPayments();
+            // Luego cargar los datos
+            await fetchPlayers();
+            await fetchGameInfo();
+            await fetchExistingPayments();
+        };
+        
+        initializeForm();
     }, [teamId, gameId]);
 
     const fetchPlayers = async () => {
@@ -56,6 +64,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
     const handlePlayerChange = (playerId) => {
         setSelectedPlayer(playerId);
         setShowUpdateWarning(false);
+        setShowCancelWarning(false);
         setSuccessMessage(''); // Limpiar mensaje de éxito al cambiar jugador
         
         if (playerId && existingPayments[playerId]) {
@@ -89,6 +98,40 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
         }
     };
 
+    const cleanZeroPayments = async () => {
+        // Función para limpiar pagos que tengan monto total de 0
+        const { data, error } = await supabase
+            .from('pagos')
+            .select('jugador_id, monto_umpire, monto_inscripcion')
+            .eq('partido_id', gameId);
+        
+        if (error) {
+            console.error('Error al verificar pagos en 0:', error);
+            return;
+        }
+        
+        const paymentsToDelete = data.filter(payment => {
+            const totalPayment = (payment.monto_umpire || 0) + (payment.monto_inscripcion || 0);
+            return totalPayment === 0;
+        });
+        
+        if (paymentsToDelete.length > 0) {
+            console.log(`Encontrados ${paymentsToDelete.length} pagos en 0 para limpiar`);
+            
+            for (const payment of paymentsToDelete) {
+                const { error: deleteError } = await supabase
+                    .from('pagos')
+                    .delete()
+                    .eq('partido_id', gameId)
+                    .eq('jugador_id', payment.jugador_id);
+                
+                if (deleteError) {
+                    console.error(`Error al eliminar pago en 0 para jugador ${payment.jugador_id}:`, deleteError);
+                }
+            }
+        }
+    };
+
     const fetchExistingPayments = async () => {
         const { data, error } = await supabase
             .from('pagos')
@@ -102,10 +145,15 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
             let totalUmpire = 0;
             let totalInscripcion = 0;
             
+            // Solo procesar pagos con monto total mayor a 0
             data.forEach(payment => {
-                paymentsMap[payment.jugador_id] = payment;
-                totalUmpire += payment.monto_umpire || 0;
-                totalInscripcion += payment.monto_inscripcion || 0;
+                const totalPayment = (payment.monto_umpire || 0) + (payment.monto_inscripcion || 0);
+                
+                if (totalPayment > 0) {
+                    paymentsMap[payment.jugador_id] = payment;
+                    totalUmpire += payment.monto_umpire || 0;
+                    totalInscripcion += payment.monto_inscripcion || 0;
+                }
             });
             
             setExistingPayments(paymentsMap);
@@ -115,6 +163,45 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                 totalInscripcion
             }));
         }
+    };
+
+    const updatePaymentState = async () => {
+        // Función para actualizar inmediatamente el estado de pagos después de una operación
+        const { data, error } = await supabase
+            .from('pagos')
+            .select('jugador_id, monto_umpire, monto_inscripcion, metodo_pago')
+            .eq('partido_id', gameId);
+        
+        if (error) {
+            console.error('Error actualizando estado de pagos:', error);
+            return;
+        }
+        
+        const paymentsMap = {};
+        let totalUmpire = 0;
+        let totalInscripcion = 0;
+        
+        // Solo procesar pagos con monto total mayor a 0
+        data.forEach(payment => {
+            const totalPayment = (payment.monto_umpire || 0) + (payment.monto_inscripcion || 0);
+            
+            if (totalPayment > 0) {
+                paymentsMap[payment.jugador_id] = payment;
+                totalUmpire += payment.monto_umpire || 0;
+                totalInscripcion += payment.monto_inscripcion || 0;
+            }
+        });
+        
+        // Actualizar estado inmediatamente
+        setExistingPayments(paymentsMap);
+        setPaymentTotals(prev => ({
+            ...prev,
+            totalUmpire,
+            totalInscripcion
+        }));
+        
+        // También actualizar la lista de jugadores para reflejar cambios en el estado de pago
+        await fetchPlayers();
     };
 
 
@@ -128,8 +215,11 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
         }
 
         // Verificar que al menos se ingrese un monto, pero permitir solo inscripción si el umpire está completo
-        if (!montoUmpire && !montoRegistro) {
-            setError('Por favor, ingresa al menos un monto.');
+        const totalPayment = (montoUmpire ? parseFloat(montoUmpire) : 0) + (montoRegistro ? parseFloat(montoRegistro) : 0);
+        
+        // Permitir pago en 0 solo si es una actualización de un pago existente
+        if (totalPayment === 0 && !existingPayments[selectedPlayer]) {
+            setError('Por favor, ingresa al menos un monto mayor a 0. No se pueden registrar pagos nuevos con monto total de $0.');
             return;
         }
 
@@ -140,8 +230,14 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
         }
 
         // Check if player already has a payment
-        if (existingPayments[selectedPlayer] && !showUpdateWarning) {
+        if (existingPayments[selectedPlayer] && !showUpdateWarning && !showCancelWarning) {
             setShowUpdateWarning(true);
+            return;
+        }
+        
+        // Check if updating payment to 0 (canceling payment)
+        if (existingPayments[selectedPlayer] && totalPayment === 0 && !showCancelWarning) {
+            setShowCancelWarning(true);
             return;
         }
 
@@ -177,21 +273,48 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
         if (result.error) {
             setError('Error al registrar el pago: ' + result.error.message);
         } else {
-            // Mostrar mensaje de éxito
-            setSuccessMessage(existingPayments[selectedPlayer] ? 'Pago actualizado con éxito!' : 'Pago registrado con éxito!');
-            // Reset form
+            // Verificar si el pago quedó en 0 (se canceló el pago)
+            const totalPayment = (montoUmpire ? parseFloat(montoUmpire) : 0) + (montoRegistro ? parseFloat(montoRegistro) : 0);
+            const wasExistingPayment = existingPayments[selectedPlayer];
+            
+            if (wasExistingPayment && totalPayment === 0) {
+                // Si era un pago existente y ahora quedó en 0, eliminar el registro
+                const { error: deleteError } = await supabase
+                    .from('pagos')
+                    .delete()
+                    .eq('partido_id', gameId)
+                    .eq('jugador_id', selectedPlayer);
+                
+                if (deleteError) {
+                    console.error('Error al eliminar pago en 0:', deleteError);
+                } else {
+                    setSuccessMessage('✅ Pago borrado exitosamente. El jugador ha sido desmarcado y puede registrar un nuevo pago.');
+                    // Ocultar la advertencia de cancelación después del borrado exitoso
+                    setShowCancelWarning(false);
+                }
+            } else {
+                // Mostrar mensaje de éxito normal
+                setSuccessMessage(wasExistingPayment ? 'Pago actualizado con éxito! El formulario se ha limpiado para el siguiente jugador.' : 'Pago registrado con éxito! El formulario se ha limpiado para el siguiente jugador.');
+            }
+            
+            // Actualizar inmediatamente el estado local de pagos
+            await updatePaymentState();
+            
+            // Limpiar mensaje de éxito después de 3 segundos
+            setTimeout(() => {
+                setSuccessMessage('');
+            }, 3000);
+            
+            // Reset form para el siguiente jugador (pero mantener el modal abierto)
             setSelectedPlayer('');
             setMontoUmpire('');
             setMontoRegistro('');
             setMetodoPago('Efectivo');
             setShowUpdateWarning(false);
-            // Refresh existing payments
-            fetchExistingPayments();
-            // Limpiar mensaje de éxito después de 3 segundos
-            setTimeout(() => {
-                setSuccessMessage('');
-            }, 3000);
-            // No llamar a onPaymentComplete para mantener el modal abierto
+            setShowCancelWarning(false);
+            
+            // NO llamar a onPaymentComplete aquí para evitar que se cierre el modal
+            // El modal permanecerá abierto para registrar más pagos
         }
         
         setLoading(false);
@@ -205,9 +328,9 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                         <h2 className="text-xl font-semibold text-white">Registrar Pago</h2>
                         <button
                             onClick={() => {
-                                // Recargar datos antes de cerrar
+                                // Solo recargar datos si se registró un pago
                                 if (onPaymentComplete) {
-                                    onPaymentComplete();
+                                    onPaymentComplete(false); // false = no se registró pago
                                 }
                                 onClose();
                             }}
@@ -220,6 +343,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                 </div>
 
                 <div className="modal-content p-6">
+                    
                     {gameInfo && (
                         <div className="mb-6 p-4 bg-gray-800 rounded-lg">
                          <h3 className="font-semibold text-white mb-2">Información del Partido</h3>
@@ -327,7 +451,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                                id="montoUmpire"
                                name="montoUmpire"
                                type="number"
-                               step="0.01"
+                               step="10"
                                min="0"
                                value={montoUmpire}
                                onChange={(e) => setMontoUmpire(e.target.value)}
@@ -352,7 +476,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                                id="montoRegistro"
                                name="montoRegistro"
                                type="number"
-                               step="0.01"
+                               step="10"
                                min="0"
                                value={montoRegistro}
                                onChange={(e) => setMontoRegistro(e.target.value)}
@@ -361,17 +485,39 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                            />
                      </div>
 
-                     <div>
-                         <label className="block text-white mb-2">Método de Pago</label>
-                                                                              <select
-                               value={metodoPago}
-                               onChange={(e) => setMetodoPago(e.target.value)}
-                               className="w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white"
-                           >
-                              <option value="Efectivo">Efectivo</option>
-                              <option value="Transferencia">Transferencia</option>
-                          </select>
-                     </div>
+                                           <div>
+                          <label className="block text-white mb-2">Método de Pago</label>
+                          <select
+                              value={metodoPago}
+                              onChange={(e) => setMetodoPago(e.target.value)}
+                              className="w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white"
+                          >
+                             <option value="Efectivo">Efectivo</option>
+                             <option value="Transferencia">Transferencia</option>
+                         </select>
+                      </div>
+
+                      {/* Botón para borrar pago existente */}
+                      {selectedPlayer && existingPayments[selectedPlayer] && (
+                          <div className="pt-2">
+                              <button
+                                  type="button"
+                                  onClick={() => {
+                                      setMontoUmpire('0');
+                                      setMontoRegistro('0');
+                                      setShowCancelWarning(true);
+                                  }}
+                                  className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+                                  title="Borrar el pago de este jugador"
+                              >
+                                  <span>🗑️</span>
+                                  <span>Borrar Pago</span>
+                              </button>
+                              <div className="text-xs text-gray-400 mt-1 text-center">
+                                  Establece ambos montos en $0 para cancelar el pago
+                              </div>
+                          </div>
+                      )}
 
                                          {error && (
                          <div className="text-red-500 text-sm">{error}</div>
@@ -386,53 +532,90 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                          </div>
                      )}
 
-                     {showUpdateWarning && (
-                         <div className="bg-yellow-900 border border-yellow-600 rounded-md p-3">
-                             <div className="text-yellow-200 font-semibold mb-2">⚠️ Advertencia</div>
-                             <div className="text-yellow-100 text-sm mb-3">
-                                 Este jugador ya tiene un pago registrado para este partido. 
-                                 Al continuar, se actualizará el pago existente.
-                             </div>
-                             <div className="flex space-x-2">
-                                 <button
-                                     type="button"
-                                     onClick={() => setShowUpdateWarning(false)}
-                                     className="px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700"
-                                 >
-                                     Cancelar
-                                 </button>
-                                 <button
-                                     type="submit"
-                                     className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
-                                 >
-                                     Actualizar Pago
-                                 </button>
-                             </div>
-                         </div>
-                     )}
+                                           {showUpdateWarning && (
+                          <div className="bg-yellow-900 border border-yellow-600 rounded-md p-3">
+                              <div className="text-yellow-200 font-semibold mb-2">⚠️ Advertencia</div>
+                              <div className="text-yellow-100 text-sm mb-3">
+                                  Este jugador ya tiene un pago registrado para este partido. 
+                                  Al continuar, se actualizará el pago existente.
+                              </div>
+                              <div className="flex space-x-2">
+                                  <button
+                                      type="button"
+                                      onClick={() => setShowUpdateWarning(false)}
+                                      className="px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700"
+                                  >
+                                      Cancelar
+                                  </button>
+                                  <button
+                                      type="submit"
+                                      className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                                  >
+                                      Actualizar Pago
+                                  </button>
+                              </div>
+                          </div>
+                      )}
+
+                                             {showCancelWarning && (
+                           <div className="bg-red-900 border border-red-600 rounded-md p-3">
+                               <div className="text-red-200 font-semibold mb-2">🗑️ Borrar Pago</div>
+                               <div className="text-red-100 text-sm mb-3">
+                                   Estás a punto de <strong>borrar completamente</strong> el pago de este jugador. 
+                                   El registro será eliminado de la base de datos y el jugador aparecerá como no pagado.
+                                   <br /><br />
+                                   <span className="text-yellow-300">⚠️ Esta acción no se puede deshacer.</span>
+                               </div>
+                              <div className="flex space-x-2">
+                                  <button
+                                      type="button"
+                                      onClick={() => setShowCancelWarning(false)}
+                                      className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                                  >
+                                      Cancelar
+                                  </button>
+                                                                     <button
+                                       type="submit"
+                                       className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                                   >
+                                       Sí, Borrar Pago
+                                   </button>
+                              </div>
+                          </div>
+                      )}
 
                                           <div className="flex space-x-3 pt-4">
+                         <button
+                             type="button"
+                             onClick={() => {
+                                 // Solo cerrar sin actualizar datos
+                                 onClose();
+                             }}
+                             className="flex-1 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                         >
+                             Cancelar
+                         </button>
                                                    <button
-                              type="button"
-                              onClick={() => {
-                                  // Recargar datos antes de cerrar
-                                  if (onPaymentComplete) {
-                                      onPaymentComplete();
-                                  }
-                                  onClose();
-                              }}
-                              className="flex-1 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                              type="submit"
+                              disabled={loading || players.length === 0 || showUpdateWarning || showCancelWarning}
+                              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
                           >
-                              Cancelar
+                              {loading ? 'Registrando...' : 'Registrar Pago'}
                           </button>
                          <button
-                             type="submit"
-                             disabled={loading || players.length === 0 || showUpdateWarning}
-                             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                             type="button"
+                             onClick={() => {
+                                 // Recargar datos y cerrar modal
+                                 if (onPaymentComplete) {
+                                     onPaymentComplete(true); // true = se registraron pagos
+                                 }
+                                 onClose();
+                             }}
+                             className="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                          >
-                             {loading ? 'Registrando...' : 'Registrar Pago'}
+                             Terminar
                          </button>
-                    </div>
+                     </div>
                 </form>
                 </div>
             </div>

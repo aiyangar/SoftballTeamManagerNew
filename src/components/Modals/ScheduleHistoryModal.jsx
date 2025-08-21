@@ -41,6 +41,7 @@ const ScheduleHistoryModal = ({
     const [isEditingAttendance, setIsEditingAttendance] = useState(false);
     const [localAttendance, setLocalAttendance] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [showDeleteWarning, setShowDeleteWarning] = useState(false);
 
     // Cargar asistencia existente cuando se abre el modal
     useEffect(() => {
@@ -122,12 +123,7 @@ const ScheduleHistoryModal = ({
                                         <span>Pagos</span>
                                     </button>
                                     <button
-                                        onClick={() => {
-                                            if (window.confirm('¿Estás seguro de que quieres eliminar este partido? Esta acción no se puede deshacer.')) {
-                                                onDeleteGame(selectedGame.id);
-                                                onClose();
-                                            }
-                                        }}
+                                        onClick={() => setShowDeleteWarning(true)}
                                         className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center space-x-2"
                                         title="Eliminar partido"
                                     >
@@ -376,8 +372,57 @@ const ScheduleHistoryModal = ({
                     </div>
                 </div>
             </div>
+
+            {/* Modal de confirmación para eliminar partido */}
+            {showDeleteWarning && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60">
+                    <div className="bg-gray-800 border border-red-600 rounded-lg p-6 max-w-md mx-4">
+                        <div className="text-red-200 font-semibold text-lg mb-4">🗑️ Eliminar Partido</div>
+                        <div className="text-gray-200 text-sm mb-6">
+                            <p className="mb-3">
+                                Estás a punto de <strong>eliminar completamente</strong> este partido:
+                            </p>
+                            <div className="bg-gray-700 p-3 rounded mb-3">
+                                <p className="text-white font-semibold">vs {selectedGame.equipo_contrario}</p>
+                                <p className="text-gray-300 text-sm">
+                                    {new Date(selectedGame.fecha_partido).toLocaleDateString()} - {selectedGame.lugar}
+                                </p>
+                            </div>
+                            <p className="text-yellow-300 text-sm">
+                                ⚠️ Esta acción eliminará:
+                            </p>
+                            <ul className="text-yellow-200 text-sm ml-4 mt-2 space-y-1">
+                                <li>• El registro del partido</li>
+                                <li>• Todos los registros de asistencia</li>
+                                <li>• Todos los pagos asociados</li>
+                            </ul>
+                            <p className="text-red-300 text-sm mt-3 font-semibold">
+                                ⚠️ Esta acción no se puede deshacer.
+                            </p>
+                        </div>
+                        <div className="flex space-x-3">
+                            <button
+                                onClick={() => setShowDeleteWarning(false)}
+                                className="flex-1 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={() => {
+                                    onDeleteGame(selectedGame.id);
+                                    setShowDeleteWarning(false);
+                                    onClose();
+                                }}
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                            >
+                                Sí, Eliminar Partido
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-    )
-}
+    );
+};
 
 export default ScheduleHistoryModal

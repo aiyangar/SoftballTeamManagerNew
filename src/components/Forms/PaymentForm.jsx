@@ -245,13 +245,38 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
         setLoading(true);
         setError(null);
 
+        // Calcular montos con lógica de transferencia automática
+        let montoUmpireFinal = 0;
+        let montoInscripcionFinal = parseFloat(montoRegistro) || 0;
+        const montoUmpireIngresado = parseFloat(montoUmpire) || 0;
+        const umpireFaltante = paymentTotals.umpireTarget - paymentTotals.totalUmpire;
+
+        if (montoUmpireIngresado > 0) {
+            // Calcular cuánto falta para completar el umpire
+            
+            if (umpireFaltante > 0) {
+                // Si hay espacio en el umpire
+                if (montoUmpireIngresado <= umpireFaltante) {
+                    // El monto cabe completamente en el umpire
+                    montoUmpireFinal = montoUmpireIngresado;
+                } else {
+                    // El monto excede el umpire, transferir el exceso a inscripción
+                    montoUmpireFinal = umpireFaltante;
+                    montoInscripcionFinal += (montoUmpireIngresado - umpireFaltante);
+                }
+            } else {
+                // El umpire ya está completo, todo va a inscripción
+                montoInscripcionFinal += montoUmpireIngresado;
+            }
+        }
+
         const paymentData = {
             jugador_id: selectedPlayer,
             partido_id: gameId,
             equipo_id: teamId,
             fecha_pago: new Date().toISOString(),
-            monto_umpire: (montoUmpire && paymentTotals.totalUmpire < paymentTotals.umpireTarget) ? parseFloat(montoUmpire) : 0,
-            monto_inscripcion: montoRegistro ? parseFloat(montoRegistro) : 0,
+            monto_umpire: montoUmpireFinal,
+            monto_inscripcion: montoInscripcionFinal,
             concepto: `Pago partido vs ${gameInfo?.equipo_contrario || 'Equipo contrario'}`,
             metodo_pago: metodoPago
         };
@@ -294,8 +319,21 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                     setShowCancelWarning(false);
                 }
             } else {
-                // Mostrar mensaje de éxito normal
-                setSuccessMessage(wasExistingPayment ? 'Pago actualizado con éxito! El formulario se ha limpiado para el siguiente jugador.' : 'Pago registrado con éxito! El formulario se ha limpiado para el siguiente jugador.');
+                // Preparar mensaje de éxito con información sobre transferencia automática
+                let successMessage = wasExistingPayment ? 'Pago actualizado con éxito!' : 'Pago registrado con éxito!';
+                
+                // Agregar información sobre transferencia automática si ocurrió
+                if (montoUmpireIngresado > 0 && montoUmpireFinal !== montoUmpireIngresado) {
+                    const transferido = montoUmpireIngresado - montoUmpireFinal;
+                    if (umpireFaltante <= 0) {
+                        successMessage += ` 💡 $${montoUmpireIngresado} transferidos automáticamente a inscripción (umpire completo).`;
+                    } else {
+                        successMessage += ` 💡 $${transferido} transferidos automáticamente a inscripción (exceso del umpire).`;
+                    }
+                }
+                
+                successMessage += ' El formulario se ha limpiado para el siguiente jugador.';
+                setSuccessMessage(successMessage);
             }
             
             // Actualizar inmediatamente el estado local de pagos
@@ -420,9 +458,13 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                                        : 'bg-gray-800'
                                }`}
                            />
-                           {paymentTotals.totalUmpire >= paymentTotals.umpireTarget && (
+                           {paymentTotals.totalUmpire >= paymentTotals.umpireTarget ? (
                                <div className="text-green-400 text-xs mt-1">
                                    ✅ Objetivo del umpire alcanzado
+                               </div>
+                           ) : (
+                               <div className="text-blue-400 text-xs mt-1">
+                                   💡 Faltan ${(paymentTotals.umpireTarget - paymentTotals.totalUmpire).toLocaleString()} para completar umpire
                                </div>
                            )}
                       </div>
@@ -440,6 +482,14 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                                placeholder="0.00"
                                className="w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white"
                            />
+                     </div>
+
+                     {/* Nota informativa sobre transferencia automática */}
+                     <div className="bg-blue-900 border border-blue-600 text-blue-200 px-3 py-2 rounded text-xs">
+                         <div className="flex items-center space-x-2">
+                             <span className="text-blue-300">💡</span>
+                             <span>Si el monto del umpire excede lo necesario, el exceso se transferirá automáticamente a inscripción.</span>
+                         </div>
                      </div>
 
                                            <div>

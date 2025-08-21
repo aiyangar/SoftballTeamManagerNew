@@ -57,23 +57,23 @@ const Dashboard = () => {
       await fetchTeamInfo(teamId)
       setLoadingTeam(false)
     } else {
-                          setTeamInfo({
-          totalPlayers: 0,
-          nextGame: null,
-          totalRegistrationPaid: 0,
-          totalRegistrationRequired: 0,
-          remainingRegistration: 0,
-          lastGame: null,
-          gameStats: {
-            wins: 0,
-            losses: 0,
-            ties: 0
-          },
-          topContributors: [],
-          topAttendance: [],
-          totalGames: 0,
-          averageAttendance: 0
-        })
+      setTeamInfo({
+        totalPlayers: 0,
+        nextGame: null,
+        totalRegistrationPaid: 0,
+        totalRegistrationRequired: 0,
+        remainingRegistration: 0,
+        lastGame: null,
+        gameStats: {
+          wins: 0,
+          losses: 0,
+          ties: 0
+        },
+        topContributors: [],
+        topAttendance: [],
+        totalGames: 0,
+        averageAttendance: 0
+      })
     }
   }
 

@@ -33,7 +33,8 @@ const Players = () => {
     const [players, setPlayers] = useState([])
     const [loadingPlayers, setLoadingPlayers] = useState(true)
     const { teams, selectedTeam } = useTeam()
-      const [positions, setPositions] = useState([])
+    const [positions, setPositions] = useState([])
+    const [loadingPositions, setLoadingPositions] = useState(true)
     const [showForm, setShowForm] = useState(false)
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
 

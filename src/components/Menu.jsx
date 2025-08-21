@@ -85,16 +85,16 @@ const Menu = () => {
                             )}
                             
                                                          {/* Enlaces de navegación */}
-                             <div className="space-y-2">
-                                 <button 
-                                     onClick={() => {
-                                         navigate('/dashboard')
-                                         setShowMenu(false)
-                                     }}
-                                     className="block w-full text-left px-3 py-2 text-white hover:bg-gray-800 rounded transition-colors"
-                                 >
-                                     🏠 Dashboard
-                                 </button>
+                            <div className="space-y-2">
+                                <button 
+                                    onClick={() => {
+                                        navigate('/dashboard')
+                                        setShowMenu(false)
+                                    }}
+                                    className="block w-full text-left px-3 py-2 text-white hover:bg-gray-800 rounded transition-colors"
+                                >
+                                    🏠 Dashboard
+                                </button>
                                 <Link 
                                     to="/teams"
                                     className="block w-full text-left px-3 py-2 text-white hover:bg-gray-800 rounded transition-colors"

@@ -49,16 +49,16 @@ const PlayerCard = ({
             
             {/* Información del jugador */}
             <div className="space-y-2">
-                                 {/* Posiciones */}
-                 {player.jugador_posiciones && player.jugador_posiciones.length > 0 && (
-                     <div className="flex flex-wrap gap-1">
-                         {player.jugador_posiciones.map((jp, idx) => (
-                             <span key={idx} className="px-2 py-1 bg-rose-800 text-rose-100 text-xs rounded-full">
-                                 {getPositionAbbreviation(jp.posiciones.nombre_posicion)}
-                             </span>
-                         ))}
-                     </div>
-                 )}
+                {/* Posiciones */}
+                {player.jugador_posiciones && player.jugador_posiciones.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                        {player.jugador_posiciones.map((jp, idx) => (
+                            <span key={idx} className="px-2 py-1 bg-rose-800 text-rose-100 text-xs rounded-full">
+                                {getPositionAbbreviation(jp.posiciones.nombre_posicion)}
+                            </span>
+                        ))}
+                    </div>
+                )}
                 
                 
                 

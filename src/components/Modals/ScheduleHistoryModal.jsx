@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 
 /**
  * Componente para el modal de detalles del partido
@@ -8,6 +8,15 @@ import React from 'react'
  * @param {Object} gameDetailsData - Datos detallados del partido
  * @param {Function} onClose - Función para cerrar el modal
  * @param {Function} getLocalTeamName - Función para obtener el nombre del equipo local
+ * @param {Function} onEditGame - Función para editar partido
+ * @param {Function} onDeleteGame - Función para eliminar partido
+ * @param {boolean} gameFinalizationStatus - Estado de finalización del partido
+ * @param {Function} onOpenPaymentForm - Función para abrir formulario de pagos
+ * @param {Array} players - Lista de jugadores del equipo
+ * @param {Object} attendance - Estado de asistencia por partido
+ * @param {Function} onAttendanceChange - Función para cambiar asistencia
+ * @param {Function} onRecordAttendance - Función para guardar asistencia
+ * @param {Function} onLoadExistingAttendance - Función para cargar asistencia existente
  */
 const ScheduleHistoryModal = ({
     showModal,
@@ -15,8 +24,29 @@ const ScheduleHistoryModal = ({
     paymentTotals,
     gameDetailsData,
     onClose,
-    // getLocalTeamName - función no utilizada actualmente
+    getLocalTeamName,
+    onEditGame,
+    onDeleteGame,
+    gameFinalizationStatus,
+    onOpenPaymentForm,
+    players,
+    attendance,
+    onAttendanceChange,
+    onRecordAttendance,
+    onLoadExistingAttendance
 }) => {
+    const [isEditingAttendance, setIsEditingAttendance] = useState(false);
+    const [localAttendance, setLocalAttendance] = useState([]);
+    const [loading, setLoading] = useState(false);
+
+    // Cargar asistencia existente cuando se abre el modal
+    useEffect(() => {
+        if (showModal && selectedGame) {
+            const currentAttendance = attendance[selectedGame.id] || [];
+            setLocalAttendance(currentAttendance);
+        }
+    }, [showModal, selectedGame, attendance]);
+
     if (!showModal || !selectedGame) return null
 
     return (
@@ -25,13 +55,68 @@ const ScheduleHistoryModal = ({
                 <div className="modal-header p-6 border-b border-gray-600">
                     <div className="flex justify-between items-center">
                         <h2 className="text-2xl font-semibold text-white">Detalles del Partido</h2>
-                        <button
-                            onClick={onClose}
-                            className="text-gray-400 hover:text-white text-2xl"
-                            title="Cerrar detalles del partido"
-                        >
-                            ×
-                        </button>
+                        <div className="flex items-center space-x-3">
+                            {/* Botones de acción */}
+                            {!gameFinalizationStatus && (
+                                <>
+                                    <button
+                                        onClick={() => {
+                                            onEditGame(selectedGame);
+                                            onClose();
+                                        }}
+                                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                                        title="Editar partido"
+                                    >
+                                        <span>✏️</span>
+                                        <span>Editar</span>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setIsEditingAttendance(!isEditingAttendance);
+                                            if (!isEditingAttendance) {
+                                                onLoadExistingAttendance(selectedGame.id);
+                                            }
+                                        }}
+                                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center space-x-2"
+                                        title="Gestionar asistencia"
+                                    >
+                                        <span>{isEditingAttendance ? '✕' : '📋'}</span>
+                                        <span>{isEditingAttendance ? 'Cancelar' : 'Asistencia'}</span>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            onOpenPaymentForm(selectedGame.id);
+                                            onClose();
+                                        }}
+                                        className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors flex items-center space-x-2"
+                                        title="Registrar pagos"
+                                    >
+                                        <span>💰</span>
+                                        <span>Pagos</span>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            if (window.confirm('¿Estás seguro de que quieres eliminar este partido? Esta acción no se puede deshacer.')) {
+                                                onDeleteGame(selectedGame.id);
+                                                onClose();
+                                            }
+                                        }}
+                                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center space-x-2"
+                                        title="Eliminar partido"
+                                    >
+                                        <span>🗑️</span>
+                                        <span>Eliminar</span>
+                                    </button>
+                                </>
+                            )}
+                            <button
+                                onClick={onClose}
+                                className="text-gray-400 hover:text-white text-2xl"
+                                title="Cerrar detalles del partido"
+                            >
+                                ×
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
@@ -122,20 +207,83 @@ const ScheduleHistoryModal = ({
                     
                     {/* Asistencia */}
                     <div className="mb-6">
-                        <h3 className="text-lg font-semibold text-white mb-4">Asistencia ({gameDetailsData.attendance.length} jugadores)</h3>
-                        {gameDetailsData.attendance.length > 0 ? (
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                {gameDetailsData.attendance.map((att, index) => (
-                                    <div key={index} className="p-3 bg-gray-800 rounded-lg text-center">
-                                        <div className="text-green-400 text-2xl mb-1">✓</div>
-                                        <p className="text-white text-sm">{att.jugadores?.nombre || 'Jugador'}</p>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold text-white">
+                                Asistencia ({gameDetailsData.attendance.length} jugadores)
+                            </h3>
+                            {!gameFinalizationStatus && isEditingAttendance && (
+                                <div className="flex space-x-2">
+                                    <button
+                                        onClick={() => {
+                                            setLocalAttendance([]);
+                                            onAttendanceChange(selectedGame.id, []);
+                                        }}
+                                        className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+                                    >
+                                        Limpiar
+                                    </button>
+                                    <button
+                                        onClick={async () => {
+                                            setLoading(true);
+                                            await onRecordAttendance(selectedGame.id);
+                                            setLoading(false);
+                                            setIsEditingAttendance(false);
+                                        }}
+                                        disabled={loading}
+                                        className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+                                    >
+                                        {loading ? 'Guardando...' : 'Guardar'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {isEditingAttendance && !gameFinalizationStatus ? (
+                            // Modo edición
+                            <div className="p-4 bg-gray-800 rounded-lg">
+                                <h4 className="text-white font-semibold mb-3">Seleccionar Jugadores Asistentes</h4>
+                                {players.length === 0 ? (
+                                    <div className="text-yellow-500 text-center">
+                                        <p>No hay jugadores registrados en este equipo.</p>
                                     </div>
-                                ))}
+                                ) : (
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                        {players.map(player => (
+                                            <label key={player.id} className="flex items-center space-x-3 p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={localAttendance.includes(player.id)}
+                                                    onChange={() => {
+                                                        const newAttendance = localAttendance.includes(player.id)
+                                                            ? localAttendance.filter(id => id !== player.id)
+                                                            : [...localAttendance, player.id];
+                                                        setLocalAttendance(newAttendance);
+                                                        onAttendanceChange(selectedGame.id, newAttendance);
+                                                    }}
+                                                    className="form-checkbox h-5 w-5 text-blue-600"
+                                                />
+                                                <span className="text-white">{player.nombre}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         ) : (
-                            <div className="p-4 bg-gray-800 rounded-lg text-center">
-                                <p className="text-gray-400">No hay registros de asistencia</p>
-                            </div>
+                            // Modo visualización
+                            gameDetailsData.attendance.length > 0 ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                    {gameDetailsData.attendance.map((att, index) => (
+                                        <div key={index} className="p-3 bg-gray-800 rounded-lg text-center">
+                                            <div className="text-green-400 text-2xl mb-1">✓</div>
+                                            <p className="text-white text-sm">{att.jugadores?.nombre || 'Jugador'}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="p-4 bg-gray-800 rounded-lg text-center">
+                                    <p className="text-gray-400">No hay registros de asistencia</p>
+                                </div>
+                            )
                         )}
                     </div>
                     

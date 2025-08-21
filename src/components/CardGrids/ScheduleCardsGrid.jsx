@@ -7,12 +7,10 @@ import ScheduleCard from '../Cards/ScheduleCard'
  * @param {Object} paymentTotals - Totales de pagos por partido
  * @param {Object} gameFinalizationStatus - Estado de finalización de partidos
  * @param {Function} onCardClick - Función para manejar el click en la card
- * @param {Function} onActionMenuToggle - Función para manejar el menú de acciones
  * @param {Function} onAttendanceFormToggle - Función para manejar el formulario de asistencia
  * @param {Function} onEditGame - Función para editar partido
  * @param {Function} onOpenPaymentForm - Función para abrir formulario de pagos
  * @param {Function} onOpenScoreForm - Función para abrir formulario de resultado
- * @param {string} actionMenuOpen - ID del partido con menú abierto
  * @param {Array} players - Lista de jugadores
  * @param {Object} attendance - Estado de asistencia por partido
  * @param {Function} onAttendanceChange - Función para cambiar asistencia
@@ -27,12 +25,10 @@ const ScheduleCardsGrid = ({
     paymentTotals,
     gameFinalizationStatus,
     onCardClick,
-    onActionMenuToggle,
     onAttendanceFormToggle,
     onEditGame,
     onOpenPaymentForm,
     onOpenScoreForm,
-    actionMenuOpen,
     players,
     attendance,
     onAttendanceChange,
@@ -60,12 +56,10 @@ const ScheduleCardsGrid = ({
                     paymentTotals={paymentTotals}
                     gameFinalizationStatus={gameFinalizationStatus}
                     onCardClick={onCardClick}
-                    onActionMenuToggle={onActionMenuToggle}
                     onAttendanceFormToggle={onAttendanceFormToggle}
                     onEditGame={onEditGame}
                     onOpenPaymentForm={onOpenPaymentForm}
                     onOpenScoreForm={onOpenScoreForm}
-                    actionMenuOpen={actionMenuOpen}
                     players={players}
                     attendance={attendance}
                     onAttendanceChange={onAttendanceChange}

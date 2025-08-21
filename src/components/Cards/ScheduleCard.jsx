@@ -6,12 +6,10 @@ import React from 'react'
  * @param {Object} paymentTotals - Totales de pagos por partido
  * @param {Object} gameFinalizationStatus - Estado de finalización de partidos
  * @param {Function} onCardClick - Función para manejar el click en la card
- * @param {Function} onActionMenuToggle - Función para manejar el menú de acciones
  * @param {Function} onAttendanceFormToggle - Función para manejar el formulario de asistencia
  * @param {Function} onEditGame - Función para editar partido
  * @param {Function} onOpenPaymentForm - Función para abrir formulario de pagos
  * @param {Function} onOpenScoreForm - Función para abrir formulario de resultado
- * @param {string} actionMenuOpen - ID del partido con menú abierto
  * @param {Array} players - Lista de jugadores
  * @param {Object} attendance - Estado de asistencia por partido
  * @param {Function} onAttendanceChange - Función para cambiar asistencia
@@ -26,12 +24,10 @@ const ScheduleCard = ({
     paymentTotals, 
     gameFinalizationStatus, 
     onCardClick,
-    onActionMenuToggle,
     onAttendanceFormToggle,
     onEditGame,
     onOpenPaymentForm,
     onOpenScoreForm,
-    actionMenuOpen,
     players,
     attendance,
     onAttendanceChange,
@@ -142,76 +138,7 @@ const ScheduleCard = ({
                             </div>
                         )}
                     </div>
-                    <div className="relative">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onActionMenuToggle(game.id);
-                            }}
-                            className="px-3 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-500 transition-colors"
-                            title="Opciones del partido"
-                        >
-                            ⋮
-                        </button>
-                        
-                        {actionMenuOpen === game.id && (
-                            <>
-                                <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50">
-                                    <div className="py-1">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onAttendanceFormToggle(game.id);
-                                            }}
-                                            disabled={gameFinalizationStatus[game.id]}
-                                            className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-50"
-                                        >
-                                            📋 Asistencia
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onEditGame(game);
-                                            }}
-                                            disabled={gameFinalizationStatus[game.id]}
-                                            className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-50"
-                                        >
-                                            ✏️ Editar Partido
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onOpenPaymentForm(game.id);
-                                            }}
-                                            disabled={gameFinalizationStatus[game.id]}
-                                            className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-50"
-                                        >
-                                            💰 Registrar Pagos
-                                        </button>
-                                        {!gameFinalizationStatus[game.id] && (
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    onOpenScoreForm(game);
-                                                }}
-                                                className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900 transition-colors"
-                                            >
-                                                ⚾ Finalizar Partido
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                                {/* Overlay para cerrar menú */}
-                                <div 
-                                    className="fixed inset-0 z-40" 
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onActionMenuToggle(null);
-                                    }}
-                                />
-                            </>
-                        )}
-                    </div>
+
                 </div>
             )}
             

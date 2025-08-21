@@ -34,7 +34,6 @@ const Schedule = () => {
     const [selectedGameForPayment, setSelectedGameForPayment] = useState(null);
     const [gameFinalizationStatus, setGameFinalizationStatus] = useState({});
     const [showGameForm, setShowGameForm] = useState(false);
-    const [actionMenuOpen, setActionMenuOpen] = useState(null);
     const [showAttendanceForm, setShowAttendanceForm] = useState({});
     const [editingGame, setEditingGame] = useState(null);
     const [paymentTotals, setPaymentTotals] = useState({});
@@ -118,20 +117,12 @@ const Schedule = () => {
         });
     };
 
-    // Función para manejar el menú de acciones
-    const toggleActionMenu = (gameId) => {
-        setActionMenuOpen(actionMenuOpen === gameId ? null : gameId);
-    };
-
-
-
     // Función para habilitar/deshabilitar formulario de asistencia
     const toggleAttendanceForm = (gameId) => {
         setShowAttendanceForm(prev => ({
             ...prev,
             [gameId]: !prev[gameId]
         }));
-        setActionMenuOpen(null);
     };
 
     // Función para editar partido
@@ -144,7 +135,6 @@ const Schedule = () => {
             umpire: game.umpire || 550
         });
         setShowGameForm(true);
-        setActionMenuOpen(null);
     };
 
     // Función para actualizar partido (comentada por no uso actual)
@@ -259,7 +249,6 @@ const Schedule = () => {
             carreras_equipo_contrario: game.carreras_equipo_contrario || 0
         });
         setShowScoreForm(true);
-        setActionMenuOpen(null);
     };
 
     const closeScoreForm = () => {
@@ -332,7 +321,6 @@ const Schedule = () => {
     };
 
     const recordAttendance = async (gameId) => {
-        setLoading(true);
         const playerIds = attendance[gameId] || [];
 
         // First, remove existing attendance for this game
@@ -343,7 +331,6 @@ const Schedule = () => {
 
         if (deleteError) {
             setError(deleteError.message);
-            setLoading(false);
             return;
         }
 
@@ -363,9 +350,8 @@ const Schedule = () => {
         } else {
             setSuccess('Asistencia guardada con éxito!');
             // Refresh the games to show updated attendance
-            fetchGames(selectedTeam);
+            await fetchGames(selectedTeam);
         }
-        setLoading(false);
     };
 
     const loadExistingAttendance = async (gameId) => {
@@ -458,6 +444,48 @@ const Schedule = () => {
         setGameDetailsData({ attendance: [], payments: [] });
     };
 
+    // Función para eliminar partido
+    const deleteGame = async (gameId) => {
+        setLoading(true);
+        try {
+            // Primero eliminar registros relacionados
+            const { error: attendanceError } = await supabase
+                .from('asistencia_partidos')
+                .delete()
+                .eq('partido_id', gameId);
+
+            if (attendanceError) {
+                console.error('Error deleting attendance:', attendanceError);
+            }
+
+            const { error: paymentsError } = await supabase
+                .from('pagos')
+                .delete()
+                .eq('partido_id', gameId);
+
+            if (paymentsError) {
+                console.error('Error deleting payments:', paymentsError);
+            }
+
+            // Luego eliminar el partido
+            const { error } = await supabase
+                .from('partidos')
+                .delete()
+                .eq('id', gameId);
+
+            if (error) {
+                setError('Error al eliminar partido: ' + error.message);
+            } else {
+                setSuccess('Partido eliminado exitosamente');
+                await fetchGames(selectedTeam);
+            }
+        } catch (error) {
+            setError('Error inesperado al eliminar partido');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Cargar datos cuando cambia el equipo seleccionado
     useEffect(() => {
         if (selectedTeam) {
@@ -528,12 +556,10 @@ const Schedule = () => {
                             paymentTotals={paymentTotals}
                             gameFinalizationStatus={gameFinalizationStatus}
                             onCardClick={openGameDetailsModal}
-                            onActionMenuToggle={toggleActionMenu}
                             onAttendanceFormToggle={toggleAttendanceForm}
                             onEditGame={editGame}
                             onOpenPaymentForm={openPaymentForm}
                             onOpenScoreForm={openScoreForm}
-                            actionMenuOpen={actionMenuOpen}
                             players={players}
                             attendance={attendance}
                             onAttendanceChange={handleAttendanceChange}
@@ -570,6 +596,15 @@ const Schedule = () => {
                               gameDetailsData={gameDetailsData}
                               onClose={closeGameDetailsModal}
                               getLocalTeamName={getLocalTeamName}
+                              onEditGame={editGame}
+                              onDeleteGame={deleteGame}
+                              gameFinalizationStatus={selectedGameForDetails ? gameFinalizationStatus[selectedGameForDetails.id] : false}
+                              onOpenPaymentForm={openPaymentForm}
+                              players={players}
+                              attendance={attendance}
+                              onAttendanceChange={handleAttendanceChange}
+                              onRecordAttendance={recordAttendance}
+                              onLoadExistingAttendance={loadExistingAttendance}
                           />
 
              {/* Score Form Modal */}

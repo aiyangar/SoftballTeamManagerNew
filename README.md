@@ -110,7 +110,9 @@ src/
 │   ├── PlayerCardsGrid.jsx # Grid de tarjetas de jugadores
 │   ├── PlayerForm.jsx   # Formulario de jugador
 │   ├── PlayerFilters.jsx # Filtros de jugadores
-│   └── PlayerHistoryModal.jsx # Modal de historial de jugador
+│   ├── PlayerHistoryModal.jsx # Modal de historial de jugador
+│   ├── DashboardCard.jsx # Tarjeta individual del dashboard
+│   └── DashboardCardsGrid.jsx # Grid de tarjetas del dashboard
 ├── hooks/               # Hooks personalizados
 │   └── useModal.js      # Hook para manejo de modales
 ├── context/             # Contextos de React
@@ -158,7 +160,7 @@ Para más información sobre el proyecto, consulta los archivos de documentació
 - Supabase para backend como servicio (BaaS)
 - Sistema de rutas protegidas para seguridad
 - **Nuevo**: Arquitectura modular mejorada con separación clara entre páginas y componentes
-- **Nuevo**: Componentes de jugadores modularizados para mejor mantenibilidad
+- **Nuevo**: Componentes de jugadores y dashboard modularizados para mejor mantenibilidad
 - Modales optimizados con hook personalizado `useModal`
 - Footer de versión consistente en todas las páginas principales
 
@@ -177,6 +179,12 @@ Para más información sobre el proyecto, consulta los archivos de documentació
     - `PlayerCardsGrid.jsx` - Grid de tarjetas de jugadores
     - `PlayerForm.jsx` - Formulario de jugador
     - `PlayerFilters.jsx` - Filtros de jugadores
+    - `PlayerHistoryModal.jsx` - Modal de historial de jugador
+
+- ✅ **Modularización del Dashboard:**
+  - Separado `Dashboard.jsx` en componentes modulares más pequeños y reutilizables:
+    - `DashboardCard.jsx` - Tarjeta individual del dashboard
+    - `DashboardCardsGrid.jsx` - Grid de tarjetas del dashboard
     - `PlayerHistoryModal.jsx` - Modal de historial de jugador
   - Mejorada la mantenibilidad y legibilidad del código
   - Componentes más enfocados y con responsabilidades específicas

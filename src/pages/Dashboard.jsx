@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import Menu from '../components/Menu'
 import { useTeam } from '../context/TeamContext'
+import DashboardCardsGrid from '../components/DashboardCardsGrid'
 
 /**
  * Componente Dashboard - Página principal para usuarios autenticados
@@ -282,7 +283,7 @@ const Dashboard = () => {
                     </div>
 
              {/* Mensaje de Bienvenida */}
-       <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8">
+       <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8 border border-gray-700">
          <h2 className="text-xl font-semibold text-white">
            Bienvenido, {session?.user?.email}
          </h2>
@@ -297,266 +298,220 @@ const Dashboard = () => {
 
       {/* Información del Equipo */}
       {selectedTeam && (
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 dashboard-grid">
-                     {/* Card: Total de Jugadores */}
-           <Link to="/players" className="block">
-             <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer min-h-64 flex flex-col dashboard-card">
-               <div className="flex items-center justify-between mb-3">
-                 <h3 className="text-lg font-semibold text-white">Total de Jugadores</h3>
-                 <div className="text-4xl text-blue-400 flex items-center justify-center w-16 h-16">👥</div>
-               </div>
-               <div className="flex-1 flex items-center dashboard-card-content">
-                 {loadingTeam ? (
-                   <p className="text-gray-400">Cargando...</p>
-                 ) : (
-                   <p className="text-3xl font-bold text-blue-400">{teamInfo.totalPlayers}</p>
-                 )}
-               </div>
-             </div>
-           </Link>
-
-                     {/* Card: Próximo Juego */}
-           <Link to="/schedule" className="block">
-             <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer min-h-64 flex flex-col dashboard-card">
-               <div className="flex items-center justify-between mb-3">
-                 <h3 className="text-lg font-semibold text-white">Próximo Juego</h3>
-                 <div className="text-4xl text-green-400 flex items-center justify-center w-16 h-16">⚾</div>
-               </div>
-               <div className="flex-1 overflow-hidden dashboard-card-content">
-                 {loadingTeam ? (
-                   <p className="text-gray-400">Cargando...</p>
-                 ) : teamInfo.nextGame ? (
-                   <div className="space-y-2">
-                     <p className="text-white text-sm">
-                       <span className="font-semibold">Oponente:</span> {teamInfo.nextGame.equipo_contrario}
-                     </p>
-                     <p className="text-white text-sm">
-                       <span className="font-semibold">Fecha:</span> {new Date(teamInfo.nextGame.fecha_partido).toLocaleDateString()}
-                     </p>
-                     <p className="text-white text-sm">
-                       <span className="font-semibold">Campo:</span> {teamInfo.nextGame.lugar}
-                     </p>
-                     <p className="text-white text-sm">
-                       <span className="font-semibold">Costo Umpire:</span> $550
-                     </p>
-                   </div>
-                 ) : (
-                   <p className="text-gray-400">No hay próximos juegos programados</p>
-                 )}
-               </div>
-             </div>
-           </Link>
-
-                     {/* Card: Total Pagado Registro */}
-           <Link to="/teams" className="block">
-             <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer min-h-64 flex flex-col dashboard-card">
-               <div className="flex items-center justify-between mb-3">
-                 <h3 className="text-lg font-semibold text-white">Total Pagado Registro</h3>
-                 <div className="text-4xl text-green-400 flex items-center justify-center w-16 h-16">💰</div>
-               </div>
-               <div className="flex-1 flex flex-col justify-center dashboard-card-content">
-                 {loadingTeam ? (
-                   <p className="text-gray-400">Cargando...</p>
-                 ) : (
-                   <div className="space-y-2">
-                     <p className="text-3xl font-bold text-green-400">${teamInfo.totalRegistrationPaid.toLocaleString()}</p>
-                     <div className="text-sm text-gray-300">
-                       <p>Total requerido: ${teamInfo.totalRegistrationRequired.toLocaleString()}</p>
-                       <p className={teamInfo.remainingRegistration > 0 ? 'text-red-400' : 'text-green-400'}>
-                         Faltan: ${teamInfo.remainingRegistration.toLocaleString()}
-                       </p>
-                     </div>
-                   </div>
-                 )}
-               </div>
-             </div>
-           </Link>
-
-          {/* Card: Último Partido */}
-          <Link to="/schedule" className="block">
-            <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer min-h-64 flex flex-col dashboard-card">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold text-white">Último Partido</h3>
-                <div className="text-4xl text-yellow-400 flex items-center justify-center w-16 h-16">🏆</div>
-              </div>
-              <div className="flex-1 overflow-hidden dashboard-card-content">
-                {loadingTeam ? (
-                  <p className="text-gray-400">Cargando...</p>
-                ) : teamInfo.lastGame ? (
-                  <div className="space-y-2">
-                    <p className="text-white text-sm">
-                      <span className="font-semibold">Oponente:</span> {teamInfo.lastGame.equipo_contrario}
-                    </p>
-                    <p className="text-white text-sm">
-                      <span className="font-semibold">Fecha:</span> {new Date(teamInfo.lastGame.fecha_partido).toLocaleDateString()}
-                    </p>
-                    <p className="text-white text-sm">
-                      <span className="font-semibold">Marcador:</span> {teamInfo.lastGame.carreras_equipo_local || 0} - {teamInfo.lastGame.carreras_equipo_contrario || 0}
-                    </p>
-                    <p className={`font-semibold text-sm ${
-                      teamInfo.lastGame.resultado === 'Victoria' ? 'text-green-400' :
-                      teamInfo.lastGame.resultado === 'Derrota' ? 'text-red-400' :
-                      'text-yellow-400'
-                    }`}>
-                      {teamInfo.lastGame.resultado}
+        <DashboardCardsGrid 
+          loading={loadingTeam}
+          cards={[
+            // Card: Total de Jugadores
+            {
+              title: "Total de Jugadores",
+              icon: "👥",
+              iconColor: "text-blue-400",
+              linkTo: "/players",
+              loading: loadingTeam,
+              content: <p className="text-3xl font-bold text-blue-400">{teamInfo.totalPlayers}</p>
+            },
+            // Card: Próximo Juego
+            {
+              title: "Próximo Juego",
+              icon: "⚾",
+              iconColor: "text-green-400",
+              linkTo: "/schedule",
+              loading: loadingTeam,
+              content: teamInfo.nextGame ? (
+                <div className="space-y-2">
+                  <p className="text-white text-sm">
+                    <span className="font-semibold">Oponente:</span> {teamInfo.nextGame.equipo_contrario}
+                  </p>
+                  <p className="text-white text-sm">
+                    <span className="font-semibold">Fecha:</span> {new Date(teamInfo.nextGame.fecha_partido).toLocaleDateString()}
+                  </p>
+                  <p className="text-white text-sm">
+                    <span className="font-semibold">Campo:</span> {teamInfo.nextGame.lugar}
+                  </p>
+                  <p className="text-white text-sm">
+                    <span className="font-semibold">Costo Umpire:</span> $550
+                  </p>
+                </div>
+              ) : (
+                <p className="text-gray-400">No hay próximos juegos programados</p>
+              )
+            },
+            // Card: Total Pagado Registro
+            {
+              title: "Total Pagado Registro",
+              icon: "💰",
+              iconColor: "text-green-400",
+              linkTo: "/teams",
+              loading: loadingTeam,
+              content: (
+                <div className="space-y-2">
+                  <p className="text-3xl font-bold text-green-400">${teamInfo.totalRegistrationPaid.toLocaleString()}</p>
+                  <div className="text-sm text-gray-300">
+                    <p>Total requerido: ${teamInfo.totalRegistrationRequired.toLocaleString()}</p>
+                    <p className={teamInfo.remainingRegistration > 0 ? 'text-red-400' : 'text-green-400'}>
+                      Faltan: ${teamInfo.remainingRegistration.toLocaleString()}
                     </p>
                   </div>
-                ) : (
-                  <p className="text-gray-400">No hay partidos jugados</p>
-                )}
-              </div>
-            </div>
-          </Link>
-
-                                           {/* Card: Historial de Resultados */}
-            <Link to="/schedule" className="block">
-              <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer min-h-64 flex flex-col dashboard-card">
-               <div className="flex items-center justify-between mb-3">
-                 <h3 className="text-lg font-semibold text-white">Historial de Resultados</h3>
-                 <div className="text-4xl text-purple-400 flex items-center justify-center w-16 h-16">📊</div>
-               </div>
-              <div className="flex-1 flex flex-col justify-center dashboard-card-content">
-                {loadingTeam ? (
-                  <p className="text-gray-400">Cargando...</p>
-                ) : (
-                  <div className="space-y-2">
+                </div>
+              )
+            },
+            // Card: Último Partido
+            {
+              title: "Último Partido",
+              icon: "🏆",
+              iconColor: "text-yellow-400",
+              linkTo: "/schedule",
+              loading: loadingTeam,
+              content: teamInfo.lastGame ? (
+                <div className="space-y-2">
+                  <p className="text-white text-sm">
+                    <span className="font-semibold">Oponente:</span> {teamInfo.lastGame.equipo_contrario}
+                  </p>
+                  <p className="text-white text-sm">
+                    <span className="font-semibold">Fecha:</span> {new Date(teamInfo.lastGame.fecha_partido).toLocaleDateString()}
+                  </p>
+                  <p className="text-white text-sm">
+                    <span className="font-semibold">Marcador:</span> {teamInfo.lastGame.carreras_equipo_local || 0} - {teamInfo.lastGame.carreras_equipo_contrario || 0}
+                  </p>
+                  <p className={`font-semibold text-sm ${
+                    teamInfo.lastGame.resultado === 'Victoria' ? 'text-green-400' :
+                    teamInfo.lastGame.resultado === 'Derrota' ? 'text-red-400' :
+                    'text-yellow-400'
+                  }`}>
+                    {teamInfo.lastGame.resultado}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-gray-400">No hay partidos jugados</p>
+              )
+            },
+            // Card: Historial de Resultados
+            {
+              title: "Historial de Resultados",
+              icon: "📊",
+              iconColor: "text-purple-400",
+              linkTo: "/schedule",
+              loading: loadingTeam,
+              content: (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-white text-sm">Victorias:</span>
+                    <span className="text-green-400 font-bold">{teamInfo.gameStats.wins}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white text-sm">Derrotas:</span>
+                    <span className="text-red-400 font-bold">{teamInfo.gameStats.losses}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white text-sm">Empates:</span>
+                    <span className="text-yellow-400 font-bold">{teamInfo.gameStats.ties}</span>
+                  </div>
+                  <div className="border-t border-gray-600 pt-2 mt-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-white text-sm">Victorias:</span>
-                      <span className="text-green-400 font-bold">{teamInfo.gameStats.wins}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-white text-sm">Derrotas:</span>
-                      <span className="text-red-400 font-bold">{teamInfo.gameStats.losses}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-white text-sm">Empates:</span>
-                      <span className="text-yellow-400 font-bold">{teamInfo.gameStats.ties}</span>
-                    </div>
-                    <div className="border-t border-gray-600 pt-2 mt-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white font-semibold text-sm">Total:</span>
-                        <span className="text-blue-400 font-bold">
-                          {teamInfo.gameStats.wins + teamInfo.gameStats.losses + teamInfo.gameStats.ties}
-                        </span>
-                      </div>
+                      <span className="text-white font-semibold text-sm">Total:</span>
+                      <span className="text-blue-400 font-bold">
+                        {teamInfo.gameStats.wins + teamInfo.gameStats.losses + teamInfo.gameStats.ties}
+                      </span>
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
-          </Link>
-
-                                                                                       {/* Card: Top Contribuyentes */}
-             <Link to="/players" className="block">
-               <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer min-h-64 flex flex-col dashboard-card">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold text-white">Top Contribuyentes</h3>
-                  <div className="text-4xl text-orange-400 flex items-center justify-center w-16 h-16">🏅</div>
                 </div>
-               <div className="flex-1 overflow-hidden dashboard-card-content">
-                 {loadingTeam ? (
-                   <p className="text-gray-400">Cargando...</p>
-                 ) : teamInfo.topContributors.length > 0 ? (
-                   <div className="space-y-2">
-                     {teamInfo.topContributors.map((contributor, index) => (
-                       <div key={index} className="flex justify-between items-center p-2 bg-gray-800 rounded">
-                         <div className="flex items-center space-x-2 min-w-0 flex-1">
-                           <span className={`text-lg font-bold flex-shrink-0 ${
-                             index === 0 ? 'text-yellow-400' : 
-                             index === 1 ? 'text-gray-300' : 
-                             'text-orange-600'
-                           }`}>
-                             {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
-                           </span>
-                           <span className="text-white font-medium text-sm truncate">{contributor.name}</span>
-                         </div>
-                         <span className="text-green-400 font-bold text-sm flex-shrink-0 ml-2">
-                           ${contributor.amount.toLocaleString()}
-                         </span>
-                       </div>
-                     ))}
-                   </div>
-                 ) : (
-                   <p className="text-gray-400">No hay contribuciones registradas</p>
-                 )}
-               </div>
-             </div>
-           </Link>
-
-                                                                                               {/* Card: Top Asistencias */}
-              <Link to="/players" className="block">
-                <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer min-h-64 flex flex-col dashboard-card">
-                 <div className="flex items-center justify-between mb-3">
-                   <h3 className="text-lg font-semibold text-white">Top Asistencias</h3>
-                   <div className="text-4xl text-blue-400 flex items-center justify-center w-16 h-16">📋</div>
-                 </div>
-                <div className="flex-1 overflow-hidden dashboard-card-content">
-                  {loadingTeam ? (
-                    <p className="text-gray-400">Cargando...</p>
-                  ) : teamInfo.topAttendance.length > 0 ? (
-                    <div className="space-y-2">
-                      {teamInfo.topAttendance.map((attendance, index) => (
-                        <div key={index} className="flex justify-between items-center p-2 bg-gray-800 rounded">
-                          <div className="flex items-center space-x-2 min-w-0 flex-1">
-                            <span className={`text-lg font-bold flex-shrink-0 ${
-                              index === 0 ? 'text-yellow-400' : 
-                              index === 1 ? 'text-gray-300' : 
-                              'text-orange-600'
-                            }`}>
-                              {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
-                            </span>
-                            <span className="text-white font-medium text-sm truncate">{attendance.name}</span>
-                          </div>
-                          <span className="text-blue-400 font-bold text-sm flex-shrink-0 ml-2">
-                            {attendance.count} partidos
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-400">No hay asistencias registradas</p>
-                  )}
-                </div>
-              </div>
-            </Link>
-
-                                                                                               {/* Card: Estadísticas Generales */}
-              <Link to="/schedule" className="block">
-                <div className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-colors cursor-pointer min-h-64 flex flex-col dashboard-card">
-                 <div className="flex items-center justify-between mb-3">
-                   <h3 className="text-lg font-semibold text-white">Estadísticas Generales</h3>
-                   <div className="text-4xl text-purple-400 flex items-center justify-center w-16 h-16">📈</div>
-                 </div>
-                <div className="flex-1 flex flex-col justify-center dashboard-card-content">
-                  {loadingTeam ? (
-                    <p className="text-gray-400">Cargando...</p>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center p-2 bg-gray-800 rounded">
-                        <span className="text-white text-sm">Total Partidos:</span>
-                        <span className="text-purple-400 font-bold">{teamInfo.totalGames}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-2 bg-gray-800 rounded">
-                        <span className="text-white text-sm">Promedio Asistencia:</span>
-                        <span className="text-blue-400 font-bold text-sm">{teamInfo.averageAttendance} jugadores</span>
-                      </div>
-                      <div className="flex justify-between items-center p-2 bg-gray-800 rounded">
-                        <span className="text-white text-sm">Porcentaje Victoria:</span>
-                        <span className="text-green-400 font-bold">
-                          {teamInfo.totalGames > 0 ? Math.round((teamInfo.gameStats.wins / teamInfo.totalGames) * 100) : 0}%
+              )
+            },
+            // Card: Top Contribuyentes
+            {
+              title: "Top Contribuyentes",
+              icon: "🏅",
+              iconColor: "text-orange-400",
+              linkTo: "/players",
+              loading: loadingTeam,
+              content: teamInfo.topContributors.length > 0 ? (
+                <div className="space-y-2">
+                  {teamInfo.topContributors.map((contributor, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-gray-800 rounded">
+                      <div className="flex items-center space-x-2 min-w-0 flex-1">
+                        <span className={`text-lg font-bold flex-shrink-0 ${
+                          index === 0 ? 'text-yellow-400' : 
+                          index === 1 ? 'text-gray-300' : 
+                          'text-orange-600'
+                        }`}>
+                          {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
                         </span>
+                        <span className="text-white font-medium text-sm truncate">{contributor.name}</span>
                       </div>
+                      <span className="text-green-400 font-bold text-sm flex-shrink-0 ml-2">
+                        ${contributor.amount.toLocaleString()}
+                      </span>
                     </div>
-                  )}
+                  ))}
                 </div>
-              </div>
-            </Link>
-        </div>
+              ) : (
+                <p className="text-gray-400">No hay contribuciones registradas</p>
+              )
+            },
+            // Card: Top Asistencias
+            {
+              title: "Top Asistencias",
+              icon: "📋",
+              iconColor: "text-blue-400",
+              linkTo: "/players",
+              loading: loadingTeam,
+              content: teamInfo.topAttendance.length > 0 ? (
+                <div className="space-y-2">
+                  {teamInfo.topAttendance.map((attendance, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-gray-800 rounded">
+                      <div className="flex items-center space-x-2 min-w-0 flex-1">
+                        <span className={`text-lg font-bold flex-shrink-0 ${
+                          index === 0 ? 'text-yellow-400' : 
+                          index === 1 ? 'text-gray-300' : 
+                          'text-orange-600'
+                        }`}>
+                          {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                        </span>
+                        <span className="text-white font-medium text-sm truncate">{attendance.name}</span>
+                      </div>
+                      <span className="text-blue-400 font-bold text-sm flex-shrink-0 ml-2">
+                        {attendance.count} partidos
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400">No hay asistencias registradas</p>
+              )
+            },
+            // Card: Estadísticas Generales
+            {
+              title: "Estadísticas Generales",
+              icon: "📈",
+              iconColor: "text-purple-400",
+              linkTo: "/schedule",
+              loading: loadingTeam,
+              content: (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center p-2 bg-gray-800 rounded">
+                    <span className="text-white text-sm">Total Partidos:</span>
+                    <span className="text-purple-400 font-bold">{teamInfo.totalGames}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-2 bg-gray-800 rounded">
+                    <span className="text-white text-sm">Promedio Asistencia:</span>
+                    <span className="text-blue-400 font-bold text-sm">{teamInfo.averageAttendance} jugadores</span>
+                  </div>
+                  <div className="flex justify-between items-center p-2 bg-gray-800 rounded">
+                    <span className="text-white text-sm">Porcentaje Victoria:</span>
+                    <span className="text-green-400 font-bold">
+                      {teamInfo.totalGames > 0 ? Math.round((teamInfo.gameStats.wins / teamInfo.totalGames) * 100) : 0}%
+                    </span>
+                  </div>
+                </div>
+              )
+            }
+          ]}
+        />
       )}
 
              {/* Mensaje cuando no hay equipo seleccionado */}
        {!selectedTeam && !loadingTeams && (
-         <div className="bg-neutral-900 shadow rounded-lg p-8 text-center">
+         <div className="bg-neutral-900 shadow rounded-lg p-8 text-center border border-gray-700">
            {teams.length === 0 ? (
              <div>
                <p className="text-gray-400 mb-4">No tienes equipos registrados</p>

@@ -849,7 +849,7 @@ const Players = () => {
                             <select
                                 value={sortConfig.key || ''}
                                 onChange={(e) => handleSort(e.target.value)}
-                                className="px-3 py-1 bg-gray-700 text-white text-sm rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                                className="px-3 py-2 bg-gray-700 text-white text-sm rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
                             >
                                 <option value="">Seleccionar</option>
                                 <option value="nombre">Nombre</option>
@@ -858,7 +858,7 @@ const Players = () => {
                             {sortConfig.key && (
                                 <button
                                     onClick={() => setSortConfig({ key: sortConfig.key, direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })}
-                                    className="px-2 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-500"
+                                    className="px-2 py-2 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-500"
                                 >
                                     {sortConfig.direction === 'asc' ? '↑' : '↓'}
                                 </button>

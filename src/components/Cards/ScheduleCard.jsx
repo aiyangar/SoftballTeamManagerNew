@@ -1,4 +1,5 @@
 import React from 'react'
+import PaymentStatusWidget from '../Widgets/PaymentStatusWidget'
 
 /**
  * Componente para las tarjetas individuales de partidos
@@ -83,59 +84,16 @@ const ScheduleCard = ({
                         <p>Lugar: {game.lugar}</p>
                         <p>Umpire: ${game.umpire || 550}</p>
                         
-                        {/* Información de Pagos Acumulados */}
+                        {/* Widget de Estado de Pagos */}
                         {paymentTotals[game.id] && (
-                            <div className="mt-3 p-3 bg-gray-800 rounded-lg text-center">
-                                <h4 className="font-semibold text-white text-sm mb-2">Estado de Pagos</h4>
-                                
-                                {/* Umpire */}
-                                <div className="mb-2">
-                                    <div className="flex justify-between items-center mb-1">
-                                        <span className="text-gray-300 text-xs">Umpire:</span>
-                                        <span className="text-white text-sm font-semibold">
-                                            ${paymentTotals[game.id].totalUmpire.toLocaleString()} / ${game.umpire?.toLocaleString() || '550'}
-                                        </span>
-                                    </div>
-                                    <div className="w-full bg-gray-700 rounded-full h-1.5">
-                                        <div 
-                                            className="h-1.5 rounded-full transition-all duration-300"
-                                            style={{ 
-                                                width: `${Math.min((paymentTotals[game.id].totalUmpire / (game.umpire || 550)) * 100, 100)}%`,
-                                                backgroundColor: paymentTotals[game.id].totalUmpire >= (game.umpire || 550) 
-                                                    ? '#10B981' // Verde cuando se alcanza el objetivo
-                                                    : paymentTotals[game.id].totalUmpire >= (game.umpire || 550) * 0.8
-                                                    ? '#F59E0B' // Amarillo cuando está cerca (80%+)
-                                                    : paymentTotals[game.id].totalUmpire >= (game.umpire || 550) * 0.5
-                                                    ? '#F97316' // Naranja cuando está a la mitad (50%+)
-                                                    : '#DC2626' // Rojo por defecto
-                                            }}
-                                        ></div>
-                                    </div>
-                                    <div className="flex justify-between text-xs mt-1">
-                                        <span className="text-gray-400">
-                                            {paymentTotals[game.id].totalUmpire >= (game.umpire || 550) ? '✅ Completado' : '💰 Recaudado'}
-                                        </span>
-                                        <span className="text-gray-400">
-                                            {paymentTotals[game.id].totalUmpire >= (game.umpire || 550) 
-                                                ? 'Meta alcanzada' 
-                                                : `Faltan $${((game.umpire || 550) - paymentTotals[game.id].totalUmpire).toLocaleString()}`
-                                            }
-                                        </span>
-                                    </div>
-                                </div>
-                                
-                                {/* Inscripción */}
-                                <div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-300 text-xs">Inscripción:</span>
-                                        <span className="text-white text-sm font-semibold">
-                                            ${paymentTotals[game.id].totalInscripcion.toLocaleString()}
-                                        </span>
-                                    </div>
-                                    <div className="text-xs text-gray-400 mt-1">
-                                        Total recaudado
-                                    </div>
-                                </div>
+                            <div className="mt-3">
+                                <PaymentStatusWidget
+                                    paymentTotals={paymentTotals[game.id]}
+                                    umpireTarget={game.umpire || 550}
+                                    size="small"
+                                    showTitle={true}
+                                    className="text-center"
+                                />
                             </div>
                         )}
                     </div>

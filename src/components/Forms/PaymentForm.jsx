@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 import { Link } from 'react-router-dom';
 import { useModal } from '../../hooks/useModal';
+import PaymentStatusWidget from '../Widgets/PaymentStatusWidget';
 
 const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
     const [players, setPlayers] = useState([]);
@@ -344,68 +345,24 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
 
                 <div className="modal-content p-6">
                     
-                    {gameInfo && (
-                        <div className="mb-6 p-4 bg-gray-800 rounded-lg">
-                         <h3 className="font-semibold text-white mb-2">Información del Partido</h3>
-                         <p className="text-gray-300">vs {gameInfo.equipo_contrario}</p>
-                         <p className="text-gray-300">Fecha: {new Date(gameInfo.fecha_partido).toLocaleDateString()}</p>
-                         <p className="text-gray-300">Lugar: {gameInfo.lugar}</p>
-                         
-                         {/* Información de Pagos Acumulados */}
-                         <div className="mt-4 pt-4 border-t border-gray-600">
-                             <h4 className="font-semibold text-white mb-3">Estado de Pagos</h4>
-                             
-                             {/* Umpire */}
-                             <div className="mb-3">
-                                 <div className="flex justify-between items-center mb-1">
-                                     <span className="text-gray-300 text-sm">Umpire:</span>
-                                     <span className="text-white font-semibold">
-                                         ${paymentTotals.totalUmpire.toLocaleString()} / ${paymentTotals.umpireTarget.toLocaleString()}
-                                     </span>
-                                 </div>
-                                                                   <div className="w-full bg-gray-700 rounded-full h-2">
-                                      <div 
-                                          className="h-2 rounded-full transition-all duration-300"
-                                          style={{ 
-                                              width: `${Math.min((paymentTotals.totalUmpire / paymentTotals.umpireTarget) * 100, 100)}%`,
-                                                                                         backgroundColor: paymentTotals.totalUmpire >= paymentTotals.umpireTarget 
-                                                   ? '#10B981' // Verde cuando se alcanza el objetivo
-                                                   : paymentTotals.totalUmpire >= paymentTotals.umpireTarget * 0.8
-                                                   ? '#F59E0B' // Amarillo cuando está cerca (80%+)
-                                                   : paymentTotals.totalUmpire >= paymentTotals.umpireTarget * 0.5
-                                                   ? '#F97316' // Naranja cuando está a la mitad (50%+)
-                                                   : '#DC2626' // Rojo por defecto
-                                          }}
-                                      ></div>
-                                  </div>
-                                 <div className="flex justify-between text-xs mt-1">
-                                     <span className="text-gray-400">
-                                         {paymentTotals.totalUmpire >= paymentTotals.umpireTarget ? '✅ Completado' : '💰 Recaudado'}
-                                     </span>
-                                     <span className="text-gray-400">
-                                         {paymentTotals.totalUmpire >= paymentTotals.umpireTarget 
-                                             ? 'Meta alcanzada' 
-                                             : `Faltan $${(paymentTotals.umpireTarget - paymentTotals.totalUmpire).toLocaleString()}`
-                                         }
-                                     </span>
-                                 </div>
-                             </div>
-                             
-                             {/* Inscripción */}
-                             <div>
-                                 <div className="flex justify-between items-center">
-                                     <span className="text-gray-300 text-sm">Inscripción:</span>
-                                     <span className="text-white font-semibold">
-                                         ${paymentTotals.totalInscripcion.toLocaleString()}
-                                     </span>
-                                 </div>
-                                 <div className="text-xs text-gray-400 mt-1">
-                                     Total recaudado para inscripción
-                                 </div>
-                             </div>
-                         </div>
-                     </div>
-                 )}
+                                         {gameInfo && (
+                         <div className="mb-6 p-4 bg-gray-800 rounded-lg">
+                          <h3 className="font-semibold text-white mb-2">Información del Partido</h3>
+                          <p className="text-gray-300">vs {gameInfo.equipo_contrario}</p>
+                          <p className="text-gray-300">Fecha: {new Date(gameInfo.fecha_partido).toLocaleDateString()}</p>
+                          <p className="text-gray-300">Lugar: {gameInfo.lugar}</p>
+                          
+                          {/* Widget de Estado de Pagos */}
+                          <div className="mt-4 pt-4 border-t border-gray-600">
+                              <PaymentStatusWidget
+                                  paymentTotals={paymentTotals}
+                                  umpireTarget={paymentTotals.umpireTarget}
+                                  size="medium"
+                                  showTitle={true}
+                              />
+                          </div>
+                      </div>
+                  )}
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                     <div>

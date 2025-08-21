@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import PaymentStatusWidget from '../Widgets/PaymentStatusWidget'
 
 /**
  * Componente para el modal de detalles del partido
@@ -181,53 +182,15 @@ const ScheduleHistoryModal = ({
                         </div>
                     </div>
                     
-                    {/* Estado de Pagos */}
+                    {/* Widget de Estado de Pagos */}
                     {paymentTotals[selectedGame.id] && (
-                        <div className="mb-6 p-4 bg-gray-800 rounded-lg">
-                            <h3 className="text-lg font-semibold text-white mb-4">Estado de Pagos</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Umpire */}
-                                <div>
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-gray-300">Umpire:</span>
-                                        <span className="text-white font-semibold">
-                                            ${paymentTotals[selectedGame.id].totalUmpire.toLocaleString()} / ${selectedGame.umpire?.toLocaleString() || '550'}
-                                        </span>
-                                    </div>
-                                    <div className="w-full bg-gray-700 rounded-full h-2">
-                                        <div 
-                                            className="h-2 rounded-full transition-all duration-300"
-                                            style={{ 
-                                                width: `${Math.min((paymentTotals[selectedGame.id].totalUmpire / (selectedGame.umpire || 550)) * 100, 100)}%`,
-                                                backgroundColor: paymentTotals[selectedGame.id].totalUmpire >= (selectedGame.umpire || 550) 
-                                                    ? '#10B981' 
-                                                    : paymentTotals[selectedGame.id].totalUmpire >= (selectedGame.umpire || 550) * 0.8
-                                                    ? '#F59E0B' 
-                                                    : paymentTotals[selectedGame.id].totalUmpire >= (selectedGame.umpire || 550) * 0.5
-                                                    ? '#F97316' 
-                                                    : '#DC2626' 
-                                            }}
-                                        ></div>
-                                    </div>
-                                    <p className="text-xs text-gray-400 mt-1">
-                                        {paymentTotals[selectedGame.id].totalUmpire >= (selectedGame.umpire || 550) 
-                                            ? '✅ Meta alcanzada' 
-                                            : `Faltan $${((selectedGame.umpire || 550) - paymentTotals[selectedGame.id].totalUmpire).toLocaleString()}`
-                                        }
-                                    </p>
-                                </div>
-                                
-                                {/* Inscripción */}
-                                <div>
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-gray-300">Inscripción:</span>
-                                        <span className="text-white font-semibold">
-                                            ${paymentTotals[selectedGame.id].totalInscripcion.toLocaleString()}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-gray-400">Total recaudado</p>
-                                </div>
-                            </div>
+                        <div className="mb-6">
+                            <PaymentStatusWidget
+                                paymentTotals={paymentTotals[selectedGame.id]}
+                                umpireTarget={selectedGame.umpire || 550}
+                                size="large"
+                                showTitle={true}
+                            />
                         </div>
                     )}
                     

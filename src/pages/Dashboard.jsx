@@ -5,6 +5,7 @@ import { supabase } from '../supabaseClient'
 import Menu from '../components/Menu'
 import { useTeam } from '../context/useTeam'
 import DashboardCardsGrid from '../components/CardGrids/DashboardCardsGrid'
+import PaymentStatusWidget from '../components/Widgets/PaymentStatusWidget'
 
 /**
  * Componente Dashboard - Página principal para usuarios autenticados
@@ -34,6 +35,10 @@ const Dashboard = () => {
     topAttendance: [],
     totalGames: 0,
     averageAttendance: 0
+  })
+  const [paymentTotals, setPaymentTotals] = useState({
+    totalUmpire: 0,
+    totalInscripcion: 0
   })
   const [loadingTeam, setLoadingTeam] = useState(false)
 
@@ -88,6 +93,22 @@ const Dashboard = () => {
       if (playersError) {
         console.error('Error fetching players:', playersError)
         return
+      }
+
+      // Obtener totales de pagos del equipo
+      const { data: paymentsData, error: paymentsError } = await supabase
+        .from('pagos')
+        .select('monto_umpire, monto_inscripcion')
+        .eq('equipo_id', teamId)
+
+      if (!paymentsError && paymentsData) {
+        const totalUmpire = paymentsData.reduce((sum, payment) => sum + (payment.monto_umpire || 0), 0);
+        const totalInscripcion = paymentsData.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0);
+        
+        setPaymentTotals({
+          totalUmpire,
+          totalInscripcion
+        });
       }
 
       // Obtener próximo juego (próxima fecha)
@@ -156,13 +177,13 @@ const Dashboard = () => {
       }
 
       // Obtener total pagado para registro del equipo
-      const { data: payments, error: paymentsError } = await supabase
+      const { data: payments, error: registrationPaymentsError } = await supabase
         .from('pagos')
         .select('monto_inscripcion')
         .eq('equipo_id', teamId)
 
-      if (paymentsError) {
-        console.error('Error fetching payments:', paymentsError)
+      if (registrationPaymentsError) {
+        console.error('Error fetching payments:', registrationPaymentsError)
         return
       }
 
@@ -482,6 +503,23 @@ const Dashboard = () => {
                     </span>
                   </div>
                 </div>
+              )
+            },
+            // Card: Estado de Pagos (Widget Reutilizable)
+            {
+              title: "Estado de Pagos",
+              icon: "💰",
+              iconColor: "text-green-400",
+              linkTo: "/schedule",
+              loading: loadingTeam,
+              content: (
+                <PaymentStatusWidget
+                  paymentTotals={paymentTotals}
+                  umpireTarget={550}
+                  size="small"
+                  showTitle={false}
+                  className="bg-transparent"
+                />
               )
             }
           ]}

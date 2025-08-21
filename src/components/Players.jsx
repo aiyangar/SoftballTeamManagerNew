@@ -5,6 +5,11 @@ import { supabase } from '../supabaseClient'
 import Menu from './Menu'
 import { useTeam } from '../context/TeamContext'
 import { useModal } from '../hooks/useModal'
+import PlayerCard from './PlayerCard'
+import PlayerCardsGrid from './PlayerCardsGrid'
+import PlayerForm from './PlayerForm'
+import PlayerFilters from './PlayerFilters'
+import PlayerHistoryModal from './PlayerHistoryModal'
 
 /**
  * Componente para la gestión de jugadores
@@ -30,6 +35,7 @@ const Players = () => {
     const { teams, selectedTeam } = useTeam()
     const [positions, setPositions] = useState([])
     const [loadingPositions, setLoadingPositions] = useState(true)
+    const [loadingTeams, setLoadingTeams] = useState(false)
     const [showForm, setShowForm] = useState(false)
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
     const [actionMenuOpen, setActionMenuOpen] = useState(null)
@@ -314,6 +320,7 @@ const Players = () => {
      */
     const fetchTeams = async (propietarioId) => {
         try {
+            setLoadingTeams(true)
             const { data, error } = await supabase
                 .from('equipos')
                 .select('*')
@@ -325,12 +332,11 @@ const Players = () => {
                 return { success: false, error: error.message }
             }
 
-      
-            setTeams(data)
             setLoadingTeams(false)
             return { success: true, data: data }
         } catch (error) {
             console.error('Error inesperado al obtener equipos:', error)
+            setLoadingTeams(false)
             return { success: false, error: error.message }
         }
     }
@@ -717,22 +723,7 @@ const Players = () => {
     const filteredPlayers = filterPlayers(players, filters)
     const sortedPlayers = sortConfig.key ? sortPlayers(filteredPlayers, sortConfig.key, sortConfig.direction) : filteredPlayers
 
-    // Función para obtener la abreviación de la posición
-    const getPositionAbbreviation = (positionName) => {
-        const abbreviations = {
-            'Pitcher': 'P',
-            'Catcher': 'C',
-            'Primera Base': '1B',
-            'Segunda Base': '2B',
-            'Tercera Base': '3B',
-            'Shortstop': 'SS',
-            'Jardinero Izquierdo': 'LF',
-            'Jardinero Central': 'CF',
-            'Jardinero Derecho': 'RF',
-            'Short Fielder': 'SF'
-        }
-        return abbreviations[positionName] || positionName
-    }
+
 
 
 
@@ -788,127 +779,42 @@ const Players = () => {
 
             {/* Formulario de registro */}
             {showForm && (
-                <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8">
-                    <h2 className="text-xl font-semibold mb-6 text-white">
-                        {editingPlayer ? 'Editar Jugador' : 'Registrar Nuevo Jugador'}
-                    </h2>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Nombre *
-                                </label>
-                                <input
-                                    id="playerName"
-                                    name="playerName"
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="w-full p-3 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-gray-800 text-white"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Número *
-                                </label>
-                                <input
-                                    id="playerNumber"
-                                    name="playerNumber"
-                                    type="number"
-                                    min="0"
-                                    max="99"
-                                    value={numero}
-                                    onChange={(e) => setNumero(e.target.value)}
-                                    className="w-full p-3 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-gray-800 text-white"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Teléfono
-                                </label>
-                                <input
-                                    id="playerPhone"
-                                    name="playerPhone"
-                                    type="tel"
-                                    value={telefono}
-                                    onChange={(e) => setTelefono(e.target.value)}
-                                    className="w-full p-3 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-gray-800 text-white"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Email
-                                </label>
-                                <input
-                                    id="playerEmail"
-                                    name="playerEmail"
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full p-3 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-gray-800 text-white"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Equipo
-                                </label>
-                                <select
-                                    value={equipoId}
-                                    onChange={(e) => setEquipoId(e.target.value)}
-                                    className="w-full p-3 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-gray-800 text-white"
-                                >
-                                    <option value="">Seleccionar equipo</option>
-                                    {teams.map(team => (
-                                        <option key={team.id} value={team.id}>
-                                            {team.nombre_equipo}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Selección de posiciones */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Posiciones (máximo 3)
-                            </label>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                {positions.map(position => (
-                                    <label key={position.id} className="flex items-center space-x-2">
-                                        <input
-                                            id={`position-${position.id}`}
-                                            name={`position-${position.id}`}
-                                            type="checkbox"
-                                            checked={selectedPositions.includes(position.id)}
-                                            onChange={() => handlePositionToggle(position.id)}
-                                            className="rounded border-gray-600 text-gray-500 focus:ring-gray-500 bg-gray-800"
-                                        />
-                                        <span className="text-sm text-gray-300">{position.nombre_posicion}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="flex justify-end space-x-4">
-                            <button
-                                type="button"
-                                onClick={() => setShowForm(false)}
-                                className="px-4 py-2 text-gray-300 border border-gray-600 rounded-md hover:bg-gray-800"
-                            >
-                                Cancelar
-                            </button>
-                                                         <button
-                                 type="submit"
-                                 disabled={loading}
-                                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                             >
-                                 {loading ? (editingPlayer ? 'Actualizando...' : 'Registrando...') : (editingPlayer ? 'Actualizar Jugador' : 'Registrar Jugador')}
-                             </button>
-                        </div>
-                    </form>
-                </div>
+                <PlayerForm
+                    formData={{
+                        name,
+                        numero,
+                        telefono,
+                        email,
+                        equipoId
+                    }}
+                    onFormDataChange={(field, value) => {
+                        switch (field) {
+                            case 'name':
+                                setName(value)
+                                break
+                            case 'numero':
+                                setNumero(value)
+                                break
+                            case 'telefono':
+                                setTelefono(value)
+                                break
+                            case 'email':
+                                setEmail(value)
+                                break
+                            case 'equipoId':
+                                setEquipoId(value)
+                                break
+                        }
+                    }}
+                    selectedPositions={selectedPositions}
+                    onPositionToggle={handlePositionToggle}
+                    positions={positions}
+                    teams={teams}
+                    editingPlayer={editingPlayer}
+                    loading={loading}
+                    onSubmit={handleSubmit}
+                    onCancel={() => setShowForm(false)}
+                />
             )}
 
             {/* Botón para mostrar/ocultar formulario */}
@@ -960,494 +866,51 @@ const Players = () => {
                              )}
                          </div>
                          
-                         {/* Botón para mostrar/ocultar filtros */}
-                         <button
-                             onClick={() => setShowFilters(!showFilters)}
-                             className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors flex items-center space-x-2"
-                         >
-                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                             </svg>
-                             <span>{showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}</span>
-                             {(filters.nombre || filters.numero || filters.posiciones.length > 0) && (
-                                 <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded-full">
-                                     {sortedPlayers.length}
-                                 </span>
-                             )}
-                         </button>
+                         <PlayerFilters
+                             filters={filters}
+                             onFilterChange={handleFilterChange}
+                             onPositionFilterToggle={handlePositionFilterToggle}
+                             onPositionMatchTypeChange={handlePositionMatchTypeChange}
+                             onClearFilters={clearFilters}
+                             positions={positions}
+                             filteredCount={sortedPlayers.length}
+                             totalCount={players.length}
+                             showFilters={showFilters}
+                             onToggleFilters={() => setShowFilters(!showFilters)}
+                         />
                      </div>
                  </div>
-
-                 {/* Indicador de resultados cuando los filtros están ocultos */}
-                 {!showFilters && (filters.nombre || filters.numero || filters.posiciones.length > 0) && (
-                     <div className="mb-6 text-sm text-gray-300">
-                         <span className="text-gray-400">Mostrando </span>
-                         <span className="font-medium text-blue-400">{sortedPlayers.length}</span>
-                         <span className="text-gray-400"> de </span>
-                         <span className="font-medium text-white">{players.length}</span>
-                         <span className="text-gray-400"> jugadores (filtrados)</span>
-                     </div>
-                 )}
-
-                 {/* Sección de filtros */}
-                 {showFilters && (
-                     <div className="mb-6 p-4 bg-gray-800 rounded-lg border border-gray-600">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-medium text-white">Filtros</h3>
-                        <button
-                            onClick={clearFilters}
-                            className="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-500 transition-colors"
-                        >
-                            Limpiar Filtros
-                        </button>
-                    </div>
-                    
-                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         {/* Filtro por nombre */}
-                         <div>
-                             <label className="block text-sm font-medium text-gray-300 mb-2">
-                                 Buscar por nombre
-                             </label>
-                             <input
-                                 type="text"
-                                 value={filters.nombre}
-                                 onChange={(e) => handleFilterChange('nombre', e.target.value)}
-                                 placeholder="Escribir nombre..."
-                                 className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-                             />
-                         </div>
-                         
-                         {/* Filtro por número */}
-                         <div>
-                             <label className="block text-sm font-medium text-gray-300 mb-2">
-                                 Número de playera
-                             </label>
-                             <input
-                                 type="number"
-                                 value={filters.numero}
-                                 onChange={(e) => handleFilterChange('numero', e.target.value)}
-                                 placeholder="Ej: 10"
-                                 min="0"
-                                 max="99"
-                                 className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-                             />
-                         </div>
-                     </div>
-
-                     {/* Filtro por posiciones */}
-                     <div className="mt-4">
-                         <label className="block text-sm font-medium text-gray-300 mb-2">
-                             Posiciones
-                         </label>
-                         
-                         {/* Tipo de coincidencia */}
-                         <div className="mb-3">
-                             <div className="flex items-center space-x-4">
-                                 <label className="flex items-center space-x-2">
-                                     <input
-                                         type="radio"
-                                         name="positionMatchType"
-                                         value="any"
-                                         checked={filters.posicionMatchType === 'any'}
-                                         onChange={(e) => handlePositionMatchTypeChange(e.target.value)}
-                                         className="text-blue-500 focus:ring-blue-500 bg-gray-700 border-gray-600"
-                                     />
-                                     <span className="text-sm text-gray-300">Al menos una posición</span>
-                                 </label>
-                                 <label className="flex items-center space-x-2">
-                                     <input
-                                         type="radio"
-                                         name="positionMatchType"
-                                         value="all"
-                                         checked={filters.posicionMatchType === 'all'}
-                                         onChange={(e) => handlePositionMatchTypeChange(e.target.value)}
-                                         className="text-blue-500 focus:ring-blue-500 bg-gray-700 border-gray-600"
-                                     />
-                                     <span className="text-sm text-gray-300">Todas las posiciones</span>
-                                 </label>
-                             </div>
-                         </div>
-                         
-                         {/* Selección de posiciones */}
-                         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
-                             {positions.map(position => (
-                                 <label key={position.id} className="flex items-center space-x-2 p-2 bg-gray-700 rounded border border-gray-600 hover:bg-gray-600 transition-colors">
-                                     <input
-                                         type="checkbox"
-                                         checked={filters.posiciones.includes(position.nombre_posicion)}
-                                         onChange={() => handlePositionFilterToggle(position.nombre_posicion)}
-                                         className="rounded border-gray-600 text-blue-500 focus:ring-blue-500 bg-gray-800"
-                                     />
-                                     <span className="text-sm text-gray-300">{position.nombre_posicion}</span>
-                                 </label>
-                             ))}
-                         </div>
-                     </div>
-                    
-                                                              {/* Indicador de resultados */}
-                     <div className="mt-4 pt-4 border-t border-gray-600">
-                         <div className="flex items-center justify-between">
-                             <div className="text-sm text-gray-300">
-                                 <span className="text-gray-400">Mostrando </span>
-                                 <span className="font-medium text-blue-400">{sortedPlayers.length}</span>
-                                 <span className="text-gray-400"> de </span>
-                                 <span className="font-medium text-white">{players.length}</span>
-                                 <span className="text-gray-400"> jugadores</span>
-                                 {(filters.nombre || filters.numero || filters.posiciones.length > 0) && (
-                                     <span className="text-gray-400"> (filtrados)</span>
-                                 )}
-                             </div>
-                             {(filters.nombre || filters.numero || filters.posiciones.length > 0) && (
-                                 <div className="text-xs text-gray-400">
-                                     Filtros activos: 
-                                     {filters.nombre && <span className="ml-1 px-2 py-1 bg-blue-900 text-blue-200 rounded">Nombre: {filters.nombre}</span>}
-                                     {filters.numero && <span className="ml-1 px-2 py-1 bg-green-900 text-green-200 rounded">Número: {filters.numero}</span>}
-                                     {filters.posiciones.length > 0 && (
-                                         <span className="ml-1 px-2 py-1 bg-purple-900 text-purple-200 rounded">
-                                             Posiciones: {filters.posiciones.join(', ')} ({filters.posicionMatchType === 'all' ? 'todas' : 'al menos una'})
-                                         </span>
-                                     )}
-                                 </div>
-                             )}
-                         </div>
-                     </div>
-                     </div>
-                 )}
                 
                 <div>
-                    {loadingPlayers ? (
-                        <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500 mx-auto"></div>
-                            <p className="mt-2 text-gray-300">Cargando jugadores...</p>
-                        </div>
-                    ) : players.length === 0 ? (
-                        <div className="text-center py-8">
-                            <p className="text-gray-300">No hay jugadores registrados.</p>
-                            <p className="text-sm text-gray-400 mt-1">Registra tu primer jugador usando el botón de arriba.</p>
-                        </div>
-                    ) : sortedPlayers.length === 0 ? (
+                    {sortedPlayers.length === 0 && !loadingPlayers && players.length > 0 ? (
                         <div className="text-center py-8">
                             <p className="text-gray-300">No se encontraron jugadores con los filtros aplicados.</p>
                             <p className="text-sm text-gray-400 mt-1">Intenta ajustar los filtros o limpiarlos para ver todos los jugadores.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {sortedPlayers.map((player, index) => (
-                                <div key={player.id} className="bg-gray-800 border border-gray-600 rounded-lg p-4 hover:bg-gray-700 transition-colors">
-                                    {/* Header de la ficha */}
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="flex items-center space-x-2">
-                                            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                                                {player.numero || '#'}
-                                            </div>
-                                            <h3 className="text-white font-semibold truncate">{player.nombre}</h3>
-                                        </div>
-                                        <div className="relative">
-                                            <button
-                                                onClick={() => toggleActionMenu(player.id)}
-                                                className="p-1 text-gray-400 hover:text-white transition-colors"
-                                                title="Opciones del jugador"
-                                            >
-                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                                </svg>
-                                            </button>
-                                            
-                                            {actionMenuOpen === player.id && (
-                                                <>
-                                                    <div className="absolute right-0 mt-2 w-48 bg-gray-700 border border-gray-600 rounded-lg shadow-lg z-50">
-                                                        <div className="py-1">
-                                                            <button
-                                                                onClick={() => openPlayerHistoryModal(player)}
-                                                                className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-600 transition-colors"
-                                                            >
-                                                                📊 Ver Historial
-                                                            </button>
-                                                            <button
-                                                                onClick={() => editPlayer(player.id)}
-                                                                className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-600 transition-colors"
-                                                            >
-                                                                ✏️ Editar
-                                                            </button>
-                                                            <button
-                                                                onClick={() => {
-                                                                    deletePlayer(player.id)
-                                                                    setActionMenuOpen(null)
-                                                                }}
-                                                                className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900 transition-colors"
-                                                            >
-                                                                🗑️ Eliminar
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    {/* Overlay para cerrar menú */}
-                                                    <div 
-                                                        className="fixed inset-0 z-40" 
-                                                        onClick={() => setActionMenuOpen(null)}
-                                                    />
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Información del jugador */}
-                                    <div className="space-y-2">
-                                        {/* Posiciones */}
-                                        {player.jugador_posiciones && player.jugador_posiciones.length > 0 && (
-                                            <div className="flex flex-wrap gap-1">
-                                                {player.jugador_posiciones.map((jp, idx) => (
-                                                    <span key={idx} className="px-2 py-1 bg-blue-900 text-blue-200 text-xs rounded-full">
-                                                        {getPositionAbbreviation(jp.posiciones.nombre_posicion)}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-                                        
-                                        {/* Equipo */}
-                                        {player.equipos && (
-                                            <div className="text-sm">
-                                                <span className="text-gray-400">Equipo: </span>
-                                                <span className="text-blue-400 font-medium">{player.equipos.nombre_equipo}</span>
-                                            </div>
-                                        )}
-                                        
-                                        {/* Teléfono */}
-                                        {player.telefono && (
-                                            <div className="text-sm">
-                                                <span className="text-gray-400">📞 </span>
-                                                <span className="text-gray-300">{player.telefono}</span>
-                                            </div>
-                                        )}
-                                        
-                                        {/* Email */}
-                                        {player.email && (
-                                            <div className="text-sm">
-                                                <span className="text-gray-400">✉️ </span>
-                                                <span className="text-gray-300 truncate">{player.email}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                        <PlayerCardsGrid
+                            players={sortedPlayers}
+                            loadingPlayers={loadingPlayers}
+                            onEdit={editPlayer}
+                            onDelete={deletePlayer}
+                            onViewHistory={openPlayerHistoryModal}
+                            actionMenuOpen={actionMenuOpen}
+                            onToggleActionMenu={toggleActionMenu}
+                        />
                     )}
                 </div>
             </div>
 
                         {/* Modal de Historial del Jugador */}
-            {showPlayerHistoryModal && selectedPlayerForHistory && (
-                <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50">
-                    <div className="bg-neutral-900 border border-gray-600 rounded-lg w-full max-w-4xl mx-4 modal-container">
-                        {/* Header fijo */}
-                        <div className="modal-header p-6 border-b border-gray-600">
-                            <div className="flex justify-between items-center">
-                                <h2 className="text-2xl font-semibold text-white">
-                                    Historial de {selectedPlayerForHistory.nombre}
-                                </h2>
-                                <button
-                                    onClick={closePlayerHistoryModal}
-                                    className="text-gray-400 hover:text-white text-2xl"
-                                    title="Cerrar historial"
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Contenido con scroll */}
-                        <div className="modal-content p-6">
-                            {loadingHistory ? (
-                                <div className="text-center py-8">
-                                    <p className="text-gray-300">Cargando historial...</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-6">
-                                    {/* Estadísticas Generales */}
-                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                        <div className="bg-gray-800 p-4 rounded-lg text-center">
-                                            <div className="text-2xl font-bold text-blue-400">{playerHistory.gamesPlayed}</div>
-                                            <div className="text-sm text-gray-300">Total Partidos</div>
-                                        </div>
-                                        <div className="bg-gray-800 p-4 rounded-lg text-center">
-                                            <div className="text-2xl font-bold text-green-400">{playerHistory.gamesAttended}</div>
-                                            <div className="text-sm text-gray-300">Asistencias</div>
-                                        </div>
-                                        <div className="bg-gray-800 p-4 rounded-lg text-center">
-                                            <div className="text-2xl font-bold text-yellow-400">{playerHistory.attendanceRate}%</div>
-                                            <div className="text-sm text-gray-300">Tasa de Asistencia</div>
-                                        </div>
-                                        <div className="bg-gray-800 p-4 rounded-lg text-center">
-                                            <div className="text-2xl font-bold text-purple-400">{playerHistory.payments.length}</div>
-                                            <div className="text-sm text-gray-300">Pagos Realizados</div>
-                                        </div>
-                                    </div>
-
-                                    {/* Resumen de Pagos */}
-                                    <div className="bg-gray-800 p-4 rounded-lg">
-                                        <h3 className="text-lg font-semibold text-white mb-4">Resumen de Pagos</h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="bg-gray-700 p-3 rounded">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-gray-300">Total Umpire:</span>
-                                                    <span className="text-green-400 font-semibold">
-                                                        ${playerHistory.totalUmpirePaid.toLocaleString()}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="bg-gray-700 p-3 rounded">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-gray-300">Total Inscripción:</span>
-                                                    <span className="text-blue-400 font-semibold">
-                                                        ${playerHistory.totalInscripcionPaid.toLocaleString()}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                                                         {/* Historial de Asistencias */}
-                                     <div className="bg-gray-800 p-4 rounded-lg">
-                                         <button
-                                             onClick={() => toggleSection('attendance')}
-                                             className="w-full flex justify-between items-center text-left"
-                                         >
-                                             <h3 className="text-lg font-semibold text-white">Historial de Asistencias</h3>
-                                             <div className="flex items-center space-x-2">
-                                                 <span className="text-sm text-gray-400">
-                                                     {playerHistory.attendance.length} registros
-                                                 </span>
-                                                 <svg 
-                                                     className={`w-5 h-5 text-gray-400 transition-transform ${expandedSections.attendance ? 'rotate-180' : ''}`}
-                                                     fill="none" 
-                                                     stroke="currentColor" 
-                                                     viewBox="0 0 24 24"
-                                                 >
-                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                 </svg>
-                                             </div>
-                                         </button>
-                                         
-                                         {expandedSections.attendance && (
-                                             <div className="mt-4">
-                                                 {playerHistory.attendance.length === 0 ? (
-                                                     <p className="text-gray-400 text-center py-4">No hay registros de asistencia</p>
-                                                 ) : (
-                                                     <div className="space-y-2">
-                                                         {playerHistory.attendance.map((attendance, index) => (
-                                                             <div key={index} className="bg-gray-700 p-3 rounded flex justify-between items-center">
-                                                                 <div>
-                                                                     <div className="font-medium text-white">
-                                                                         vs {attendance.partidos?.equipo_contrario}
-                                                                     </div>
-                                                                     <div className="text-sm text-gray-300">
-                                                                         {new Date(attendance.partidos?.fecha_partido).toLocaleDateString()}
-                                                                     </div>
-                                                                     <div className="text-xs text-gray-400">
-                                                                         {attendance.partidos?.lugar}
-                                                                     </div>
-                                                                 </div>
-                                                                 <div className="text-right">
-                                                                     {attendance.partidos?.finalizado ? (
-                                                                         <div className="text-sm">
-                                                                             <div className={`font-semibold ${
-                                                                                 attendance.partidos.resultado === 'Victoria' ? 'text-green-400' :
-                                                                                 attendance.partidos.resultado === 'Derrota' ? 'text-red-400' :
-                                                                                 'text-yellow-400'
-                                                                             }`}>
-                                                                                 {attendance.partidos.resultado}
-                                                                             </div>
-                                                                             <div className="text-gray-300">
-                                                                                 {attendance.partidos.carreras_equipo_local} - {attendance.partidos.carreras_equipo_contrario}
-                                                                             </div>
-                                                                         </div>
-                                                                     ) : (
-                                                                         <span className="text-yellow-400 text-sm">Pendiente</span>
-                                                                     )}
-                                                                 </div>
-                                                             </div>
-                                                         ))}
-                                                     </div>
-                                                 )}
-                                             </div>
-                                         )}
-                                     </div>
-
-                                                                         {/* Historial de Pagos */}
-                                     <div className="bg-gray-800 p-4 rounded-lg">
-                                         <button
-                                             onClick={() => toggleSection('payments')}
-                                             className="w-full flex justify-between items-center text-left"
-                                         >
-                                             <h3 className="text-lg font-semibold text-white">Historial de Pagos</h3>
-                                             <div className="flex items-center space-x-2">
-                                                 <span className="text-sm text-gray-400">
-                                                     {playerHistory.payments.length} registros
-                                                 </span>
-                                                 <svg 
-                                                     className={`w-5 h-5 text-gray-400 transition-transform ${expandedSections.payments ? 'rotate-180' : ''}`}
-                                                     fill="none" 
-                                                     stroke="currentColor" 
-                                                     viewBox="0 0 24 24"
-                                                 >
-                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                 </svg>
-                                             </div>
-                                         </button>
-                                         
-                                         {expandedSections.payments && (
-                                             <div className="mt-4">
-                                                 {playerHistory.payments.length === 0 ? (
-                                                     <p className="text-gray-400 text-center py-4">No hay registros de pagos</p>
-                                                 ) : (
-                                                     <div className="space-y-2">
-                                                         {playerHistory.payments.map((payment, index) => (
-                                                             <div key={index} className="bg-gray-700 p-3 rounded">
-                                                                 <div className="flex justify-between items-start mb-2">
-                                                                     <div>
-                                                                         <div className="font-medium text-white">
-                                                                             vs {payment.partidos?.equipo_contrario}
-                                                                         </div>
-                                                                         <div className="text-sm text-gray-300">
-                                                                             {new Date(payment.fecha_pago).toLocaleDateString()}
-                                                                         </div>
-                                                                     </div>
-                                                                     <div className="text-right">
-                                                                         <div className="text-sm text-gray-300">
-                                                                             {new Date(payment.fecha_pago).toLocaleTimeString()}
-                                                                         </div>
-                                                                     </div>
-                                                                 </div>
-                                                                 <div className="grid grid-cols-2 gap-2 text-sm">
-                                                                     {payment.monto_umpire > 0 && (
-                                                                         <div className="bg-green-900 p-2 rounded">
-                                                                             <span className="text-green-300">Umpire:</span>
-                                                                             <span className="text-green-400 font-semibold ml-2">
-                                                                                 ${payment.monto_umpire.toLocaleString()}
-                                                                             </span>
-                                                                         </div>
-                                                                     )}
-                                                                     {payment.monto_inscripcion > 0 && (
-                                                                         <div className="bg-blue-900 p-2 rounded">
-                                                                             <span className="text-blue-300">Inscripción:</span>
-                                                                             <span className="text-blue-400 font-semibold ml-2">
-                                                                                 ${payment.monto_inscripcion.toLocaleString()}
-                                                                             </span>
-                                                                         </div>
-                                                                     )}
-                                                                 </div>
-                                                             </div>
-                                                         ))}
-                                                     </div>
-                                                 )}
-                                             </div>
-                                         )}
-                                     </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
+            <PlayerHistoryModal
+                isOpen={showPlayerHistoryModal}
+                player={selectedPlayerForHistory}
+                history={playerHistory}
+                loadingHistory={loadingHistory}
+                expandedSections={expandedSections}
+                onToggleSection={toggleSection}
+                onClose={closePlayerHistoryModal}
+            />
             
             </div>
         </>

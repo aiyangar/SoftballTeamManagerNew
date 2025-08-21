@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../../supabaseClient';
 import { Link } from 'react-router-dom';
-import { useModal } from '../hooks/useModal';
+import { useModal } from '../../hooks/useModal';
 
 const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
     const [players, setPlayers] = useState([]);

@@ -759,7 +759,7 @@ const Players = () => {
     return (
         <>
             <div>
-                                <div className="flex justify-between items-center mb-8">
+                                <div className="flex justify-between items-center mb-8 ">
                         <h1 className="text-2xl font-bold text-white">Gestión de Jugadores</h1>
                     </div>
 
@@ -829,7 +829,7 @@ const Players = () => {
             </div>
 
             {/* Lista de jugadores */}
-            <div className="bg-neutral-900 shadow rounded-lg p-6">
+            <div className="bg-neutral-900 shadow rounded-lg p-6 border border-gray-700">
                 {/* Header superior con título, equipo, ordenamiento y botón de filtro */}
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-semibold text-white">Jugadores Registrados</h2>

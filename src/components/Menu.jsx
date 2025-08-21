@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { UserAuth } from '../context/AuthContext'
 import { useTeam } from '../context/TeamContext'
+import { getFullVersion } from '../version'
 
 /**
  * Componente Menu - Menú desplegable reutilizable
@@ -138,7 +139,7 @@ const Menu = () => {
                             </div>
                             <div className="text-center pt-3">
                                 <p className="text-gray-400 text-xs">
-                                    Versión 0.9.0 - Softball Team Manager
+                                    {getFullVersion()}
                                 </p>
                             </div>
                         </div>

@@ -5,6 +5,9 @@ import PaymentForm from '../components/PaymentForm';
 import Menu from '../components/Menu';
 import { useTeam } from '../context/TeamContext';
 import { useModal } from '../hooks/useModal';
+import ScheduleCardsGrid from '../components/ScheduleCardsGrid';
+import ScheduleForm from '../components/ScheduleForm';
+import ScheduleHistoryModal from '../components/ScheduleHistoryModal';
 
 const Schedule = () => {
     const authContext = UserAuth();
@@ -512,76 +515,23 @@ const Schedule = () => {
                     </div>
 
                     {/* Game Creation Form */}
-                    {showGameForm && (
-                        <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8">
-                            <h2 className="text-xl font-semibold mb-6 text-white">
-                                {editingGame ? 'Editar Partido' : 'Registrar Nuevo Partido'}
-                            </h2>
-                            <form onSubmit={handleCreateGame} className="space-y-4">
-                                <input
-                                    type="text"
-                                    name="equipo_contrario"
-                                    placeholder="Equipo Contrario"
-                                    value={newGame.equipo_contrario}
-                                    onChange={handleInputChange}
-                                    className="w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white"
-                                    required
-                                />
-                                <input
-                                    type="date"
-                                    name="fecha_partido"
-                                    value={newGame.fecha_partido}
-                                    onChange={handleInputChange}
-                                    className="w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white"
-                                    required
-                                />
-                                <input
-                                    type="text"
-                                    name="lugar"
-                                    placeholder="Lugar del partido"
-                                    value={newGame.lugar}
-                                    onChange={handleInputChange}
-                                    className="w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white"
-                                    required
-                                />
-                                <input
-                                    type="number"
-                                    name="umpire"
-                                    placeholder="Pago al Umpire"
-                                    value={newGame.umpire}
-                                    onChange={handleInputChange}
-                                    className="w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white"
-                                    min="0"
-                                    step="0.01"
-                                    required
-                                />
-                                <div className="flex space-x-4">
-                                    <button 
-                                        type="button"
-                                        onClick={() => {
-                                            setShowGameForm(false);
-                                            setEditingGame(null);
-                                            setNewGame({ equipo_contrario: '', fecha_partido: '', lugar: '', umpire: 550 });
-                                        }}
-                                        className="flex-1 px-4 py-3 border border-gray-600 text-gray-300 rounded hover:bg-gray-800 transition-colors"
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button 
-                                        type="submit" 
-                                        disabled={loading} 
-                                        className="flex-1 px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        {loading ? (editingGame ? 'Actualizando...' : 'Registrando...') : (editingGame ? 'Actualizar Partido' : 'Registrar Partido')}
-                                    </button>
-                                </div>
-                                {error && <p className="text-red-500 mt-2">{error}</p>}
-                            </form>
-                        </div>
-                    )}
+                    <ScheduleForm
+                        showForm={showGameForm}
+                        newGame={newGame}
+                        onInputChange={handleInputChange}
+                        onSubmit={handleCreateGame}
+                        onCancel={() => {
+                            setShowGameForm(false);
+                            setEditingGame(null);
+                            setNewGame({ equipo_contrario: '', fecha_partido: '', lugar: '', umpire: 550 });
+                        }}
+                        loading={loading}
+                        editingGame={editingGame}
+                        error={error}
+                    />
 
-                    {/* Games List */}
-                    <div className="bg-neutral-900 shadow rounded-lg p-6">
+                                         {/* Games List */}
+                     <div className="bg-neutral-900 shadow rounded-lg p-6 border border-gray-700">
                         <h2 className="text-xl font-semibold mb-6 text-white">Partidos Registrados</h2>
                         
                         {/* Mensajes de error y éxito */}
@@ -596,260 +546,30 @@ const Schedule = () => {
                             </div>
                         )}
                         
-                        {games.length === 0 ? (
-                            <div className="text-center py-8">
-                                <p className="text-gray-300">No hay partidos registrados aún.</p>
-                                <p className="text-sm text-gray-400 mt-1">Registra tu primer partido usando el formulario de arriba.</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {games.map(game => (
-                                    <div 
-                                        key={game.id} 
-                                        className="border border-gray-600 rounded-lg p-4 cursor-pointer hover:bg-gray-800 transition-colors"
-                                        onClick={() => openGameDetailsModal(game)}
-                                    >
-                                                                                 {gameFinalizationStatus[game.id] ? (
-                                             // Partido finalizado - Vista compacta
-                                             <div>
-                                                 <div className="flex justify-between items-start">
-                                                     <div className="flex-1">
-                                                         <h3 className="font-bold text-lg">{game.equipo_contrario}</h3>
-                                                         <p>Fecha: {new Date(game.fecha_partido).toLocaleDateString()}</p>
-                                                         
-                                                         {/* Marcador siempre visible */}
-                                                         {game.resultado && (
-                                                             <div className="mt-2 p-2 bg-gray-700 rounded">
-                                                                 <p className="text-sm font-semibold text-white">
-                                                                     Marcador: {game.carreras_equipo_local || 0} - {game.carreras_equipo_contrario || 0}
-                                                                 </p>
-                                                                 <p className={`text-xs ${
-                                                                     game.resultado === 'Victoria' ? 'text-green-400' :
-                                                                     game.resultado === 'Derrota' ? 'text-red-400' :
-                                                                     'text-yellow-400'
-                                                                 }`}>
-                                                                     Resultado: {game.resultado}
-                                                                 </p>
-                                                             </div>
-                                                         )}
-                                                         
-                                                         {/* Estado de finalización */}
-                                                         <div className="mt-2 p-2 bg-red-900 border border-red-600 rounded">
-                                                             <span className="text-red-200 font-semibold text-sm">🔒 PARTIDO FINALIZADO</span>
-                                                         </div>
-                                                     </div>
-                                                 </div>
-                                             </div>
-                                        ) : (
-                                            // Partido no finalizado - Vista completa
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex-1">
-                                                    <h3 className="font-bold text-lg">{game.equipo_contrario}</h3>
-                                                    <p>Fecha: {new Date(game.fecha_partido).toLocaleDateString()}</p>
-                                                    <p>Lugar: {game.lugar}</p>
-                                                    <p>Umpire: ${game.umpire || 550}</p>
-                                                    
-                                                    {/* Información de Pagos Acumulados */}
-                                                    {paymentTotals[game.id] && (
-                                                        <div className="mt-3 p-3 bg-gray-800 rounded-lg text-center">
-                                                            <h4 className="font-semibold text-white text-sm mb-2">Estado de Pagos</h4>
-                                                            
-                                                            {/* Umpire */}
-                                                            <div className="mb-2">
-                                                                <div className="flex justify-between items-center mb-1">
-                                                                    <span className="text-gray-300 text-xs">Umpire:</span>
-                                                                    <span className="text-white text-sm font-semibold">
-                                                                        ${paymentTotals[game.id].totalUmpire.toLocaleString()} / ${game.umpire?.toLocaleString() || '550'}
-                                                                    </span>
-                                                                </div>
-                                                                <div className="w-full bg-gray-700 rounded-full h-1.5">
-                                                                    <div 
-                                                                        className="h-1.5 rounded-full transition-all duration-300"
-                                                                        style={{ 
-                                                                            width: `${Math.min((paymentTotals[game.id].totalUmpire / (game.umpire || 550)) * 100, 100)}%`,
-                                                                            backgroundColor: paymentTotals[game.id].totalUmpire >= (game.umpire || 550) 
-                                                                                ? '#10B981' // Verde cuando se alcanza el objetivo
-                                                                                : paymentTotals[game.id].totalUmpire >= (game.umpire || 550) * 0.8
-                                                                                ? '#F59E0B' // Amarillo cuando está cerca (80%+)
-                                                                                : paymentTotals[game.id].totalUmpire >= (game.umpire || 550) * 0.5
-                                                                                ? '#F97316' // Naranja cuando está a la mitad (50%+)
-                                                                                : '#DC2626' // Rojo por defecto
-                                                                        }}
-                                                                    ></div>
-                                                                </div>
-                                                                <div className="flex justify-between text-xs mt-1">
-                                                                    <span className="text-gray-400">
-                                                                        {paymentTotals[game.id].totalUmpire >= (game.umpire || 550) ? '✅ Completado' : '💰 Recaudado'}
-                                                                    </span>
-                                                                    <span className="text-gray-400">
-                                                                        {paymentTotals[game.id].totalUmpire >= (game.umpire || 550) 
-                                                                            ? 'Meta alcanzada' 
-                                                                            : `Faltan $${((game.umpire || 550) - paymentTotals[game.id].totalUmpire).toLocaleString()}`
-                                                                        }
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                            
-                                                            {/* Inscripción */}
-                                                            <div>
-                                                                <div className="flex justify-between items-center">
-                                                                    <span className="text-gray-300 text-xs">Inscripción:</span>
-                                                                    <span className="text-white text-sm font-semibold">
-                                                                        ${paymentTotals[game.id].totalInscripcion.toLocaleString()}
-                                                                    </span>
-                                                                </div>
-                                                                <div className="text-xs text-gray-400 mt-1">
-                                                                    Total recaudado
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="relative">
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            toggleActionMenu(game.id);
-                                                        }}
-                                                        className="px-3 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-500 transition-colors"
-                                                        title="Opciones del partido"
-                                                    >
-                                                        ⋮
-                                                    </button>
-                                                    
-                                                                                                         {actionMenuOpen === game.id && (
-                                                         <>
-                                                             <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50">
-                                                                 <div className="py-1">
-                                                                     <button
-                                                                         onClick={(e) => {
-                                                                             e.stopPropagation();
-                                                                             toggleAttendanceForm(game.id);
-                                                                         }}
-                                                                         disabled={gameFinalizationStatus[game.id]}
-                                                                         className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-50"
-                                                                     >
-                                                                         📋 Asistencia
-                                                                     </button>
-                                                                     <button
-                                                                         onClick={(e) => {
-                                                                             e.stopPropagation();
-                                                                             editGame(game);
-                                                                         }}
-                                                                         disabled={gameFinalizationStatus[game.id]}
-                                                                         className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-50"
-                                                                     >
-                                                                         ✏️ Editar Partido
-                                                                     </button>
-                                                                     <button
-                                                                         onClick={(e) => {
-                                                                             e.stopPropagation();
-                                                                             openPaymentForm(game.id);
-                                                                         }}
-                                                                         disabled={gameFinalizationStatus[game.id]}
-                                                                         className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-50"
-                                                                     >
-                                                                         💰 Registrar Pagos
-                                                                     </button>
-                                                                     {!gameFinalizationStatus[game.id] && (
-                                                                         <button
-                                                                             onClick={(e) => {
-                                                                                 e.stopPropagation();
-                                                                                 openScoreForm(game);
-                                                                             }}
-                                                                             className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900 transition-colors"
-                                                                         >
-                                                                             ⚾ Finalizar Partido
-                                                                         </button>
-                                                                     )}
-                                                                 </div>
-                                                             </div>
-                                                             {/* Overlay para cerrar menú */}
-                                                             <div 
-                                                                 className="fixed inset-0 z-40" 
-                                                                 onClick={(e) => {
-                                                                     e.stopPropagation();
-                                                                     setActionMenuOpen(null);
-                                                                 }}
-                                                             />
-                                                         </>
-                                                     )}
-                                                </div>
-                                            </div>
-                                        )}
-                                        
-                                                                                 {/* Sección de Asistencia - Solo se muestra cuando está habilitada */}
-                                         {showAttendanceForm[game.id] && (
-                                             <div className="mt-4" onClick={(e) => e.stopPropagation()}>
-                                                 <div className="flex justify-between items-center mb-2">
-                                                     <h4 className="font-semibold">Asistencia de Jugadores</h4>
-                                                     <button
-                                                         onClick={() => toggleAttendanceForm(game.id)}
-                                                         className="text-gray-400 hover:text-white"
-                                                         title="Cerrar formulario de asistencia"
-                                                     >
-                                                         ✕
-                                                     </button>
-                                                 </div>
-                                                
-                                                {players.length === 0 ? (
-                                                    <div className="text-yellow-500 mb-4">
-                                                        No hay jugadores registrados en este equipo. 
-                                                        <br />
-                                                        <span className="text-sm">Jugadores cargados: {players.length}</span>
-                                                        <br />
-                                                        <button 
-                                                            onClick={() => fetchPlayers(selectedTeam)}
-                                                            className="mt-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
-                                                        >
-                                                            Recargar Jugadores
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        {players.map(player => (
-                                                            <label key={player.id} className="flex items-center space-x-2">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={attendance[game.id]?.includes(player.id) || false}
-                                                                    onChange={() => handleAttendanceChange(game.id, player.id)}
-                                                                    disabled={gameFinalizationStatus[game.id]}
-                                                                    className="form-checkbox h-5 w-5 text-blue-600 disabled:opacity-50"
-                                                                />
-                                                                <span className={gameFinalizationStatus[game.id] ? "text-gray-400" : ""}>{player.nombre}</span>
-                                                            </label>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                                
-                                                <div className="flex space-x-2 mt-4">
-                                                    <button
-                                                        onClick={() => loadExistingAttendance(game.id)}
-                                                        disabled={gameFinalizationStatus[game.id]}
-                                                        className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50"
-                                                    >
-                                                        Cargar Asistencia Existente
-                                                    </button>
-                                                    <button
-                                                        onClick={() => recordAttendance(game.id)}
-                                                        disabled={gameFinalizationStatus[game.id]}
-                                                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                                                    >
-                                                        Guardar Asistencia
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-                                        
-                                        
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                                                <ScheduleCardsGrid
+                            games={games}
+                            paymentTotals={paymentTotals}
+                            gameFinalizationStatus={gameFinalizationStatus}
+                            onCardClick={openGameDetailsModal}
+                            onActionMenuToggle={toggleActionMenu}
+                            onAttendanceFormToggle={toggleAttendanceForm}
+                            onEditGame={editGame}
+                            onOpenPaymentForm={openPaymentForm}
+                            onOpenScoreForm={openScoreForm}
+                            actionMenuOpen={actionMenuOpen}
+                            players={players}
+                            attendance={attendance}
+                            onAttendanceChange={handleAttendanceChange}
+                            onLoadExistingAttendance={loadExistingAttendance}
+                            onRecordAttendance={recordAttendance}
+                            onFetchPlayers={fetchPlayers}
+                            selectedTeam={selectedTeam}
+                            showAttendanceForm={showAttendanceForm}
+                        />
                     </div>
                 </>
             ) : (
-                <div className="bg-neutral-900 shadow rounded-lg p-8 text-center">
+                                 <div className="bg-neutral-900 shadow rounded-lg p-8 text-center border border-gray-700">
                     <p className="text-gray-300 mb-4">No hay equipo seleccionado</p>
                     <p className="text-sm text-gray-400">Selecciona un equipo desde el Dashboard para gestionar partidos</p>
                 </div>
@@ -865,167 +585,15 @@ const Schedule = () => {
                 />
             )}
 
-                         {/* Game Details Modal */}
-             {showGameDetailsModal && selectedGameForDetails && (
-                 <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50">
-                     <div className="bg-neutral-900 border border-gray-600 rounded-lg w-full max-w-4xl mx-4 modal-container">
-                         <div className="modal-header p-6 border-b border-gray-600">
-                             <div className="flex justify-between items-center">
-                                 <h2 className="text-2xl font-semibold text-white">Detalles del Partido</h2>
-                                 <button
-                                     onClick={closeGameDetailsModal}
-                                     className="text-gray-400 hover:text-white text-2xl"
-                                     title="Cerrar detalles del partido"
-                                 >
-                                     ×
-                                 </button>
-                             </div>
-                         </div>
-                         
-                         <div className="modal-content p-6">
-                             {/* Información básica del partido */}
-                             <div className="mb-6 p-4 bg-gray-800 rounded-lg">
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                 <div>
-                                     <h3 className="text-lg font-semibold text-white mb-2">{selectedGameForDetails.equipo_contrario}</h3>
-                                     <p className="text-gray-300">Fecha: {new Date(selectedGameForDetails.fecha_partido).toLocaleDateString()}</p>
-                                     <p className="text-gray-300">Lugar: {selectedGameForDetails.lugar}</p>
-                                     <p className="text-gray-300">Umpire: ${selectedGameForDetails.umpire || 550}</p>
-                                 </div>
-                                 <div>
-                                     {selectedGameForDetails.resultado && (
-                                         <div className="text-center">
-                                             <p className="text-gray-300 text-sm mb-1">Resultado:</p>
-                                             <p className="text-2xl font-bold text-white">
-                                                 {selectedGameForDetails.carreras_equipo_local || 0} - {selectedGameForDetails.carreras_equipo_contrario || 0}
-                                             </p>
-                                             <p className={`text-sm font-semibold ${
-                                                 selectedGameForDetails.resultado === 'Victoria' ? 'text-green-400' :
-                                                 selectedGameForDetails.resultado === 'Derrota' ? 'text-red-400' :
-                                                 'text-yellow-400'
-                                             }`}>
-                                                 {selectedGameForDetails.resultado}
-                                             </p>
-                                         </div>
-                                     )}
-                                     {selectedGameForDetails.finalizado && (
-                                         <div className="mt-2 p-2 bg-red-900 border border-red-600 rounded text-center">
-                                             <span className="text-red-200 font-semibold text-sm">🔒 PARTIDO FINALIZADO</span>
-                                         </div>
-                                     )}
-                                 </div>
-                             </div>
-                         </div>
-                         
-                         {/* Estado de Pagos */}
-                         {paymentTotals[selectedGameForDetails.id] && (
-                             <div className="mb-6 p-4 bg-gray-800 rounded-lg">
-                                 <h3 className="text-lg font-semibold text-white mb-4">Estado de Pagos</h3>
-                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                     {/* Umpire */}
-                                     <div>
-                                         <div className="flex justify-between items-center mb-2">
-                                             <span className="text-gray-300">Umpire:</span>
-                                             <span className="text-white font-semibold">
-                                                 ${paymentTotals[selectedGameForDetails.id].totalUmpire.toLocaleString()} / ${selectedGameForDetails.umpire?.toLocaleString() || '550'}
-                                             </span>
-                                         </div>
-                                         <div className="w-full bg-gray-700 rounded-full h-2">
-                                             <div 
-                                                 className="h-2 rounded-full transition-all duration-300"
-                                                 style={{ 
-                                                     width: `${Math.min((paymentTotals[selectedGameForDetails.id].totalUmpire / (selectedGameForDetails.umpire || 550)) * 100, 100)}%`,
-                                                     backgroundColor: paymentTotals[selectedGameForDetails.id].totalUmpire >= (selectedGameForDetails.umpire || 550) 
-                                                         ? '#10B981' 
-                                                         : paymentTotals[selectedGameForDetails.id].totalUmpire >= (selectedGameForDetails.umpire || 550) * 0.8
-                                                         ? '#F59E0B' 
-                                                         : paymentTotals[selectedGameForDetails.id].totalUmpire >= (selectedGameForDetails.umpire || 550) * 0.5
-                                                         ? '#F97316' 
-                                                         : '#DC2626' 
-                                                 }}
-                                             ></div>
-                                         </div>
-                                         <p className="text-xs text-gray-400 mt-1">
-                                             {paymentTotals[selectedGameForDetails.id].totalUmpire >= (selectedGameForDetails.umpire || 550) 
-                                                 ? '✅ Meta alcanzada' 
-                                                 : `Faltan $${((selectedGameForDetails.umpire || 550) - paymentTotals[selectedGameForDetails.id].totalUmpire).toLocaleString()}`
-                                             }
-                                         </p>
-                                     </div>
-                                     
-                                     {/* Inscripción */}
-                                     <div>
-                                         <div className="flex justify-between items-center mb-2">
-                                             <span className="text-gray-300">Inscripción:</span>
-                                             <span className="text-white font-semibold">
-                                                 ${paymentTotals[selectedGameForDetails.id].totalInscripcion.toLocaleString()}
-                                             </span>
-                                         </div>
-                                         <p className="text-xs text-gray-400">Total recaudado</p>
-                                     </div>
-                                 </div>
-                             </div>
-                         )}
-                         
-                         {/* Asistencia */}
-                         <div className="mb-6">
-                             <h3 className="text-lg font-semibold text-white mb-4">Asistencia ({gameDetailsData.attendance.length} jugadores)</h3>
-                             {gameDetailsData.attendance.length > 0 ? (
-                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                     {gameDetailsData.attendance.map((att, index) => (
-                                         <div key={index} className="p-3 bg-gray-800 rounded-lg text-center">
-                                             <div className="text-green-400 text-2xl mb-1">✓</div>
-                                             <p className="text-white text-sm">{att.jugadores?.nombre || 'Jugador'}</p>
-                                         </div>
-                                     ))}
-                                 </div>
-                             ) : (
-                                 <div className="p-4 bg-gray-800 rounded-lg text-center">
-                                     <p className="text-gray-400">No hay registros de asistencia</p>
-                                 </div>
-                             )}
-                         </div>
-                         
-                         {/* Pagos Detallados */}
-                         <div>
-                             <h3 className="text-lg font-semibold text-white mb-4">Pagos Registrados ({gameDetailsData.payments.length} pagos)</h3>
-                             {gameDetailsData.payments.length > 0 ? (
-                                 <div className="space-y-3">
-                                     {gameDetailsData.payments.map((payment) => (
-                                         <div key={payment.id} className="p-4 bg-gray-800 rounded-lg">
-                                             <div className="flex justify-between items-start mb-2">
-                                                 <div>
-                                                     <p className="text-white font-semibold">{payment.jugadores?.nombre || 'Jugador'}</p>
-                                                     <p className="text-gray-400 text-sm">
-                                                         {new Date(payment.fecha_pago).toLocaleDateString()}
-                                                     </p>
-                                                 </div>
-                                                 <div className="text-right">
-                                                     {payment.monto_umpire > 0 && (
-                                                         <p className="text-green-400 text-sm">
-                                                             Umpire: ${payment.monto_umpire.toLocaleString()}
-                                                         </p>
-                                                     )}
-                                                     {payment.monto_inscripcion > 0 && (
-                                                         <p className="text-blue-400 text-sm">
-                                                             Inscripción: ${payment.monto_inscripcion.toLocaleString()}
-                                                         </p>
-                                                     )}
-                                                 </div>
-                                             </div>
-                                         </div>
-                                     ))}
-                                 </div>
-                             ) : (
-                                 <div className="p-4 bg-gray-800 rounded-lg text-center">
-                                     <p className="text-gray-400">No hay pagos registrados</p>
-                                 </div>
-                             )}
-                         </div>
-                         </div>
-                     </div>
-                 </div>
-             )}
+                                                   {/* Game Details Modal */}
+                          <ScheduleHistoryModal
+                              showModal={showGameDetailsModal}
+                              selectedGame={selectedGameForDetails}
+                              paymentTotals={paymentTotals}
+                              gameDetailsData={gameDetailsData}
+                              onClose={closeGameDetailsModal}
+                              getLocalTeamName={getLocalTeamName}
+                          />
 
              {/* Score Form Modal */}
              {showScoreForm && selectedGameForScore && (

@@ -112,7 +112,11 @@ src/
 │   ├── PlayerFilters.jsx # Filtros de jugadores
 │   ├── PlayerHistoryModal.jsx # Modal de historial de jugador
 │   ├── DashboardCard.jsx # Tarjeta individual del dashboard
-│   └── DashboardCardsGrid.jsx # Grid de tarjetas del dashboard
+│   ├── DashboardCardsGrid.jsx # Grid de tarjetas del dashboard
+│   ├── ScheduleCard.jsx # Tarjeta individual de partido
+│   ├── ScheduleCardsGrid.jsx # Grid de tarjetas de partidos
+│   ├── ScheduleForm.jsx # Formulario de creación/edición de partidos
+│   └── ScheduleHistoryModal.jsx # Modal de detalles del partido
 ├── hooks/               # Hooks personalizados
 │   └── useModal.js      # Hook para manejo de modales
 ├── context/             # Contextos de React
@@ -160,13 +164,13 @@ Para más información sobre el proyecto, consulta los archivos de documentació
 - Supabase para backend como servicio (BaaS)
 - Sistema de rutas protegidas para seguridad
 - **Nuevo**: Arquitectura modular mejorada con separación clara entre páginas y componentes
-- **Nuevo**: Componentes de jugadores y dashboard modularizados para mejor mantenibilidad
+- **Nuevo**: Componentes de jugadores, dashboard y schedule modularizados para mejor mantenibilidad
 - Modales optimizados con hook personalizado `useModal`
 - Footer de versión consistente en todas las páginas principales
 
 ## 🆕 Changelog
 
-### Versión 0.9.0
+### Versión 0.10.0
 - ✅ **Reorganización de Estructura del Proyecto:**
   - Creada carpeta `src/pages/` para páginas principales de la aplicación
   - Movidas todas las páginas principales desde `src/components/` a `src/pages/`
@@ -186,6 +190,15 @@ Para más información sobre el proyecto, consulta los archivos de documentació
     - `DashboardCard.jsx` - Tarjeta individual del dashboard
     - `DashboardCardsGrid.jsx` - Grid de tarjetas del dashboard
     - `PlayerHistoryModal.jsx` - Modal de historial de jugador
+  - Mejorada la mantenibilidad y legibilidad del código
+  - Componentes más enfocados y con responsabilidades específicas
+
+- ✅ **Modularización de Schedule:**
+  - Separado `Schedule.jsx` en componentes modulares más pequeños y reutilizables:
+    - `ScheduleCard.jsx` - Tarjeta individual de partido
+    - `ScheduleCardsGrid.jsx` - Grid de tarjetas de partidos
+    - `ScheduleForm.jsx` - Formulario de creación/edición de partidos
+    - `ScheduleHistoryModal.jsx` - Modal de detalles del partido
   - Mejorada la mantenibilidad y legibilidad del código
   - Componentes más enfocados y con responsabilidades específicas
 

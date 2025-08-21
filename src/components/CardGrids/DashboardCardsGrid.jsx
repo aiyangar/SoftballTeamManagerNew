@@ -1,5 +1,5 @@
 import React from 'react'
-import DashboardCard from './DashboardCard'
+import DashboardCard from '../Cards/DashboardCard'
 
 /**
  * Componente para la cuadrícula de tarjetas del dashboard

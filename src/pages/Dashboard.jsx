@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import Menu from '../components/Menu'
 import { useTeam } from '../context/TeamContext'
-import DashboardCardsGrid from '../components/DashboardCardsGrid'
+import DashboardCardsGrid from '../components/CardGrids/DashboardCardsGrid'
 
 /**
  * Componente Dashboard - Página principal para usuarios autenticados

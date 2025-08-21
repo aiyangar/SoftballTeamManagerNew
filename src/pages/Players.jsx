@@ -5,11 +5,11 @@ import { supabase } from '../supabaseClient'
 import Menu from '../components/Menu'
 import { useTeam } from '../context/TeamContext'
 import { useModal } from '../hooks/useModal'
-import PlayerCard from '../components/PlayerCard'
-import PlayerCardsGrid from '../components/PlayerCardsGrid'
-import PlayerForm from '../components/PlayerForm'
+import PlayerCard from '../components/Cards/PlayerCard'
+import PlayerCardsGrid from '../components/CardGrids/PlayerCardsGrid'
+import PlayerForm from '../components/Forms/PlayerForm'
 import PlayerFilters from '../components/PlayerFilters'
-import PlayerHistoryModal from '../components/PlayerHistoryModal'
+import PlayerHistoryModal from '../components/Modals/PlayerHistoryModal'
 
 /**
  * Componente para la gestión de jugadores

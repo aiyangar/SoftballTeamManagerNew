@@ -1,5 +1,5 @@
 import React from 'react'
-import PlayerCard from './PlayerCard'
+import PlayerCard from '../Cards/PlayerCard'
 
 /**
  * Componente para mostrar la grilla de tarjetas de jugadores

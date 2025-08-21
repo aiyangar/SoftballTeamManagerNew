@@ -4,9 +4,9 @@ import { UserAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
 import Menu from '../components/Menu'
 import { useTeam } from '../context/TeamContext'
-import TeamForm from '../components/TeamForm'
-import TeamCardsGrid from '../components/TeamCardsGrid'
-import TeamHistoryModal from '../components/TeamHistoryModal'
+import TeamForm from '../components/Forms/TeamForm'
+import TeamCardsGrid from '../components/CardGrids/TeamCardsGrid'
+import TeamHistoryModal from '../components/Modals/TeamHistoryModal'
 
 /**
  * Componente para la gestión de equipos

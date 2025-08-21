@@ -1,5 +1,5 @@
 import React from 'react'
-import ScheduleCard from './ScheduleCard'
+import ScheduleCard from '../Cards/ScheduleCard'
 
 /**
  * Componente para la cuadrícula de tarjetas de partidos

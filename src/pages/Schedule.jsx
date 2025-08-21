@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { UserAuth } from '../context/AuthContext';
-import PaymentForm from '../components/PaymentForm';
+import PaymentForm from '../components/Forms/PaymentForm';
 import Menu from '../components/Menu';
 import { useTeam } from '../context/TeamContext';
 import { useModal } from '../hooks/useModal';
-import ScheduleCardsGrid from '../components/ScheduleCardsGrid';
-import ScheduleForm from '../components/ScheduleForm';
-import ScheduleHistoryModal from '../components/ScheduleHistoryModal';
+import ScheduleCardsGrid from '../components/CardGrids/ScheduleCardsGrid';
+import ScheduleForm from '../components/Forms/ScheduleForm';
+import ScheduleHistoryModal from '../components/Modals/ScheduleHistoryModal';
 
 const Schedule = () => {
     const authContext = UserAuth();

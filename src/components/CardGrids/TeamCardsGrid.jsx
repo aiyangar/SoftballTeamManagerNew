@@ -1,5 +1,5 @@
 import React from 'react'
-import TeamCard from './TeamCard'
+import TeamCard from '../Cards/TeamCard'
 
 /**
  * Componente para la cuadrícula de tarjetas de equipos

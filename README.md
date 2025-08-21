@@ -2,7 +2,7 @@
 
 Una aplicación web moderna para la gestión completa de equipos de softball, desarrollada con React y Supabase.
 
-**Versión Actual: 0.11.0**
+**Versión Actual: 0.12.0**
 
 ## 🏟️ Características
 
@@ -103,24 +103,28 @@ src/
 │   └── Teams.jsx        # Gestión de equipos
 ├── components/          # Componentes reutilizables
 │   ├── Menu.jsx         # Menú de navegación
-│   ├── PaymentForm.jsx  # Formulario de pagos
 │   ├── ProtectedRoute.jsx # Ruta protegida
-│   ├── VersionFooter.jsx # Footer con información de versión
-│   ├── PlayerCard.jsx   # Tarjeta individual de jugador
-│   ├── PlayerCardsGrid.jsx # Grid de tarjetas de jugadores
-│   ├── PlayerForm.jsx   # Formulario de jugador
 │   ├── PlayerFilters.jsx # Filtros de jugadores
-│   ├── PlayerHistoryModal.jsx # Modal de historial de jugador
-│   ├── DashboardCard.jsx # Tarjeta individual del dashboard
-│   ├── DashboardCardsGrid.jsx # Grid de tarjetas del dashboard
-│   ├── ScheduleCard.jsx # Tarjeta individual de partido
-│   ├── ScheduleCardsGrid.jsx # Grid de tarjetas de partidos
-│   ├── ScheduleForm.jsx # Formulario de creación/edición de partidos
-│   ├── ScheduleHistoryModal.jsx # Modal de detalles del partido
-│   ├── TeamCard.jsx # Tarjeta individual de equipo
-│   ├── TeamCardsGrid.jsx # Grid de tarjetas de equipos
-│   ├── TeamForm.jsx # Formulario de creación/edición de equipos
-│   └── TeamHistoryModal.jsx # Modal de detalles del equipo
+│   ├── Layout.jsx       # Layout principal
+│   ├── Cards/           # Tarjetas individuales
+│   │   ├── PlayerCard.jsx # Tarjeta individual de jugador
+│   │   ├── DashboardCard.jsx # Tarjeta individual del dashboard
+│   │   ├── ScheduleCard.jsx # Tarjeta individual de partido
+│   │   └── TeamCard.jsx # Tarjeta individual de equipo
+│   ├── CardGrids/       # Grids de tarjetas
+│   │   ├── PlayerCardsGrid.jsx # Grid de tarjetas de jugadores
+│   │   ├── DashboardCardsGrid.jsx # Grid de tarjetas del dashboard
+│   │   ├── ScheduleCardsGrid.jsx # Grid de tarjetas de partidos
+│   │   └── TeamCardsGrid.jsx # Grid de tarjetas de equipos
+│   ├── Forms/           # Formularios
+│   │   ├── PlayerForm.jsx # Formulario de jugador
+│   │   ├── ScheduleForm.jsx # Formulario de creación/edición de partidos
+│   │   ├── TeamForm.jsx # Formulario de creación/edición de equipos
+│   │   └── PaymentForm.jsx # Formulario de pagos
+│   └── Modals/          # Modales
+│       ├── PlayerHistoryModal.jsx # Modal de historial de jugador
+│       ├── ScheduleHistoryModal.jsx # Modal de detalles del partido
+│       └── TeamHistoryModal.jsx # Modal de detalles del equipo
 ├── hooks/               # Hooks personalizados
 │   └── useModal.js      # Hook para manejo de modales
 ├── context/             # Contextos de React
@@ -173,6 +177,17 @@ Para más información sobre el proyecto, consulta los archivos de documentació
 - Footer de versión consistente en todas las páginas principales
 
 ## 🆕 Changelog
+
+### Versión 0.12.0
+- ✅ **Reorganización de Estructura de Componentes:**
+  - Creadas subcarpetas organizativas en `src/components/`:
+    - `Cards/` - Tarjetas individuales (PlayerCard, DashboardCard, ScheduleCard, TeamCard)
+    - `CardGrids/` - Grids de tarjetas (PlayerCardsGrid, DashboardCardsGrid, ScheduleCardsGrid, TeamCardsGrid)
+    - `Forms/` - Formularios (PlayerForm, ScheduleForm, TeamForm, PaymentForm)
+    - `Modals/` - Modales (PlayerHistoryModal, ScheduleHistoryModal, TeamHistoryModal)
+  - Actualizados todos los imports para reflejar la nueva estructura
+  - Mejorada la organización y escalabilidad del proyecto
+  - Componentes agrupados por funcionalidad para mejor mantenibilidad
 
 ### Versión 0.11.0
 - ✅ **Modularización de Teams:**

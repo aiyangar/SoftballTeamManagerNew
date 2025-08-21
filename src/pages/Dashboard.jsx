@@ -15,9 +15,6 @@ const Dashboard = () => {
   // Obtener estado de sesión y función de logout del contexto con manejo de errores
   const authContext = UserAuth()
   const session = authContext?.session
-  const loading = authContext?.loading
-  const signOut = authContext?.signOut
-  const navigate = useNavigate()
 
   // Estados para la información del equipo
   const { teams, selectedTeam, loadingTeams } = useTeam()
@@ -48,26 +45,8 @@ const Dashboard = () => {
     }
   }, [selectedTeam])
 
-  const fetchTeams = async () => {
-    setLoadingTeams(true)
-    
-    const { data, error } = await supabase
-      .from('equipos')
-      .select('id, nombre_equipo')
-      .eq('propietario_id', session?.user?.id)
-
-    if (error) {
-      console.error('Error fetching teams:', error)
-    } else {
-      setTeams(data || [])
-      
-      // Si solo hay un equipo, seleccionarlo automáticamente
-      if (data && data.length === 1) {
-        handleTeamChange(data[0].id)
-      }
-    }
-    setLoadingTeams(false)
-  }
+  // Nota: fetchTeams se maneja a través del contexto useTeam
+  // No necesitamos implementar fetchTeams aquí ya que se maneja en TeamContext
 
   const { handleTeamChange: contextHandleTeamChange } = useTeam()
 

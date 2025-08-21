@@ -30,7 +30,7 @@ export const AuthContextProvider = ({ children }) => {
                 return { success: true, data: signInData, isExistingUser: true }
             }
         } catch (error) {
-
+            console.log('Usuario no existe, procediendo con registro')
         }
         
         // Si el usuario no existe, crear una nueva cuenta

@@ -33,9 +33,7 @@ const Players = () => {
     const [players, setPlayers] = useState([])
     const [loadingPlayers, setLoadingPlayers] = useState(true)
     const { teams, selectedTeam } = useTeam()
-    const [positions, setPositions] = useState([])
-    const [loadingPositions, setLoadingPositions] = useState(true)
-    const [loadingTeams, setLoadingTeams] = useState(false)
+      const [positions, setPositions] = useState([])
     const [showForm, setShowForm] = useState(false)
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
 
@@ -318,28 +316,8 @@ const Players = () => {
      * @param {string} propietarioId - ID del usuario propietario
      * @returns {Object} - Resultado de la operación
      */
-    const fetchTeams = async (propietarioId) => {
-        try {
-            setLoadingTeams(true)
-            const { data, error } = await supabase
-                .from('equipos')
-                .select('*')
-                .eq('propietario_id', propietarioId)
-                .order('id', { ascending: false })
-
-            if (error) {
-                console.error('Error al obtener equipos:', error)
-                return { success: false, error: error.message }
-            }
-
-            setLoadingTeams(false)
-            return { success: true, data: data }
-        } catch (error) {
-            console.error('Error inesperado al obtener equipos:', error)
-            setLoadingTeams(false)
-            return { success: false, error: error.message }
-        }
-    }
+      // Nota: fetchTeams se maneja a través del contexto useTeam
+  // No necesitamos implementar fetchTeams aquí ya que se maneja en TeamContext
 
     /**
      * Obtiene todas las posiciones disponibles

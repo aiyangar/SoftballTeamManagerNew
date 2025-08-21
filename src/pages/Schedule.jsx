@@ -11,8 +11,7 @@ import ScheduleHistoryModal from '../components/Modals/ScheduleHistoryModal';
 
 const Schedule = () => {
     const authContext = UserAuth();
-    const session = authContext?.session;
-    const { teams, selectedTeam, handleTeamChange: contextHandleTeamChange } = useTeam();
+    const { teams, selectedTeam, handleTeamChange } = useTeam();
     
     // Obtener el nombre del equipo local
     const getLocalTeamName = () => {
@@ -66,29 +65,8 @@ const Schedule = () => {
         }
     }, [success])
 
-    const fetchTeams = async () => {
-        const { data, error } = await supabase
-            .from('equipos')
-            .select('id, nombre_equipo')
-            .eq('propietario_id', session.user.id);
-
-        if (error) {
-            console.error('Error fetching teams:', error);
-        } else {
-            setTeams(data);
-        }
-    };
-
-    const handleTeamChange = async (teamId) => {
-        contextHandleTeamChange(teamId);
-        if (teamId) {
-            fetchPlayers(teamId);
-            fetchGames(teamId);
-        } else {
-            setPlayers([]);
-            setGames([]);
-        }
-    };
+    // Nota: fetchTeams y handleTeamChange se manejan a través del contexto useTeam
+    // No necesitamos implementar estas funciones aquí ya que se manejan en TeamContext
 
     const fetchPlayers = async (teamId) => {
         const { data, error } = await supabase

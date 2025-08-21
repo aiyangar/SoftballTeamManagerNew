@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { UserAuth } from './AuthContext'
 import { supabase } from '../supabaseClient'
+import { calculateTeamStats } from './teamUtils'
 
 const TeamContext = createContext()
 
@@ -63,9 +64,7 @@ export const TeamProvider = ({ children }) => {
             (payments?.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0) || 0)
 
           // Calcular estadísticas W-L-D
-          const wins = gamesError ? 0 : (games?.filter(game => game.resultado === 'Victoria').length || 0)
-          const losses = gamesError ? 0 : (games?.filter(game => game.resultado === 'Derrota').length || 0)
-          const draws = gamesError ? 0 : (games?.filter(game => game.resultado === 'Empate').length || 0)
+          const { wins, losses, draws } = gamesError ? { wins: 0, losses: 0, draws: 0 } : calculateTeamStats(games)
 
           return {
             ...team,

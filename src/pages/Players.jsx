@@ -38,7 +38,7 @@ const Players = () => {
     const [loadingTeams, setLoadingTeams] = useState(false)
     const [showForm, setShowForm] = useState(false)
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
-    const [actionMenuOpen, setActionMenuOpen] = useState(null)
+
     // Estados para filtros
     const [filters, setFilters] = useState({
         nombre: '',
@@ -234,7 +234,7 @@ const Players = () => {
     const openPlayerHistoryModal = async (player) => {
         setSelectedPlayerForHistory(player)
         setShowPlayerHistoryModal(true)
-        setActionMenuOpen(null) // Cerrar el menú de acciones
+
         
         // Usar el equipo del jugador si está asignado, o el equipo seleccionado, o null para buscar en todos
         const teamId = player.equipo_id || selectedTeam || null
@@ -728,9 +728,7 @@ const Players = () => {
 
 
     // Función para manejar el menú de acciones
-    const toggleActionMenu = (playerId) => {
-        setActionMenuOpen(actionMenuOpen === playerId ? null : playerId)
-    }
+
 
     // Función para editar jugador
     const editPlayer = (playerId) => {
@@ -748,7 +746,7 @@ const Players = () => {
             setSelectedPositions(playerPositions)
             
             setShowForm(true)
-            setActionMenuOpen(null)
+    
         }
     }
 
@@ -832,55 +830,180 @@ const Players = () => {
 
             {/* Lista de jugadores */}
             <div className="bg-neutral-900 shadow rounded-lg p-6">
-                                 <div className="flex items-center justify-between mb-6">
-                     <h2 className="text-xl font-semibold text-white">Jugadores Registrados</h2>
-                     <div className="flex items-center space-x-4">
-                         {selectedTeam && teams.length > 0 && (
-                             <div className="text-sm text-gray-300">
-                                 <span className="text-gray-400">Equipo: </span>
-                                 <span className="font-medium text-blue-400">
-                                     {teams.find(team => team.id === selectedTeam)?.nombre_equipo}
-                                 </span>
-                             </div>
-                         )}
-                         
-                         {/* Botón de ordenamiento */}
-                         <div className="flex items-center space-x-2">
-                             <span className="text-sm text-gray-300">Ordenar por:</span>
-                             <select
-                                 value={sortConfig.key || ''}
-                                 onChange={(e) => handleSort(e.target.value)}
-                                 className="px-3 py-1 bg-gray-700 text-white text-sm rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
-                             >
-                                 <option value="">Seleccionar</option>
-                                 <option value="nombre">Nombre</option>
-                                 <option value="numero">Número</option>
-                             </select>
-                             {sortConfig.key && (
-                                 <button
-                                     onClick={() => setSortConfig({ key: sortConfig.key, direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })}
-                                     className="px-2 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-500"
-                                 >
-                                     {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                                 </button>
-                             )}
-                         </div>
-                         
-                         <PlayerFilters
-                             filters={filters}
-                             onFilterChange={handleFilterChange}
-                             onPositionFilterToggle={handlePositionFilterToggle}
-                             onPositionMatchTypeChange={handlePositionMatchTypeChange}
-                             onClearFilters={clearFilters}
-                             positions={positions}
-                             filteredCount={sortedPlayers.length}
-                             totalCount={players.length}
-                             showFilters={showFilters}
-                             onToggleFilters={() => setShowFilters(!showFilters)}
-                         />
-                     </div>
-                 </div>
+                {/* Header superior con título, equipo, ordenamiento y botón de filtro */}
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold text-white">Jugadores Registrados</h2>
+                    <div className="flex items-center space-x-4">
+                        {selectedTeam && teams.length > 0 && (
+                            <div className="text-sm text-gray-300">
+                                <span className="text-gray-400">Equipo: </span>
+                                <span className="font-medium text-blue-400">
+                                    {teams.find(team => team.id === selectedTeam)?.nombre_equipo}
+                                </span>
+                            </div>
+                        )}
+                        
+                        {/* Botón de ordenamiento */}
+                        <div className="flex items-center space-x-2">
+                            <span className="text-sm text-gray-300">Ordenar por:</span>
+                            <select
+                                value={sortConfig.key || ''}
+                                onChange={(e) => handleSort(e.target.value)}
+                                className="px-3 py-1 bg-gray-700 text-white text-sm rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                            >
+                                <option value="">Seleccionar</option>
+                                <option value="nombre">Nombre</option>
+                                <option value="numero">Número</option>
+                            </select>
+                            {sortConfig.key && (
+                                <button
+                                    onClick={() => setSortConfig({ key: sortConfig.key, direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })}
+                                    className="px-2 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-500"
+                                >
+                                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                                </button>
+                            )}
+                        </div>
+                        
+                        {/* Botón de filtro */}
+                        <PlayerFilters
+                            filters={filters}
+                            filteredCount={sortedPlayers.length}
+                            totalCount={players.length}
+                            showFilters={showFilters}
+                            onToggleFilters={() => setShowFilters(!showFilters)}
+                        />
+                    </div>
+                </div>
+
+                {/* Sección de filtros (se muestra debajo del header) */}
+                {showFilters && (
+                    <div className="mb-6">
+                        <div className="p-4 bg-gray-800 rounded-lg border border-gray-600">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-medium text-white">Filtros</h3>
+                                <button
+                                    onClick={clearFilters}
+                                    className="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-500 transition-colors"
+                                >
+                                    Limpiar Filtros
+                                </button>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Filtro por nombre */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        Buscar por nombre
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={filters.nombre}
+                                        onChange={(e) => handleFilterChange('nombre', e.target.value)}
+                                        placeholder="Escribir nombre..."
+                                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                                    />
+                                </div>
+                                
+                                {/* Filtro por número */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                                        Número de playera
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={filters.numero}
+                                        onChange={(e) => handleFilterChange('numero', e.target.value)}
+                                        placeholder="Ej: 10"
+                                        min="0"
+                                        max="99"
+                                        className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Filtro por posiciones */}
+                            <div className="mt-4">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Posiciones
+                                </label>
+                                
+                                {/* Tipo de coincidencia */}
+                                <div className="mb-3">
+                                    <div className="flex items-center space-x-4">
+                                        <label className="flex items-center space-x-2">
+                                            <input
+                                                type="radio"
+                                                name="positionMatchType"
+                                                value="any"
+                                                checked={filters.posicionMatchType === 'any'}
+                                                onChange={(e) => handlePositionMatchTypeChange(e.target.value)}
+                                                className="text-blue-500 focus:ring-blue-500 bg-gray-700 border-gray-600"
+                                            />
+                                            <span className="text-sm text-gray-300">Al menos una posición</span>
+                                        </label>
+                                        <label className="flex items-center space-x-2">
+                                            <input
+                                                type="radio"
+                                                name="positionMatchType"
+                                                value="all"
+                                                checked={filters.posicionMatchType === 'all'}
+                                                onChange={(e) => handlePositionMatchTypeChange(e.target.value)}
+                                                className="text-blue-500 focus:ring-blue-500 bg-gray-700 border-gray-600"
+                                            />
+                                            <span className="text-sm text-gray-300">Todas las posiciones</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                {/* Selección de posiciones */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                                    {positions.map(position => (
+                                        <label key={position.id} className="flex items-center space-x-2 p-2 bg-gray-700 rounded border border-gray-600 hover:bg-gray-600 transition-colors">
+                                            <input
+                                                type="checkbox"
+                                                checked={filters.posiciones.includes(position.nombre_posicion)}
+                                                onChange={() => handlePositionFilterToggle(position.nombre_posicion)}
+                                                className="rounded border-gray-600 text-blue-500 focus:ring-blue-500 bg-gray-800"
+                                            />
+                                            <span className="text-sm text-gray-300">{position.nombre_posicion}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            {/* Indicador de resultados */}
+                            <div className="mt-4 pt-4 border-t border-gray-600">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-sm text-gray-300">
+                                        <span className="text-gray-400">Mostrando </span>
+                                        <span className="font-medium text-blue-400">{sortedPlayers.length}</span>
+                                        <span className="text-gray-400"> de </span>
+                                        <span className="font-medium text-white">{players.length}</span>
+                                        <span className="text-gray-400"> jugadores</span>
+                                        {(filters.nombre || filters.numero || filters.posiciones.length > 0) && (
+                                            <span className="text-gray-400"> (filtrados)</span>
+                                        )}
+                                    </div>
+                                    {(filters.nombre || filters.numero || filters.posiciones.length > 0) && (
+                                        <div className="text-xs text-gray-400">
+                                            Filtros activos: 
+                                            {filters.nombre && <span className="ml-1 px-2 py-1 bg-blue-900 text-blue-200 rounded">Nombre: {filters.nombre}</span>}
+                                            {filters.numero && <span className="ml-1 px-2 py-1 bg-green-900 text-green-200 rounded">Número: {filters.numero}</span>}
+                                            {filters.posiciones.length > 0 && (
+                                                <span className="ml-1 px-2 py-1 bg-purple-900 text-purple-200 rounded">
+                                                    Posiciones: {filters.posiciones.join(', ')} ({filters.posicionMatchType === 'all' ? 'todas' : 'al menos una'})
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 
+                {/* Contenido principal - Grid de jugadores */}
                 <div>
                     {sortedPlayers.length === 0 && !loadingPlayers && players.length > 0 ? (
                         <div className="text-center py-8">
@@ -891,11 +1014,7 @@ const Players = () => {
                         <PlayerCardsGrid
                             players={sortedPlayers}
                             loadingPlayers={loadingPlayers}
-                            onEdit={editPlayer}
-                            onDelete={deletePlayer}
                             onViewHistory={openPlayerHistoryModal}
-                            actionMenuOpen={actionMenuOpen}
-                            onToggleActionMenu={toggleActionMenu}
                         />
                     )}
                 </div>
@@ -910,6 +1029,8 @@ const Players = () => {
                 expandedSections={expandedSections}
                 onToggleSection={toggleSection}
                 onClose={closePlayerHistoryModal}
+                onEdit={editPlayer}
+                onDelete={deletePlayer}
             />
             
             </div>

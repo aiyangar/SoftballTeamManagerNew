@@ -5,20 +5,12 @@ import PlayerCard from './PlayerCard'
  * Componente para mostrar la grilla de tarjetas de jugadores
  * @param {Array} players - Lista de jugadores
  * @param {boolean} loadingPlayers - Estado de carga
- * @param {Function} onEdit - Función para editar un jugador
- * @param {Function} onDelete - Función para eliminar un jugador
  * @param {Function} onViewHistory - Función para ver el historial de un jugador
- * @param {number} actionMenuOpen - ID del jugador cuyo menú está abierto
- * @param {Function} onToggleActionMenu - Función para abrir/cerrar el menú de acciones
  */
 const PlayerCardsGrid = ({ 
     players, 
     loadingPlayers, 
-    onEdit, 
-    onDelete, 
-    onViewHistory, 
-    actionMenuOpen, 
-    onToggleActionMenu 
+    onViewHistory
 }) => {
     if (loadingPlayers) {
         return (
@@ -44,11 +36,7 @@ const PlayerCardsGrid = ({
                 <PlayerCard
                     key={player.id}
                     player={player}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
                     onViewHistory={onViewHistory}
-                    actionMenuOpen={actionMenuOpen}
-                    onToggleActionMenu={onToggleActionMenu}
                 />
             ))}
         </div>

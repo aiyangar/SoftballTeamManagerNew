@@ -1,12 +1,12 @@
 import { createBrowserRouter } from "react-router-dom";
 import App from "./App";
-import Signup from "./components/Signup";
-import Signin from "./components/Signin";
-import Dashboard from "./components/Dashboard";
-import Teams from "./components/Teams";
-import Players from "./components/Players";
-import Schedule from "./components/Schedule";
-import AdminPanel from "./components/AdminPanel";
+import Signup from "./pages/Signup";
+import Signin from "./pages/Signin";
+import Dashboard from "./pages/Dashboard";
+import Teams from "./pages/Teams";
+import Players from "./pages/Players";
+import Schedule from "./pages/Schedule";
+import AdminPanel from "./pages/AdminPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout.jsx";
 

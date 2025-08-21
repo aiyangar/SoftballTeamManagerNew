@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { UserAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
-import Menu from './Menu'
+import Menu from '../components/Menu'
 import { useTeam } from '../context/TeamContext'
 
 /**

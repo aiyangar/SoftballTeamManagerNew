@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { UserAuth } from '../context/AuthContext';
-import PaymentForm from './PaymentForm';
-import Menu from './Menu';
+import PaymentForm from '../components/PaymentForm';
+import Menu from '../components/Menu';
 import { useTeam } from '../context/TeamContext';
 import { useModal } from '../hooks/useModal';
 

@@ -2,7 +2,7 @@
 
 Una aplicación web moderna para la gestión completa de equipos de softball, desarrollada con React y Supabase.
 
-**Versión Actual: 0.8.0**
+**Versión Actual: 0.9.0**
 
 ## 🏟️ Características
 
@@ -16,6 +16,7 @@ Una aplicación web moderna para la gestión completa de equipos de softball, de
 - Perfiles detallados con información personal y deportiva
 - Historial de rendimiento y estadísticas
 - Gestión de pagos y membresías
+- **Nuevo**: Componentes modulares para mejor organización y mantenibilidad
 
 ### Programación de Partidos
 - Crear y gestionar calendario de partidos
@@ -39,6 +40,7 @@ Una aplicación web moderna para la gestión completa de equipos de softball, de
 - Footer de versión visible en todas las páginas principales
 - Diseño responsivo y moderno con Tailwind CSS
 - Componentes reutilizables y modulares
+- **Nuevo**: Arquitectura modular mejorada con separación de páginas y componentes
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -91,18 +93,24 @@ Una aplicación web moderna para la gestión completa de equipos de softball, de
 
 ```
 src/
-├── components/          # Componentes de React
+├── pages/               # Páginas principales de la aplicación
 │   ├── AdminPanel.jsx   # Panel de administración
 │   ├── Dashboard.jsx    # Dashboard principal
-│   ├── Menu.jsx         # Menú de navegación
-│   ├── PaymentForm.jsx  # Formulario de pagos
-│   ├── Players.jsx      # Gestión de jugadores
-│   ├── ProtectedRoute.jsx # Ruta protegida
+│   ├── Players.jsx      # Gestión de jugadores (contenedor principal)
 │   ├── Schedule.jsx     # Programación de partidos
 │   ├── Signin.jsx       # Inicio de sesión
 │   ├── Signup.jsx       # Registro de usuarios
-│   ├── Teams.jsx        # Gestión de equipos
-│   └── VersionFooter.jsx # Footer con información de versión
+│   └── Teams.jsx        # Gestión de equipos
+├── components/          # Componentes reutilizables
+│   ├── Menu.jsx         # Menú de navegación
+│   ├── PaymentForm.jsx  # Formulario de pagos
+│   ├── ProtectedRoute.jsx # Ruta protegida
+│   ├── VersionFooter.jsx # Footer con información de versión
+│   ├── PlayerCard.jsx   # Tarjeta individual de jugador
+│   ├── PlayerCardsGrid.jsx # Grid de tarjetas de jugadores
+│   ├── PlayerForm.jsx   # Formulario de jugador
+│   ├── PlayerFilters.jsx # Filtros de jugadores
+│   └── PlayerHistoryModal.jsx # Modal de historial de jugador
 ├── hooks/               # Hooks personalizados
 │   └── useModal.js      # Hook para manejo de modales
 ├── context/             # Contextos de React
@@ -149,11 +157,34 @@ Para más información sobre el proyecto, consulta los archivos de documentació
 - Tailwind CSS 4 para estilos modernos y responsivos
 - Supabase para backend como servicio (BaaS)
 - Sistema de rutas protegidas para seguridad
-- Componentes modulares y reutilizables
+- **Nuevo**: Arquitectura modular mejorada con separación clara entre páginas y componentes
+- **Nuevo**: Componentes de jugadores modularizados para mejor mantenibilidad
 - Modales optimizados con hook personalizado `useModal`
 - Footer de versión consistente en todas las páginas principales
 
 ## 🆕 Changelog
+
+### Versión 0.9.0
+- ✅ **Reorganización de Estructura del Proyecto:**
+  - Creada carpeta `src/pages/` para páginas principales de la aplicación
+  - Movidas todas las páginas principales desde `src/components/` a `src/pages/`
+  - Actualizados todos los imports para reflejar la nueva estructura
+  - Mejorada la organización y escalabilidad del proyecto
+
+- ✅ **Modularización de la Sección de Jugadores:**
+  - Separado `Players.jsx` en componentes modulares más pequeños y reutilizables:
+    - `PlayerCard.jsx` - Tarjeta individual de jugador
+    - `PlayerCardsGrid.jsx` - Grid de tarjetas de jugadores
+    - `PlayerForm.jsx` - Formulario de jugador
+    - `PlayerFilters.jsx` - Filtros de jugadores
+    - `PlayerHistoryModal.jsx` - Modal de historial de jugador
+  - Mejorada la mantenibilidad y legibilidad del código
+  - Componentes más enfocados y con responsabilidades específicas
+
+- ✅ **Mejoras en la Arquitectura:**
+  - Separación clara entre páginas (vistas principales) y componentes reutilizables
+  - Mejor organización del código para facilitar el desarrollo futuro
+  - Imports actualizados en todo el proyecto para mantener la funcionalidad
 
 ### Versión 0.8.0
 - ✅ **Nuevas Funcionalidades:**

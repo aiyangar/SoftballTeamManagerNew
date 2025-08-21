@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { UserAuth } from '../context/AuthContext';
-import Menu from './Menu';
+import Menu from '../components/Menu';
 
 const AdminPanel = () => {
     const authContext = UserAuth();

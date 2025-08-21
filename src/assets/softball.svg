@@ -5,6 +5,6 @@
   <!-- Costuras de la bola - líneas curvas que simulan las costuras del softball -->
   
   <!-- Costuras verticales -->
-  <path d="M 30 15 Q 45 50 30 85" stroke="#15803d" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="1,7"/>
-  <path d="M 70 15 Q 55 50 70 85" stroke="#15803d" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="1,7"/>
+  <path d="M 30 15 Q 45 50 30 90" stroke="#ef4444" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="1,7"/>
+  <path d="M 70 15 Q 55 50 70 90" stroke="#ef4444" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="1,7"/>
 </svg>

@@ -18,7 +18,7 @@ const Signin = () => {
 
     // Obtener funciones de autenticación del contexto
     const authContext = UserAuth()
-    const session = authContext?.session
+    // const session = authContext?.session
     const signInUser = authContext?.signInUser
 
     /**

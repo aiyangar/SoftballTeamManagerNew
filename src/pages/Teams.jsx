@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+// import { useNavigate } from 'react-router-dom'
 import { UserAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
 import Menu from '../components/Menu'
-import { useTeam } from '../context/TeamContext'
+import { useTeam } from '../context/useTeam'
 import TeamForm from '../components/Forms/TeamForm'
 import TeamCardsGrid from '../components/CardGrids/TeamCardsGrid'
 import TeamHistoryModal from '../components/Modals/TeamHistoryModal'
@@ -27,7 +27,7 @@ const Teams = () => {
     const { teams, loadingTeams, fetchTeams } = useTeam() // Usar el contexto del equipo
 
     // Hook para navegación programática
-    const navigate = useNavigate()
+    // const navigate = useNavigate()
 
     // Obtener estado de sesión del contexto
     const authContext = UserAuth()

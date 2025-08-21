@@ -15,7 +15,7 @@ const ScheduleHistoryModal = ({
     paymentTotals,
     gameDetailsData,
     onClose,
-    getLocalTeamName
+    // getLocalTeamName - función no utilizada actualmente
 }) => {
     if (!showModal || !selectedGame) return null
 

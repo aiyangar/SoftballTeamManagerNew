@@ -20,7 +20,7 @@ export const AuthContextProvider = ({ children }) => {
         try {
             // Primero intentar hacer signin (para usuarios existentes)
             // Esto evita el problema de "Email no confirmado" para usuarios ya registrados
-            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            const { data: signInData } = await supabase.auth.signInWithPassword({
                 email: email,
                 password: password
             })
@@ -29,7 +29,7 @@ export const AuthContextProvider = ({ children }) => {
         
                 return { success: true, data: signInData, isExistingUser: true }
             }
-        } catch (error) {
+        } catch {
             console.log('Usuario no existe, procediendo con registro')
         }
         

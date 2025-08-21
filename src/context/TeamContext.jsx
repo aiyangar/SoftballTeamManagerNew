@@ -1,17 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { UserAuth } from './AuthContext'
 import { supabase } from '../supabaseClient'
-import { calculateTeamStats } from './teamUtils'
-
-const TeamContext = createContext()
-
-export const useTeam = () => {
-  const context = useContext(TeamContext)
-  if (!context) {
-    throw new Error('useTeam must be used within a TeamProvider')
-  }
-  return context
-}
+import { TeamContext } from './TeamContext'
 
 export const TeamProvider = ({ children }) => {
   const authContext = UserAuth()
@@ -64,7 +54,9 @@ export const TeamProvider = ({ children }) => {
             (payments?.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0) || 0)
 
           // Calcular estadísticas W-L-D
-          const { wins, losses, draws } = gamesError ? { wins: 0, losses: 0, draws: 0 } : calculateTeamStats(games)
+          const wins = gamesError ? 0 : (games?.filter(game => game.resultado === 'Victoria').length || 0)
+          const losses = gamesError ? 0 : (games?.filter(game => game.resultado === 'Derrota').length || 0)
+          const draws = gamesError ? 0 : (games?.filter(game => game.resultado === 'Empate').length || 0)
 
           return {
             ...team,

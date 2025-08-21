@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { UserAuth } from '../context/AuthContext'
-import { useTeam } from '../context/TeamContext'
+import { useTeam } from '../context/useTeam'
 import { getFullVersion } from '../version'
 
 /**

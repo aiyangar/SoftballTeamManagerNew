@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { UserAuth } from '../context/AuthContext'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import Menu from '../components/Menu'
-import { useTeam } from '../context/TeamContext'
+import { useTeam } from '../context/useTeam'
 import DashboardCardsGrid from '../components/CardGrids/DashboardCardsGrid'
 
 /**

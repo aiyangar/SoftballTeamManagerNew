@@ -3,15 +3,14 @@ import { supabase } from '../supabaseClient';
 import { UserAuth } from '../context/AuthContext';
 import PaymentForm from '../components/Forms/PaymentForm';
 import Menu from '../components/Menu';
-import { useTeam } from '../context/TeamContext';
+import { useTeam } from '../context/useTeam';
 import { useModal } from '../hooks/useModal';
 import ScheduleCardsGrid from '../components/CardGrids/ScheduleCardsGrid';
 import ScheduleForm from '../components/Forms/ScheduleForm';
 import ScheduleHistoryModal from '../components/Modals/ScheduleHistoryModal';
 
 const Schedule = () => {
-    const authContext = UserAuth();
-    const { teams, selectedTeam, handleTeamChange } = useTeam();
+    const { teams, selectedTeam } = useTeam();
     
     // Obtener el nombre del equipo local
     const getLocalTeamName = () => {
@@ -148,38 +147,38 @@ const Schedule = () => {
         setActionMenuOpen(null);
     };
 
-    // Función para actualizar partido
-    const updateGame = async (e) => {
-        e.preventDefault();
-        if (!editingGame) return;
+    // Función para actualizar partido (comentada por no uso actual)
+    // const updateGame = async (e) => {
+    //     e.preventDefault();
+    //     if (!editingGame) return;
 
-        setLoading(true);
-        try {
-            const { error } = await supabase
-                .from('partidos')
-                .update({
-                    equipo_contrario: newGame.equipo_contrario,
-                    fecha_partido: newGame.fecha_partido,
-                    lugar: newGame.lugar,
-                    umpire: newGame.umpire
-                })
-                .eq('id', editingGame.id);
+    //     setLoading(true);
+    //     try {
+    //         const { error } = await supabase
+    //             .from('partidos')
+    //             .update({
+    //                 equipo_contrario: newGame.equipo_contrario,
+    //                 fecha_partido: newGame.fecha_partido,
+    //                 lugar: newGame.lugar,
+    //                 umpire: newGame.umpire
+    //             })
+    //             .eq('id', editingGame.id);
 
-            if (error) {
-                setError('Error al actualizar partido: ' + error.message);
-            } else {
-                setSuccess('Partido actualizado exitosamente');
-                setEditingGame(null);
-                setShowGameForm(false);
-                setNewGame({ equipo_contrario: '', fecha_partido: '', lugar: '', umpire: 550 });
-                await fetchGames(selectedTeam);
-            }
-        } catch (error) {
-            setError('Error inesperado al actualizar partido');
-        } finally {
-            setLoading(false);
-        }
-    };
+    //         if (error) {
+    //             setError('Error al actualizar partido: ' + error.message);
+    //         } else {
+    //             setSuccess('Partido actualizado exitosamente');
+    //             setEditingGame(null);
+    //             setShowGameForm(false);
+    //             setNewGame({ equipo_contrario: '', fecha_partido: '', lugar: '', umpire: 550 });
+    //             await fetchGames(selectedTeam);
+    //         }
+    //     } catch (error) {
+    //         setError('Error inesperado al actualizar partido');
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
     const handleCreateGame = async (e) => {
         e.preventDefault();
@@ -214,7 +213,7 @@ const Schedule = () => {
                 }
             } else {
                 // Crear nuevo partido
-                const { data, error } = await supabase
+                const { error } = await supabase
                     .from('partidos')
                     .insert([{ ...newGame, equipo_id: selectedTeam }])
                     .select();
@@ -228,7 +227,7 @@ const Schedule = () => {
                     setShowGameForm(false); // Ocultar el formulario después de crear el partido
                 }
             }
-        } catch (error) {
+        } catch {
             setError('Error inesperado al registrar partido');
         } finally {
             setLoading(false);
@@ -306,7 +305,7 @@ const Schedule = () => {
                 closeScoreForm();
                 await fetchGames(selectedTeam);
             }
-        } catch (error) {
+        } catch {
             setError('Error inesperado al finalizar el partido');
         } finally {
             setLoading(false);
@@ -370,7 +369,7 @@ const Schedule = () => {
     };
 
     const loadExistingAttendance = async (gameId) => {
-        const { data, error } = await supabase
+        const { data: attendanceData, error } = await supabase
             .from('asistencia_partidos')
             .select('jugador_id')
             .eq('partido_id', gameId);
@@ -378,7 +377,7 @@ const Schedule = () => {
         if (error) {
             console.error('Error loading attendance:', error);
         } else {
-            const playerIds = data.map(a => a.jugador_id);
+            const playerIds = attendanceData.map(a => a.jugador_id);
             setAttendance(prev => ({
                 ...prev,
                 [gameId]: playerIds
@@ -390,7 +389,7 @@ const Schedule = () => {
         const totals = {};
         
         for (const game of gamesData) {
-            const { data, error } = await supabase
+            const { data: paymentData, error } = await supabase
                 .from('pagos')
                 .select('monto_umpire, monto_inscripcion')
                 .eq('partido_id', game.id);
@@ -399,8 +398,8 @@ const Schedule = () => {
                 console.error('Error fetching payment totals for game:', game.id, error);
                 totals[game.id] = { totalUmpire: 0, totalInscripcion: 0 };
             } else {
-                const totalUmpire = data.reduce((sum, payment) => sum + (payment.monto_umpire || 0), 0);
-                const totalInscripcion = data.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0);
+                const totalUmpire = paymentData.reduce((sum, payment) => sum + (payment.monto_umpire || 0), 0);
+                const totalInscripcion = paymentData.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0);
                 totals[game.id] = { totalUmpire, totalInscripcion };
             }
         }
@@ -448,8 +447,8 @@ const Schedule = () => {
                 attendance: attendanceData || [],
                 payments: paymentsData || []
             });
-        } catch (error) {
-            console.error('Error loading game details:', error);
+        } catch (err) {
+            console.error('Error loading game details:', err);
         }
     };
 

@@ -35,7 +35,7 @@ const AdminPanel = () => {
 
         try {
             // Usar signUp en lugar de admin.createUser
-            const { data, error } = await supabase.auth.signUp({
+            const { error } = await supabase.auth.signUp({
                 email: newUser.email,
                 password: newUser.password,
                 options: {
@@ -50,7 +50,7 @@ const AdminPanel = () => {
                 setNewUser({ email: '', password: '' });
                 setShowCreateForm(false);
             }
-        } catch (error) {
+        } catch {
             setError('Error inesperado al crear usuario');
         } finally {
             setLoading(false);

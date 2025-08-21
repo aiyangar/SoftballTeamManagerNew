@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { UserAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
 import Menu from '../components/Menu'
-import { useTeam } from '../context/TeamContext'
+import { useTeam } from '../context/useTeam'
 import { useModal } from '../hooks/useModal'
 import PlayerCard from '../components/Cards/PlayerCard'
 import PlayerCardsGrid from '../components/CardGrids/PlayerCardsGrid'
@@ -34,7 +34,7 @@ const Players = () => {
     const [loadingPlayers, setLoadingPlayers] = useState(true)
     const { teams, selectedTeam } = useTeam()
     const [positions, setPositions] = useState([])
-    const [loadingPositions, setLoadingPositions] = useState(true)
+    // const [loadingPositions, setLoadingPositions] = useState(false)
     const [showForm, setShowForm] = useState(false)
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
 
@@ -357,7 +357,7 @@ const Players = () => {
 
       
             setPositions(sortedPositions)
-            setLoadingPositions(false)
+            // setLoadingPositions(false)
             return { success: true, data: sortedPositions }
         } catch (error) {
             console.error('Error inesperado al obtener posiciones:', error)

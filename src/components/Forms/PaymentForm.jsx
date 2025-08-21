@@ -402,7 +402,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                       </div>
                   )}
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form id="payment-form" onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-white mb-2">Seleccionar Jugador</label>
                         {players.length === 0 ? (
@@ -591,39 +591,47 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                           </div>
                       )}
 
-                                          <div className="flex space-x-3 pt-4">
-                         <button
-                             type="button"
-                             onClick={() => {
-                                 // Solo cerrar sin actualizar datos
-                                 onClose();
-                             }}
-                             className="flex-1 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-                         >
-                             Cancelar
-                         </button>
-                                                   <button
-                              type="submit"
-                              disabled={loading || players.length === 0 || showUpdateWarning || showCancelWarning}
-                              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                          >
-                              {loading ? 'Registrando...' : 'Registrar Pago'}
-                          </button>
-                         <button
-                             type="button"
-                             onClick={() => {
-                                 // Recargar datos y cerrar modal
-                                 if (onPaymentComplete) {
-                                     onPaymentComplete(true); // true = se registraron pagos
-                                 }
-                                 onClose();
-                             }}
-                             className="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                         >
-                             Terminar
-                         </button>
-                     </div>
                 </form>
+                </div>
+
+                {/* Footer con botones de acción */}
+                <div className="modal-footer p-6 border-t border-gray-600 bg-gray-800">
+                    <div className="flex justify-end space-x-3">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                // Solo cerrar sin actualizar datos
+                                onClose();
+                            }}
+                            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors flex items-center space-x-2"
+                        >
+                            <span>✕</span>
+                            <span>Cancelar</span>
+                        </button>
+                        <button
+                            type="submit"
+                            form="payment-form"
+                            disabled={loading || players.length === 0 || showUpdateWarning || showCancelWarning}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center space-x-2"
+                        >
+                            <span>💰</span>
+                            <span>{loading ? 'Registrando...' : 'Registrar Pago'}</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                // Recargar datos y cerrar modal
+                                if (onPaymentComplete) {
+                                    onPaymentComplete(true); // true = se registraron pagos
+                                }
+                                onClose();
+                            }}
+                            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center space-x-2"
+                        >
+                            <span>✅</span>
+                            <span>Terminar</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

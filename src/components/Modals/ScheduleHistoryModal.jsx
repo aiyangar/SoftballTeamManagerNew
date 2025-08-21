@@ -75,75 +75,73 @@ const ScheduleHistoryModal = ({
                 <div className="modal-header p-6 border-b border-gray-600">
                     <div className="flex justify-between items-center">
                         <h2 className="text-2xl font-semibold text-white">Detalles del Partido</h2>
-                        <div className="flex items-center space-x-3">
-                            {/* Botones de acción */}
-                            {!gameFinalizationStatus && (
-                                <>
-                                    <button
-                                        onClick={() => {
-                                            onEditGame(selectedGame);
-                                            onClose();
-                                        }}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                                        title="Editar partido"
-                                    >
-                                        <span>✏️</span>
-                                        <span>Editar</span>
-                                    </button>
-                                    <button
-                                        onClick={async () => {
-                                            if (!isEditingAttendance) {
-                                                // Al activar el modo edición, cargar asistencia existente
-                                                const success = await onLoadExistingAttendance(selectedGame.id);
-                                                if (success) {
-                                                    setIsEditingAttendance(true);
-                                                }
-                                            } else {
-                                                // Al cancelar, resetear el estado local al estado global
-                                                setIsEditingAttendance(false);
-                                                const currentAttendance = attendance[selectedGame.id] || [];
-                                                setLocalAttendance(currentAttendance);
-                                            }
-                                        }}
-                                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center space-x-2"
-                                        title="Gestionar asistencia"
-                                    >
-                                        <span>{isEditingAttendance ? '✕' : '📋'}</span>
-                                        <span>{isEditingAttendance ? 'Cancelar' : 'Asistencia'}</span>
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            onOpenPaymentForm(selectedGame.id);
-                                            onClose();
-                                        }}
-                                        className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors flex items-center space-x-2"
-                                        title="Registrar pagos"
-                                    >
-                                        <span>💰</span>
-                                        <span>Pagos</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setShowDeleteWarning(true)}
-                                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center space-x-2"
-                                        title="Eliminar partido"
-                                    >
-                                        <span>🗑️</span>
-                                        <span>Eliminar</span>
-                                    </button>
-                                </>
-                            )}
-                            <button
-                                onClick={onClose}
-                                className="text-gray-400 hover:text-white text-2xl"
-                                title="Cerrar detalles del partido"
-                            >
-                                ×
-                            </button>
-                        </div>
+                        <button
+                            onClick={onClose}
+                            className="text-gray-400 hover:text-white text-2xl"
+                            title="Cerrar detalles del partido"
+                        >
+                            ×
+                        </button>
                     </div>
                 </div>
                 
                 <div className="modal-content p-6">
+                    {/* Botones de acción en la parte superior */}
+                    {!gameFinalizationStatus && (
+                        <div className="mb-6 flex flex-wrap gap-3">
+                            <button
+                                onClick={() => {
+                                    onEditGame(selectedGame);
+                                    onClose();
+                                }}
+                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                                title="Editar partido"
+                            >
+                                <span>✏️</span>
+                                <span>Editar</span>
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    if (!isEditingAttendance) {
+                                        // Al activar el modo edición, cargar asistencia existente
+                                        const success = await onLoadExistingAttendance(selectedGame.id);
+                                        if (success) {
+                                            setIsEditingAttendance(true);
+                                        }
+                                    } else {
+                                        // Al cancelar, resetear el estado local al estado global
+                                        setIsEditingAttendance(false);
+                                        const currentAttendance = attendance[selectedGame.id] || [];
+                                        setLocalAttendance(currentAttendance);
+                                    }
+                                }}
+                                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center space-x-2"
+                                title="Gestionar asistencia"
+                            >
+                                <span>{isEditingAttendance ? '✕' : '📋'}</span>
+                                <span>{isEditingAttendance ? 'Cancelar' : 'Asistencia'}</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    onOpenPaymentForm(selectedGame.id);
+                                    onClose();
+                                }}
+                                className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors flex items-center space-x-2"
+                                title="Registrar pagos"
+                            >
+                                <span>💰</span>
+                                <span>Pagos</span>
+                            </button>
+                            <button
+                                onClick={() => setShowDeleteWarning(true)}
+                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center space-x-2"
+                                title="Eliminar partido"
+                            >
+                                <span>🗑️</span>
+                                <span>Eliminar</span>
+                            </button>
+                        </div>
+                    )}
                     {/* Información básica del partido */}
                     <div className="mb-6 p-4 bg-gray-800 rounded-lg">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

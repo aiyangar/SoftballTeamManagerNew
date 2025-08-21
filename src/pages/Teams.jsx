@@ -4,6 +4,8 @@ import { UserAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
 import Menu from '../components/Menu'
 import { useTeam } from '../context/TeamContext'
+import TeamForm from '../components/TeamForm'
+import TeamCardsGrid from '../components/TeamCardsGrid'
 
 /**
  * Componente para la gestión de equipos
@@ -134,6 +136,15 @@ const Teams = () => {
     }
 
     /**
+     * Maneja la eliminación de un equipo
+     * @param {Object} team - Equipo a eliminar
+     */
+    const handleDeleteTeam = (team) => {
+        alert('Función de eliminar equipo - próximamente')
+        setActionMenuOpen(null)
+    }
+
+    /**
      * Maneja el envío del formulario de creación/edición de equipo
      * @param {Event} e - Evento del formulario
      */
@@ -220,178 +231,30 @@ const Teams = () => {
             </div>
 
             {/* Formulario de creación/edición de equipo */}
-            {showForm && (
-                <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8">
-                    <h2 className="text-xl font-semibold mb-6 text-white">
-                        {editingTeam ? 'Editar Equipo' : 'Crear Nuevo Equipo'}
-                    </h2>
-                    <form onSubmit={handleSubmitTeam} className='space-y-4'>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Nombre del Equipo *
-                            </label>
-                            <input 
-                                id="teamName"
-                                name="teamName"
-                                type="text" 
-                                placeholder='Ej: Tigres del Norte' 
-                                value={name} 
-                                onChange={(e) => setName(e.target.value)} 
-                                className='w-full p-3 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-gray-800 text-white' 
-                                required
-                            />
-                        </div>
-                        
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Monto de Inscripción ($)
-                            </label>
-                            <input 
-                                id="teamInscripcion"
-                                name="teamInscripcion"
-                                type="number" 
-                                step="0.01"
-                                min="0"
-                                placeholder='Ej: 1500.00' 
-                                value={inscripcion} 
-                                onChange={(e) => setInscripcion(e.target.value)} 
-                                className='w-full p-3 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-gray-800 text-white' 
-                            />
-                            <p className="text-xs text-gray-400 mt-1">Opcional: Deja vacío si no hay monto de inscripción</p>
-                        </div>
-                        
-                        <button 
-                            type='submit' 
-                            disabled={loading} 
-                            className='w-full mt-6 border border-gray-600 rounded-md p-3 bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
-                        >
-                            {loading ? (editingTeam ? 'Actualizando equipo...' : 'Creando equipo...') : (editingTeam ? 'Actualizar Equipo' : 'Crear Equipo')}
-                        </button>
-                        
-                        {error && (
-                            <div className="mt-4 p-3 bg-red-900 border border-red-600 text-red-200 rounded">
-                                {error}
-                            </div>
-                        )}
-                    </form>
-                </div>
-            )}
+            <TeamForm
+                showForm={showForm}
+                name={name}
+                inscripcion={inscripcion}
+                onNameChange={(e) => setName(e.target.value)}
+                onInscripcionChange={(e) => setInscripcion(e.target.value)}
+                onSubmit={handleSubmitTeam}
+                loading={loading}
+                editingTeam={editingTeam}
+                error={error}
+            />
 
             {/* Lista de equipos existentes */}
-            <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8">
+            <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8 border border-gray-700">
                 <h2 className="text-xl font-semibold mb-6 text-white">Mis Equipos</h2>
                 
-                {loadingTeams ? (
-                    <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500 mx-auto"></div>
-                        <p className="mt-2 text-gray-300">Cargando equipos...</p>
-                    </div>
-                ) : teams.length === 0 ? (
-                    <div className="text-center py-8">
-                        <p className="text-gray-300">No tienes equipos creados aún.</p>
-                        <p className="text-sm text-gray-400 mt-1">Crea tu primer equipo usando el formulario de arriba.</p>
-                    </div>
-                ) : (
-                    <div className="grid gap-4">
-                        {teams.map((team) => (
-                                                         <div key={team.id} className="border border-gray-600 rounded-lg p-4 bg-gray-700">
-                                <div className="flex justify-between items-start">
-                                    <div className="flex-1">
-                                        <h3 className="font-medium text-lg text-white mb-2">{team.nombre_equipo}</h3>
-                                        <div className="space-y-3">
-                                                                                         {/* Jugadores */}
-                                             <div className="flex items-center space-x-3 p-2 bg-gray-800 rounded-lg">
-                                                                                                   <div className="text-blue-400 text-2xl">
-                                                      👥
-                                                  </div>
-                                                                                                 <div>
-                                                     <div className="text-white font-semibold flex items-center">
-                                                         
-                                                         {team.totalPlayers || 0}
-                                                     </div>
-                                                     <div className="text-gray-400 text-xs">Jugadores</div>
-                                                 </div>
-                                            </div>
-
-                                                                                         {/* Pagos */}
-                                             <div className="flex items-center space-x-3 p-2 bg-gray-800 rounded-lg">
-                                                                                                   <div className="text-green-400 text-2xl">
-                                                      💰
-                                                  </div>
-                                                <div className="flex-1">
-                                                        <div className="text-white font-semibold flex items-center">
-                                                         
-                                                         ${(team.totalRegistrationPaid || 0).toLocaleString()}
-                                                         {team.inscripcion && (
-                                                             <span className="text-gray-400 text-sm ml-1">
-                                                                 / ${team.inscripcion.toLocaleString()}
-                                                             </span>
-                                                         )}
-                                                     </div>
-                                                    <div className="text-green-400 text-xs">Pagado</div>
-                                                </div>
-                                            </div>
-
-                                                                                         {/* Pendiente por pagar */}
-                                             {team.inscripcion && (
-                                                 <div className="flex items-center space-x-3 p-2 bg-gray-800 rounded-lg">
-                                                                                                           <div className="text-yellow-400 text-2xl">
-                                                          ⚠️
-                                                      </div>
-                                                    <div className="flex-1">
-                                                                                                                 <div className="text-white font-semibold flex items-center">
-                                                             
-                                                             ${Math.max(0, (team.inscripcion - (team.totalRegistrationPaid || 0))).toLocaleString()}
-                                                         </div>
-                                                        <div className="text-yellow-400 text-xs">Pendiente</div>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="relative ml-4">
-                                        <button
-                                            onClick={() => toggleActionMenu(team.id)}
-                                            className="px-3 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-500 transition-colors"
-                                            title="Opciones del equipo"
-                                        >
-                                            ⋮
-                                        </button>
-                                        
-                                        {actionMenuOpen === team.id && (
-                                            <>
-                                                <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50">
-                                                    <div className="py-1">
-                                                        <button
-                                                            onClick={() => startEditing(team)}
-                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
-                                                        >
-                                                            ✏️ Editar
-                                                        </button>
-                                                        <button
-                                                            onClick={() => {
-                                                                alert('Función de eliminar equipo - próximamente')
-                                                                setActionMenuOpen(null)
-                                                            }}
-                                                            className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900 transition-colors"
-                                                        >
-                                                            🗑️ Eliminar
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                {/* Overlay para cerrar menú */}
-                                                <div 
-                                                    className="fixed inset-0 z-40" 
-                                                    onClick={() => setActionMenuOpen(null)}
-                                                />
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                <TeamCardsGrid
+                    teams={teams}
+                    loadingTeams={loadingTeams}
+                    onEdit={startEditing}
+                    onDelete={handleDeleteTeam}
+                    onToggleActionMenu={toggleActionMenu}
+                    actionMenuOpen={actionMenuOpen}
+                />
             </div>
         </div>
     </>

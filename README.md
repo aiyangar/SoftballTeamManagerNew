@@ -2,7 +2,7 @@
 
 Una aplicación web moderna para la gestión completa de equipos de softball, desarrollada con React y Supabase.
 
-**Versión Actual: 0.9.0**
+**Versión Actual: 0.11.0**
 
 ## 🏟️ Características
 
@@ -116,7 +116,10 @@ src/
 │   ├── ScheduleCard.jsx # Tarjeta individual de partido
 │   ├── ScheduleCardsGrid.jsx # Grid de tarjetas de partidos
 │   ├── ScheduleForm.jsx # Formulario de creación/edición de partidos
-│   └── ScheduleHistoryModal.jsx # Modal de detalles del partido
+│   ├── ScheduleHistoryModal.jsx # Modal de detalles del partido
+│   ├── TeamCard.jsx # Tarjeta individual de equipo
+│   ├── TeamCardsGrid.jsx # Grid de tarjetas de equipos
+│   └── TeamForm.jsx # Formulario de creación/edición de equipos
 ├── hooks/               # Hooks personalizados
 │   └── useModal.js      # Hook para manejo de modales
 ├── context/             # Contextos de React
@@ -164,11 +167,20 @@ Para más información sobre el proyecto, consulta los archivos de documentació
 - Supabase para backend como servicio (BaaS)
 - Sistema de rutas protegidas para seguridad
 - **Nuevo**: Arquitectura modular mejorada con separación clara entre páginas y componentes
-- **Nuevo**: Componentes de jugadores, dashboard y schedule modularizados para mejor mantenibilidad
+- **Nuevo**: Componentes de jugadores, dashboard, schedule y teams modularizados para mejor mantenibilidad
 - Modales optimizados con hook personalizado `useModal`
 - Footer de versión consistente en todas las páginas principales
 
 ## 🆕 Changelog
+
+### Versión 0.11.0
+- ✅ **Modularización de Teams:**
+  - Separado `Teams.jsx` en componentes modulares más pequeños y reutilizables:
+    - `TeamCard.jsx` - Tarjeta individual de equipo
+    - `TeamCardsGrid.jsx` - Grid de tarjetas de equipos
+    - `TeamForm.jsx` - Formulario de creación/edición de equipos
+  - Mejorada la mantenibilidad y legibilidad del código
+  - Componentes más enfocados y con responsabilidades específicas
 
 ### Versión 0.10.0
 - ✅ **Reorganización de Estructura del Proyecto:**

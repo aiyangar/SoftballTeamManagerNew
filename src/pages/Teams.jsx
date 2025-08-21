@@ -6,6 +6,7 @@ import Menu from '../components/Menu'
 import { useTeam } from '../context/TeamContext'
 import TeamForm from '../components/TeamForm'
 import TeamCardsGrid from '../components/TeamCardsGrid'
+import TeamHistoryModal from '../components/TeamHistoryModal'
 
 /**
  * Componente para la gestión de equipos
@@ -20,7 +21,8 @@ const Teams = () => {
     const [error, setError] = useState(null)
     const [success, setSuccess] = useState(null)
     const [showForm, setShowForm] = useState(false)
-    const [actionMenuOpen, setActionMenuOpen] = useState(null)
+    const [showTeamHistoryModal, setShowTeamHistoryModal] = useState(false)
+    const [selectedTeamForHistory, setSelectedTeamForHistory] = useState(null)
     const [editingTeam, setEditingTeam] = useState(null) // Para manejar la edición
     const { teams, loadingTeams, fetchTeams } = useTeam() // Usar el contexto del equipo
 
@@ -124,15 +126,16 @@ const Teams = () => {
         setInscripcion(team.inscripcion ? team.inscripcion.toString() : '')
         setEditingTeam(team)
         setShowForm(true)
-        setActionMenuOpen(null) // Cerrar el menú de acciones
+        setShowTeamHistoryModal(false) // Cerrar el modal de historial
     }
 
     /**
-     * Maneja el menú de acciones
-     * @param {number} teamId - ID del equipo
+     * Maneja la visualización del historial del equipo
+     * @param {Object} team - Equipo para ver su historial
      */
-    const toggleActionMenu = (teamId) => {
-        setActionMenuOpen(actionMenuOpen === teamId ? null : teamId)
+    const handleViewTeamHistory = (team) => {
+        setSelectedTeamForHistory(team)
+        setShowTeamHistoryModal(true)
     }
 
     /**
@@ -141,7 +144,14 @@ const Teams = () => {
      */
     const handleDeleteTeam = (team) => {
         alert('Función de eliminar equipo - próximamente')
-        setActionMenuOpen(null)
+    }
+
+    /**
+     * Cierra el modal de historial del equipo
+     */
+    const closeTeamHistoryModal = () => {
+        setShowTeamHistoryModal(false)
+        setSelectedTeamForHistory(null)
     }
 
     /**
@@ -195,9 +205,9 @@ const Teams = () => {
     return (
         <>
             <div>
-                                <div className="flex justify-between items-center mb-8">
-                        <h1 className="text-2xl font-bold text-white">Gestión de Equipos</h1>
-                    </div>
+                <div className="flex justify-between items-center mb-8">
+                    <h1 className="text-2xl font-bold text-white">Gestión de Equipos</h1>
+                </div>
 
             {/* Mensajes de error y éxito */}
             {error && (
@@ -250,14 +260,20 @@ const Teams = () => {
                 <TeamCardsGrid
                     teams={teams}
                     loadingTeams={loadingTeams}
-                    onEdit={startEditing}
-                    onDelete={handleDeleteTeam}
-                    onToggleActionMenu={toggleActionMenu}
-                    actionMenuOpen={actionMenuOpen}
+                    onViewHistory={handleViewTeamHistory}
                 />
             </div>
+
+            {/* Modal de historial del equipo */}
+            <TeamHistoryModal
+                showModal={showTeamHistoryModal}
+                selectedTeam={selectedTeamForHistory}
+                onClose={closeTeamHistoryModal}
+                onEdit={startEditing}
+                onDelete={handleDeleteTeam}
+            />
         </div>
-    </>
+        </>
     )
 }
 

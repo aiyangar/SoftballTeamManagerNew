@@ -3,107 +3,77 @@ import React from 'react'
 /**
  * Componente para las tarjetas individuales de equipos
  * @param {Object} team - Datos del equipo
- * @param {Function} onEdit - Función para editar el equipo
- * @param {Function} onDelete - Función para eliminar el equipo
- * @param {Function} onToggleActionMenu - Función para manejar el menú de acciones
- * @param {string} actionMenuOpen - ID del equipo con menú abierto
+ * @param {Function} onViewHistory - Función para ver el historial del equipo
  */
 const TeamCard = ({ 
     team, 
-    onEdit, 
-    onDelete, 
-    onToggleActionMenu, 
-    actionMenuOpen 
+    onViewHistory
 }) => {
     return (
-        <div className="border border-gray-700 rounded-lg p-4 bg-gray-800 hover:bg-gray-750 transition-all duration-300">
-            <div className="flex justify-between items-start">
-                <div className="flex-1">
-                    <h3 className="font-medium text-lg text-white mb-2">{team.nombre_equipo}</h3>
-                    <div className="space-y-3">
-                        {/* Jugadores */}
-                        <div className="flex items-center space-x-3 p-2 bg-gray-700 rounded-lg">
-                            <div className="text-blue-400 text-2xl">
-                                👥
-                            </div>
-                            <div>
-                                <div className="text-white font-semibold flex items-center">
-                                    {team.totalPlayers || 0}
-                                </div>
-                                <div className="text-gray-400 text-xs">Jugadores</div>
-                            </div>
-                        </div>
+        <div 
+            className="border border-gray-700 rounded-lg p-6 bg-gray-800 hover:bg-gray-750 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl"
+            onClick={() => onViewHistory(team)}
+        >
+            {/* Header con nombre del equipo */}
+            <div className="mb-4">
+                <h3 className="font-bold text-xl text-white mb-1">{team.nombre_equipo}</h3>
+                <div className="w-12 h-1 bg-blue-500 rounded-full"></div>
+            </div>
 
-                        {/* Pagos */}
-                        <div className="flex items-center space-x-3 p-2 bg-gray-700 rounded-lg">
-                            <div className="text-green-400 text-2xl">
-                                💰
-                            </div>
-                            <div className="flex-1">
-                                <div className="text-white font-semibold flex items-center">
-                                    ${(team.totalRegistrationPaid || 0).toLocaleString()}
-                                    {team.inscripcion && (
-                                        <span className="text-gray-400 text-sm ml-1">
-                                            / ${team.inscripcion.toLocaleString()}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="text-green-400 text-xs">Pagado</div>
-                            </div>
-                        </div>
-
-                        {/* Pendiente por pagar */}
-                        {team.inscripcion && (
-                            <div className="flex items-center space-x-3 p-2 bg-gray-700 rounded-lg">
-                                <div className="text-yellow-400 text-2xl">
-                                    ⚠️
-                                </div>
-                                <div className="flex-1">
-                                    <div className="text-white font-semibold flex items-center">
-                                        ${Math.max(0, (team.inscripcion - (team.totalRegistrationPaid || 0))).toLocaleString()}
-                                    </div>
-                                    <div className="text-yellow-400 text-xs">Pendiente</div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+            {/* Grid de estadísticas principales */}
+            <div className="grid grid-cols-2 gap-4 mb-4">
+                {/* Jugadores */}
+                <div className="bg-gray-700 rounded-lg p-3 text-center">
+                    <div className="text-blue-400 text-2xl mb-1">👥</div>
+                    <div className="text-white font-bold text-lg">{team.totalPlayers || 0}</div>
+                    <div className="text-gray-400 text-xs">Jugadores</div>
                 </div>
-                <div className="relative ml-4">
-                    <button
-                        onClick={() => onToggleActionMenu(team.id)}
-                        className="px-3 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-500 transition-colors"
-                        title="Opciones del equipo"
-                    >
-                        ⋮
-                    </button>
-                    
-                    {actionMenuOpen === team.id && (
-                        <>
-                            <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50">
-                                <div className="py-1">
-                                    <button
-                                        onClick={() => onEdit(team)}
-                                        className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
-                                    >
-                                        ✏️ Editar
-                                    </button>
-                                    <button
-                                        onClick={() => onDelete(team)}
-                                        className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900 transition-colors"
-                                    >
-                                        🗑️ Eliminar
-                                    </button>
-                                </div>
-                            </div>
-                            {/* Overlay para cerrar menú */}
-                            <div 
-                                className="fixed inset-0 z-40" 
-                                onClick={() => onToggleActionMenu(null)}
-                            />
-                        </>
-                    )}
+
+                {/* Record W-L-D */}
+                <div className="bg-gray-700 rounded-lg p-3 text-center">
+                    <div className="text-orange-400 text-2xl mb-1">🏆</div>
+                    <div className="text-white font-bold text-lg">
+                        {team.wins || 0}-{team.losses || 0}-{team.draws || 0}
+                    </div>
+                    <div className="text-gray-400 text-xs">W-L-D</div>
                 </div>
             </div>
+
+            {/* Estado de pagos */}
+            {team.inscripcion && (
+                <div className="bg-gray-700 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-gray-300 text-sm">Estado de Pagos</span>
+                        <span className="text-green-400 text-sm font-semibold">
+                            ${(team.totalRegistrationPaid || 0).toLocaleString()}
+                        </span>
+                    </div>
+                    
+                    {/* Barra de progreso */}
+                    <div className="w-full bg-gray-600 rounded-full h-2 mb-2">
+                        <div 
+                            className="h-2 rounded-full transition-all duration-300"
+                            style={{ 
+                                width: `${Math.min(((team.totalRegistrationPaid || 0) / team.inscripcion) * 100, 100)}%`,
+                                backgroundColor: (team.totalRegistrationPaid || 0) >= team.inscripcion 
+                                    ? '#10B981' 
+                                    : (team.totalRegistrationPaid || 0) >= team.inscripcion * 0.8
+                                    ? '#F59E0B' 
+                                    : (team.totalRegistrationPaid || 0) >= team.inscripcion * 0.5
+                                    ? '#F97316' 
+                                    : '#DC2626' 
+                            }}
+                        ></div>
+                    </div>
+                    
+                    <div className="flex justify-between text-xs">
+                        <span className="text-gray-400">Pagado</span>
+                        <span className="text-gray-400">
+                            ${(team.totalRegistrationPaid || 0).toLocaleString()} / ${team.inscripcion.toLocaleString()}
+                        </span>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

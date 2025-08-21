@@ -5,18 +5,12 @@ import TeamCard from './TeamCard'
  * Componente para la cuadrícula de tarjetas de equipos
  * @param {Array} teams - Array de equipos
  * @param {boolean} loadingTeams - Estado de carga
- * @param {Function} onEdit - Función para editar equipo
- * @param {Function} onDelete - Función para eliminar equipo
- * @param {Function} onToggleActionMenu - Función para manejar el menú de acciones
- * @param {string} actionMenuOpen - ID del equipo con menú abierto
+ * @param {Function} onViewHistory - Función para ver el historial del equipo
  */
 const TeamCardsGrid = ({
     teams,
     loadingTeams,
-    onEdit,
-    onDelete,
-    onToggleActionMenu,
-    actionMenuOpen
+    onViewHistory
 }) => {
     if (loadingTeams) {
         return (
@@ -42,10 +36,7 @@ const TeamCardsGrid = ({
                 <TeamCard
                     key={team.id}
                     team={team}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                    onToggleActionMenu={onToggleActionMenu}
-                    actionMenuOpen={actionMenuOpen}
+                    onViewHistory={onViewHistory}
                 />
             ))}
         </div>

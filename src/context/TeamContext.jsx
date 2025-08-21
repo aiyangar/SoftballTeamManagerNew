@@ -51,14 +51,29 @@ export const TeamProvider = ({ children }) => {
             .eq('equipo_id', team.id)
             .not('monto_inscripcion', 'is', null)
 
+          // Obtener estadísticas de partidos finalizados
+          const { data: games, error: gamesError } = await supabase
+            .from('partidos')
+            .select('resultado')
+            .eq('equipo_id', team.id)
+            .eq('finalizado', true)
+
           const totalPlayers = playersError ? 0 : (players?.length || 0)
           const totalRegistrationPaid = paymentsError ? 0 : 
             (payments?.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0) || 0)
 
+          // Calcular estadísticas W-L-D
+          const wins = gamesError ? 0 : (games?.filter(game => game.resultado === 'Victoria').length || 0)
+          const losses = gamesError ? 0 : (games?.filter(game => game.resultado === 'Derrota').length || 0)
+          const draws = gamesError ? 0 : (games?.filter(game => game.resultado === 'Empate').length || 0)
+
           return {
             ...team,
             totalPlayers,
-            totalRegistrationPaid
+            totalRegistrationPaid,
+            wins,
+            losses,
+            draws
           }
         })
       )

@@ -119,7 +119,8 @@ src/
 │   ├── ScheduleHistoryModal.jsx # Modal de detalles del partido
 │   ├── TeamCard.jsx # Tarjeta individual de equipo
 │   ├── TeamCardsGrid.jsx # Grid de tarjetas de equipos
-│   └── TeamForm.jsx # Formulario de creación/edición de equipos
+│   ├── TeamForm.jsx # Formulario de creación/edición de equipos
+│   └── TeamHistoryModal.jsx # Modal de detalles del equipo
 ├── hooks/               # Hooks personalizados
 │   └── useModal.js      # Hook para manejo de modales
 ├── context/             # Contextos de React
@@ -179,8 +180,13 @@ Para más información sobre el proyecto, consulta los archivos de documentació
     - `TeamCard.jsx` - Tarjeta individual de equipo
     - `TeamCardsGrid.jsx` - Grid de tarjetas de equipos
     - `TeamForm.jsx` - Formulario de creación/edición de equipos
+    - `TeamHistoryModal.jsx` - Modal de detalles del equipo
   - Mejorada la mantenibilidad y legibilidad del código
   - Componentes más enfocados y con responsabilidades específicas
+  - **Nuevo**: Cards clickeables sin menú de acciones, botones de editar/eliminar en el modal
+  - **Mejorado**: Diseño visual de las cards con mejor organización y estadísticas W-L-D
+  - **Agregado**: Información detallada de record (Victorias, Derrotas, Empates) en el modal
+  - **Implementado**: Cálculo automático de estadísticas W-L-D basado en partidos finalizados
 
 ### Versión 0.10.0
 - ✅ **Reorganización de Estructura del Proyecto:**

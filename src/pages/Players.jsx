@@ -93,20 +93,11 @@ const Players = () => {
    * @param {number} teamId - ID del equipo
    */
   const fetchPlayerHistory = async (playerId, teamId) => {
-    console.log(
-      'Obteniendo historial para jugador:',
-      playerId,
-      'equipo:',
-      teamId
-    );
     setLoadingHistory(true);
     try {
       // Si no hay equipo seleccionado, obtener todos los equipos del jugador
       let teamIds = [teamId];
       if (!teamId) {
-        console.log(
-          'No hay equipo específico, obteniendo todos los equipos del usuario'
-        );
         // Obtener todos los equipos del usuario para buscar asistencia y pagos
         const { data: userTeams } = await supabase
           .from('equipos')
@@ -115,18 +106,15 @@ const Players = () => {
 
         if (userTeams && userTeams.length > 0) {
           teamIds = userTeams.map(team => team.id);
-          console.log('Equipos del usuario:', teamIds);
         } else {
           // Si no hay equipos, usar un array vacío
           teamIds = [];
-          console.log('No hay equipos del usuario');
         }
       } else {
-        console.log('Usando equipo específico:', teamId);
       }
 
       // Obtener asistencia a partidos (de todos los equipos si no hay equipo específico)
-      console.log('Obteniendo asistencia para equipos:', teamIds);
+
       let attendanceQuery = supabase
         .from('asistencia_partidos')
         .select(
@@ -154,17 +142,12 @@ const Players = () => {
         await attendanceQuery;
 
       if (attendanceError) {
-        console.error('Error al obtener asistencia:', attendanceError);
+        // Error al obtener asistencia
       } else {
-        console.log(
-          'Asistencia obtenida:',
-          attendanceData?.length || 0,
-          'registros'
-        );
       }
 
       // Obtener pagos realizados (de todos los equipos si no hay equipo específico)
-      console.log('Obteniendo pagos para equipos:', teamIds);
+
       let paymentsQuery = supabase
         .from('pagos')
         .select(
@@ -191,13 +174,12 @@ const Players = () => {
       const { data: paymentsData, error: paymentsError } = await paymentsQuery;
 
       if (paymentsError) {
-        console.error('Error al obtener pagos:', paymentsError);
+        // Error al obtener pagos
       } else {
-        console.log('Pagos obtenidos:', paymentsData?.length || 0, 'registros');
       }
 
       // Obtener todos los partidos de los equipos para calcular estadísticas
-      console.log('Obteniendo partidos para equipos:', teamIds);
+
       let gamesQuery = supabase
         .from('partidos')
         .select('id, fecha_partido, finalizado')
@@ -210,25 +192,14 @@ const Players = () => {
       const { data: allGamesData, error: gamesError } = await gamesQuery;
 
       if (gamesError) {
-        console.error('Error al obtener partidos:', gamesError);
+        // Error al obtener partidos
       } else {
-        console.log(
-          'Partidos obtenidos:',
-          allGamesData?.length || 0,
-          'registros'
-        );
       }
 
       // Calcular estadísticas
       let attendance = attendanceData || [];
       let payments = paymentsData || [];
       const allGames = allGamesData || [];
-
-      console.log('Calculando estadísticas con:', {
-        attendance: attendance.length,
-        payments: payments.length,
-        allGames: allGames.length,
-      });
 
       // Ordenar asistencia por fecha del partido (más reciente primero)
       attendance = attendance.sort((a, b) => {
@@ -252,22 +223,6 @@ const Players = () => {
       const attendanceRate =
         gamesPlayed > 0 ? ((gamesAttended / gamesPlayed) * 100).toFixed(1) : 0;
 
-      console.log('Estadísticas calculadas:', {
-        totalUmpirePaid,
-        totalInscripcionPaid,
-        gamesPlayed,
-        gamesAttended,
-        attendanceRate,
-      });
-
-      console.log('Datos del historial:', {
-        attendance: attendance.length,
-        payments: payments.length,
-        gamesPlayed,
-        gamesAttended,
-        attendanceRate,
-      });
-
       setPlayerHistory({
         attendance,
         payments,
@@ -277,14 +232,10 @@ const Players = () => {
         gamesAttended,
         attendanceRate,
       });
-
-      console.log('Historial establecido exitosamente');
     } catch (error) {
-      console.error('Error al obtener historial del jugador:', error);
       setError('Error al cargar el historial del jugador');
     } finally {
       setLoadingHistory(false);
-      console.log('Carga de historial finalizada');
     }
   };
 
@@ -293,13 +244,12 @@ const Players = () => {
    * @param {Object} player - Objeto del jugador
    */
   const openPlayerHistoryModal = async player => {
-    console.log('Abriendo modal de historial para jugador:', player);
     setSelectedPlayerForHistory(player);
     setShowPlayerHistoryModal(true);
 
     // Usar el equipo del jugador si está asignado, o el equipo seleccionado, o null para buscar en todos
     const teamId = player.equipo_id || selectedTeam || null;
-    console.log('Obteniendo historial para equipo:', teamId);
+
     await fetchPlayerHistory(player.id, teamId);
   };
 
@@ -307,7 +257,6 @@ const Players = () => {
    * Cierra el modal de historial del jugador
    */
   const closePlayerHistoryModal = () => {
-    console.log('Cerrando modal de historial');
     setShowPlayerHistoryModal(false);
     setSelectedPlayerForHistory(null);
     setPlayerHistory({
@@ -323,7 +272,6 @@ const Players = () => {
       attendance: false,
       payments: false,
     });
-    console.log('Modal de historial cerrado');
   };
 
   /**
@@ -331,13 +279,12 @@ const Players = () => {
    * @param {string} section - Nombre de la sección ('attendance' o 'payments')
    */
   const toggleSection = section => {
-    console.log('Cambiando sección:', section);
     setExpandedSections(prev => {
       const newSections = {
         ...prev,
         [section]: !prev[section],
       };
-      console.log('Nuevas secciones expandidas:', newSections);
+
       return newSections;
     });
   };
@@ -359,7 +306,6 @@ const Players = () => {
         .single();
 
       if (teamError || !teamData) {
-        console.error('Error al obtener datos del equipo:', teamError);
         return 450;
       }
 
@@ -373,7 +319,6 @@ const Players = () => {
         .eq('equipo_id', teamId);
 
       if (attendanceError) {
-        console.error('Error al obtener datos de asistencia:', attendanceError);
         return 450;
       }
 
@@ -384,7 +329,6 @@ const Players = () => {
         .eq('equipo_id', teamId);
 
       if (gamesError) {
-        console.error('Error al obtener datos de partidos:', gamesError);
         return 450;
       }
 
@@ -407,19 +351,8 @@ const Players = () => {
       // Asegurar que la meta esté en un rango razonable ($200 - $800)
       const finalTarget = Math.max(200, Math.min(800, calculatedTarget));
 
-      console.log('Meta de inscripción calculada:', {
-        totalInscripcion,
-        totalGames,
-        totalAttendance,
-        averageAttendance,
-        effectiveAverageAttendance,
-        calculatedTarget,
-        finalTarget,
-      });
-
       return finalTarget;
     } catch (error) {
-      console.error('Error al calcular meta de inscripción:', error);
       return 450;
     }
   };
@@ -441,7 +374,6 @@ const Players = () => {
         .gt('monto_inscripcion', 0);
 
       if (error) {
-        console.error('Error al obtener totales de inscripción:', error);
         return {};
       }
 
@@ -456,10 +388,6 @@ const Players = () => {
 
       return totals;
     } catch (error) {
-      console.error(
-        'Error inesperado al obtener totales de inscripción:',
-        error
-      );
       return {};
     }
   };
@@ -471,7 +399,6 @@ const Players = () => {
    */
   const fetchPlayers = async propietarioId => {
     try {
-      console.log('Obteniendo jugadores para propietario:', propietarioId);
       const { data, error } = await supabase
         .from('jugadores')
         .select(
@@ -493,12 +420,10 @@ const Players = () => {
         .order('id', { ascending: false });
 
       if (error) {
-        console.error('Error al obtener jugadores:', error);
         setLoadingPlayers(false);
         return { success: false, error: error.message };
       }
 
-      console.log('Jugadores obtenidos:', data);
       setPlayers(data || []);
 
       // Obtener totales de inscripción para todos los jugadores
@@ -515,7 +440,6 @@ const Players = () => {
       setLoadingPlayers(false);
       return { success: true, data: data };
     } catch (error) {
-      console.error('Error inesperado al obtener jugadores:', error);
       setLoadingPlayers(false);
       return { success: false, error: error.message };
     }
@@ -535,15 +459,11 @@ const Players = () => {
    */
   const fetchPositions = async () => {
     try {
-      console.log('Obteniendo posiciones...');
       const { data, error } = await supabase.from('posiciones').select('*');
 
       if (error) {
-        console.error('Error al obtener posiciones:', error);
         return { success: false, error: error.message };
       }
-
-      console.log('Posiciones obtenidas:', data);
 
       // Ordenar posiciones según el orden específico del béisbol
       const orderMap = {
@@ -565,12 +485,10 @@ const Players = () => {
         return orderA - orderB;
       });
 
-      console.log('Posiciones ordenadas:', sortedPositions);
       setPositions(sortedPositions);
       // setLoadingPositions(false)
       return { success: true, data: sortedPositions };
     } catch (error) {
-      console.error('Error inesperado al obtener posiciones:', error);
       return { success: false, error: error.message };
     }
   };
@@ -615,7 +533,7 @@ const Players = () => {
 
       if (editingPlayer) {
         // Actualizar jugador existente
-        console.log('Actualizando jugador:', editingPlayer.id, playerData);
+
         const { data: updatedPlayer, error: playerError } = await supabase
           .from('jugadores')
           .update({
@@ -629,17 +547,15 @@ const Players = () => {
           .select();
 
         if (playerError) {
-          console.error('Error al actualizar jugador:', playerError);
           throw new Error(
             `Error al actualizar jugador: ${playerError.message}`
           );
         }
 
         playerResult = updatedPlayer[0];
-        console.log('Jugador actualizado:', playerResult);
       } else {
         // Insertar nuevo jugador
-        console.log('Insertando nuevo jugador:', playerData);
+
         const { data: newPlayer, error: playerError } = await supabase
           .from('jugadores')
           .insert([
@@ -655,12 +571,10 @@ const Players = () => {
           .select();
 
         if (playerError) {
-          console.error('Error al registrar jugador:', playerError);
           throw new Error(`Error al registrar jugador: ${playerError.message}`);
         }
 
         playerResult = newPlayer[0];
-        console.log('Jugador registrado:', playerResult);
       }
 
       // Esta línea ya no es necesaria porque playerError se maneja dentro de cada bloque
@@ -674,31 +588,24 @@ const Players = () => {
           .eq('jugador_id', editingPlayer.id);
 
         if (deleteError) {
-          console.error(
-            'Error al eliminar posiciones existentes:',
-            deleteError
-          );
+          // Error al eliminar posiciones existentes
         }
       }
 
       // Si hay posiciones seleccionadas, registrarlas
       if (selectedPositions.length > 0 && playerResult) {
-        console.log('Registrando posiciones:', selectedPositions);
         const positionData = selectedPositions.map(positionId => ({
           jugador_id: playerResult.id,
           posicion_id: positionId,
         }));
 
-        console.log('Datos de posiciones a insertar:', positionData);
         const { error: positionError } = await supabase
           .from('jugador_posiciones')
           .insert(positionData);
 
         if (positionError) {
-          console.error('Error al registrar posiciones:', positionError);
-          // No lanzamos error aquí porque el jugador ya se registró/actualizó
+          // Error al registrar posiciones - no lanzamos error aquí porque el jugador ya se registró/actualizó
         } else {
-          console.log('Posiciones registradas exitosamente');
         }
       }
 
@@ -716,7 +623,6 @@ const Players = () => {
 
       return { success: true, data: playerResult };
     } catch (error) {
-      console.error('Error al registrar jugador:', error);
       setError(error.message);
       return { success: false, error: error.message };
     } finally {
@@ -734,17 +640,6 @@ const Players = () => {
     // Determinar el equipo correcto: usar el seleccionado en el formulario o el equipo actualmente seleccionado
     const equipoSeleccionado = equipoId || selectedTeam || null;
 
-    console.log('Enviando formulario con datos:', {
-      name,
-      numero,
-      telefono,
-      email,
-      equipoId,
-      selectedTeam,
-      equipoSeleccionado,
-      selectedPositions,
-    });
-
     const playerData = {
       nombre: name,
       numero: numero,
@@ -753,10 +648,7 @@ const Players = () => {
       equipo_id: equipoSeleccionado,
     };
 
-    console.log('Datos del jugador a registrar:', playerData);
     const result = await registerPlayer(playerData);
-
-    console.log('Resultado del registro:', result);
 
     if (result.success) {
       // Recargar la lista de jugadores después de un registro exitoso
@@ -769,12 +661,10 @@ const Players = () => {
    * @param {number} positionId - ID de la posición
    */
   const handlePositionToggle = positionId => {
-    console.log('Cambiando posición:', positionId);
     setSelectedPositions(prev => {
-      console.log('Posiciones anteriores:', prev);
       if (prev.includes(positionId)) {
         const newPositions = prev.filter(id => id !== positionId);
-        console.log('Posiciones después de remover:', newPositions);
+
         return newPositions;
       } else {
         if (prev.length >= 3) {
@@ -783,7 +673,7 @@ const Players = () => {
         }
         setError(null);
         const newPositions = [...prev, positionId];
-        console.log('Posiciones después de agregar:', newPositions);
+
         return newPositions;
       }
     });
@@ -793,7 +683,6 @@ const Players = () => {
    * Resetea el formulario
    */
   const resetForm = () => {
-    console.log('Reseteando formulario');
     setName('');
     setNumero('');
     setTelefono('');
@@ -805,7 +694,6 @@ const Players = () => {
     setSuccess(null);
     setEditingPlayer(null);
     setShowForm(false);
-    console.log('Formulario reseteado con equipo:', selectedTeam);
   };
 
   /**
@@ -818,7 +706,6 @@ const Players = () => {
     }
 
     try {
-      console.log('Eliminando jugador:', playerId);
       setLoading(true);
 
       // Primero eliminar las posiciones del jugador
@@ -828,9 +715,8 @@ const Players = () => {
         .eq('jugador_id', playerId);
 
       if (positionError) {
-        console.error('Error al eliminar posiciones:', positionError);
+        // Error al eliminar posiciones
       } else {
-        console.log('Posiciones eliminadas exitosamente');
       }
 
       // Luego eliminar el jugador
@@ -840,15 +726,12 @@ const Players = () => {
         .eq('id', playerId);
 
       if (playerError) {
-        console.error('Error al eliminar jugador:', playerError);
         throw new Error(`Error al eliminar jugador: ${playerError.message}`);
       }
 
-      console.log('Jugador eliminado exitosamente');
       setSuccess('Jugador eliminado exitosamente');
       await fetchPlayers(session.user.id); // Recargar lista, totales y meta
     } catch (error) {
-      console.error('Error al eliminar jugador:', error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -857,22 +740,17 @@ const Players = () => {
 
   // Cargar datos al montar el componente
   useEffect(() => {
-    console.log('useEffect ejecutado, session:', session);
     if (session?.user?.id) {
-      console.log('Cargando datos para usuario:', session.user.id);
       fetchPlayers(session.user.id);
       fetchPositions();
     } else {
-      console.log('No hay sesión activa');
     }
   }, [session]);
 
   // Establecer el equipo seleccionado por defecto cuando cambie
   useEffect(() => {
-    console.log('Equipo seleccionado cambiado:', selectedTeam);
     if (selectedTeam) {
       setEquipoId(selectedTeam);
-      console.log('Equipo establecido en formulario:', selectedTeam);
 
       // Recalcular meta de inscripción cuando cambie el equipo
       calculateInscripcionTarget(selectedTeam).then(target => {
@@ -883,7 +761,6 @@ const Players = () => {
 
   // Función para ordenar los jugadores
   const sortPlayers = (players, key, direction) => {
-    console.log('Ordenando jugadores por:', key, direction);
     const sortedPlayers = [...players].sort((a, b) => {
       let aValue = a[key];
       let bValue = b[key];
@@ -908,24 +785,22 @@ const Players = () => {
       }
       return 0;
     });
-    console.log('Jugadores ordenados:', sortedPlayers.length);
+
     return sortedPlayers;
   };
 
   // Función para manejar el ordenamiento
   const handleSort = key => {
-    console.log('Ordenando por:', key);
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
       direction = 'desc';
     }
-    console.log('Nueva configuración de ordenamiento:', { key, direction });
+
     setSortConfig({ key, direction });
   };
 
   // Función para filtrar jugadores
   const filterPlayers = (players, filters) => {
-    console.log('Filtrando jugadores con filtros:', filters);
     const filteredPlayers = players.filter(player => {
       // Filtro por nombre (búsqueda parcial, case-insensitive)
       if (
@@ -961,26 +836,24 @@ const Players = () => {
 
       return true;
     });
-    console.log('Jugadores filtrados:', filteredPlayers.length);
+
     return filteredPlayers;
   };
 
   // Función para manejar cambios en los filtros
   const handleFilterChange = (filterType, value) => {
-    console.log('Cambiando filtro:', filterType, value);
     setFilters(prev => {
       const newFilters = {
         ...prev,
         [filterType]: value,
       };
-      console.log('Nuevos filtros:', newFilters);
+
       return newFilters;
     });
   };
 
   // Función para manejar la selección/deselección de posiciones en filtros
   const handlePositionFilterToggle = positionName => {
-    console.log('Cambiando filtro de posición:', positionName);
     setFilters(prev => {
       const newPositions = prev.posiciones.includes(positionName)
         ? prev.posiciones.filter(pos => pos !== positionName)
@@ -989,27 +862,25 @@ const Players = () => {
         ...prev,
         posiciones: newPositions,
       };
-      console.log('Nuevas posiciones en filtros:', newPositions);
+
       return newFilters;
     });
   };
 
   // Función para cambiar el tipo de coincidencia de posiciones
   const handlePositionMatchTypeChange = matchType => {
-    console.log('Cambiando tipo de coincidencia de posiciones:', matchType);
     setFilters(prev => {
       const newFilters = {
         ...prev,
         posicionMatchType: matchType,
       };
-      console.log('Nuevos filtros con tipo de coincidencia:', newFilters);
+
       return newFilters;
     });
   };
 
   // Función para limpiar todos los filtros
   const clearFilters = () => {
-    console.log('Limpiando filtros');
     setFilters({
       nombre: '',
       numero: '',
@@ -1017,7 +888,6 @@ const Players = () => {
       posicionMatchType: 'any',
     });
     setShowFilters(false);
-    console.log('Filtros limpiados');
   };
 
   // Obtener jugadores filtrados y ordenados
@@ -1030,10 +900,8 @@ const Players = () => {
 
   // Función para editar jugador
   const editPlayer = playerId => {
-    console.log('Editando jugador:', playerId);
     const player = players.find(p => p.id === playerId);
     if (player) {
-      console.log('Jugador encontrado:', player);
       setEditingPlayer(player);
       setName(player.nombre);
       setNumero(player.numero.toString());
@@ -1047,16 +915,11 @@ const Players = () => {
         player.jugador_posiciones
           ?.map(jp => jp.posiciones?.id)
           .filter(id => id) || [];
-      console.log('Posiciones del jugador:', playerPositions);
+
       setSelectedPositions(playerPositions);
 
       setShowForm(true);
-      console.log(
-        'Formulario de edición abierto con equipo:',
-        player.equipo_id || selectedTeam
-      );
     } else {
-      console.log('Jugador no encontrado');
     }
   };
 
@@ -1098,7 +961,6 @@ const Players = () => {
               equipoId,
             }}
             onFormDataChange={(field, value) => {
-              console.log('Cambiando campo del formulario:', field, value);
               switch (field) {
                 case 'name':
                   setName(value);
@@ -1119,7 +981,6 @@ const Players = () => {
             }}
             selectedPositions={selectedPositions}
             onPositionToggle={positionId => {
-              console.log('Toggle de posición desde formulario:', positionId);
               handlePositionToggle(positionId);
             }}
             positions={positions}
@@ -1127,11 +988,9 @@ const Players = () => {
             editingPlayer={editingPlayer}
             loading={loading}
             onSubmit={e => {
-              console.log('Enviando formulario desde componente PlayerForm');
               handleSubmit(e);
             }}
             onCancel={() => {
-              console.log('Cancelando formulario');
               setShowForm(false);
             }}
           />
@@ -1215,7 +1074,6 @@ const Players = () => {
                 totalCount={players.length}
                 showFilters={showFilters}
                 onToggleFilters={() => {
-                  console.log('Cambiando visibilidad de filtros');
                   setShowFilters(!showFilters);
                 }}
               />
@@ -1409,7 +1267,6 @@ const Players = () => {
                 players={sortedPlayers}
                 loadingPlayers={loadingPlayers}
                 onViewHistory={player => {
-                  console.log('Abriendo historial del jugador:', player);
                   openPlayerHistoryModal(player);
                 }}
                 playerInscripcionTotals={playerInscripcionTotals}
@@ -1428,19 +1285,15 @@ const Players = () => {
           expandedSections={expandedSections}
           inscripcionTarget={inscripcionTarget}
           onToggleSection={section => {
-            console.log('Cambiando sección del modal:', section);
             toggleSection(section);
           }}
           onClose={() => {
-            console.log('Cerrando modal de historial');
             closePlayerHistoryModal();
           }}
           onEdit={playerId => {
-            console.log('Editando jugador desde modal:', playerId);
             editPlayer(playerId);
           }}
           onDelete={playerId => {
-            console.log('Eliminando jugador desde modal:', playerId);
             deletePlayer(playerId);
           }}
         />

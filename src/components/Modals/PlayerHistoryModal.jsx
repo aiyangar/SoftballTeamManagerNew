@@ -125,13 +125,16 @@ const PlayerHistoryModal = ({
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Barra de progreso de inscripción */}
                 <div className='mt-4'>
                   <div className='flex justify-between items-center mb-2'>
-                    <span className='text-sm text-gray-300'>Progreso de Inscripción</span>
                     <span className='text-sm text-gray-300'>
-                      ${history.totalInscripcionPaid.toLocaleString()} / ${inscripcionTarget.toLocaleString()}
+                      Progreso de Inscripción
+                    </span>
+                    <span className='text-sm text-gray-300'>
+                      ${history.totalInscripcionPaid.toLocaleString()} / $
+                      {inscripcionTarget.toLocaleString()}
                     </span>
                   </div>
                   <div className='w-full bg-gray-700 rounded-full h-3'>
@@ -141,7 +144,9 @@ const PlayerHistoryModal = ({
                     ></div>
                   </div>
                   <div className='flex justify-between items-center mt-2'>
-                    <span className='text-xs text-gray-400'>Meta: ${inscripcionTarget.toLocaleString()}</span>
+                    <span className='text-xs text-gray-400'>
+                      Meta: ${inscripcionTarget.toLocaleString()}
+                    </span>
                     {inscripcionRemaining > 0 ? (
                       <span
                         className={`text-xs font-semibold ${

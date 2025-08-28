@@ -143,7 +143,6 @@ const Teams = () => {
    * @param {Object} team - Equipo a eliminar
    */
   const handleDeleteTeam = team => {
-    console.log('Eliminando equipo:', team);
     alert('Función de eliminar equipo - próximamente');
   };
 

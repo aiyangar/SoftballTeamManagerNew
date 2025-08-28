@@ -293,16 +293,10 @@ const ScheduleHistoryModal = ({
                   <div className='flex justify-end space-x-2 mb-4'>
                     <button
                       onClick={() => {
-                        console.log('=== DEBUG LIMPIAR ===');
-                        console.log(
-                          'Limpiando asistencia para partido:',
-                          selectedGame.id
-                        );
-                        console.log('Estado local antes:', localAttendance);
                         setLocalAttendance([]);
                         // También limpiar el estado global
                         onAttendanceChange(selectedGame.id, []);
-                        console.log('Estado local después:', []);
+
                         console.log('========================');
                       }}
                       className='px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700'
@@ -311,13 +305,6 @@ const ScheduleHistoryModal = ({
                     </button>
                     <button
                       onClick={async () => {
-                        console.log('=== DEBUG GUARDAR ===');
-                        console.log(
-                          'Guardando asistencia para partido:',
-                          selectedGame.id
-                        );
-                        console.log('Estado local actual:', localAttendance);
-                        console.log('Estado global actual:', attendance);
                         setLoading(true);
                         const success = await onRecordAttendance(
                           selectedGame.id
@@ -330,8 +317,6 @@ const ScheduleHistoryModal = ({
                             await onReloadDetails();
                           }
                         }
-                        console.log('Resultado del guardado:', success);
-                        console.log('========================');
                       }}
                       disabled={loading}
                       className='px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50'
@@ -395,27 +380,7 @@ const ScheduleHistoryModal = ({
                                         id => id !== player.id
                                       )
                                     : [...localAttendance, player.id];
-                                  console.log('=== DEBUG CHECKBOX CHANGE ===');
-                                  console.log(
-                                    'Player ID:',
-                                    player.id,
-                                    'Tipo:',
-                                    typeof player.id
-                                  );
-                                  console.log('Player Name:', player.nombre);
-                                  console.log('Is Selected:', isSelected);
-                                  console.log(
-                                    'Local Attendance antes:',
-                                    localAttendance
-                                  );
-                                  console.log(
-                                    'Local Attendance después:',
-                                    newAttendance
-                                  );
-                                  console.log('Game ID:', selectedGame.id);
-                                  console.log(
-                                    '================================'
-                                  );
+
                                   setLocalAttendance(newAttendance);
                                   // También actualizar el estado global
                                   onAttendanceChange(

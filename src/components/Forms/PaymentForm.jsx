@@ -120,10 +120,6 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
     });
 
     if (paymentsToDelete.length > 0) {
-      console.log(
-        `Encontrados ${paymentsToDelete.length} pagos en 0 para limpiar`
-      );
-
       for (const payment of paymentsToDelete) {
         const { error: deleteError } = await supabase
           .from('pagos')

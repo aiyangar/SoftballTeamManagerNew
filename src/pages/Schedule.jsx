@@ -102,7 +102,9 @@ const Schedule = () => {
 
       if (totalGames > 0) {
         const averageAttendance = totalAttendance / totalGames;
-        const target = Math.round(teamData.total_inscripcion / averageAttendance);
+        const target = Math.round(
+          teamData.total_inscripcion / averageAttendance
+        );
         setInscripcionTarget(target);
       }
     } catch (error) {
@@ -589,15 +591,6 @@ const Schedule = () => {
     const playerIds = attendance[gameId] || [];
 
     try {
-      console.log('=== DEBUG RECORD ATTENDANCE ===');
-      console.log('Partido ID:', gameId);
-      console.log('Estado completo de asistencia:', attendance);
-      console.log('Jugadores seleccionados para este partido:', playerIds);
-      console.log('Tipo de playerIds:', typeof playerIds);
-      console.log('Es array:', Array.isArray(playerIds));
-      console.log('Equipo seleccionado:', selectedTeam);
-      console.log('===============================');
-
       // First, remove existing attendance for this game
       const { error: deleteError } = await supabase
         .from('asistencia_partidos')
@@ -642,8 +635,6 @@ const Schedule = () => {
           equipo_id: parseInt(selectedTeam),
         }));
 
-        console.log('Datos a insertar (validados):', attendanceToInsert);
-
         const { data, error: insertError } = await supabase
           .from('asistencia_partidos')
           .insert(attendanceToInsert)
@@ -654,8 +645,6 @@ const Schedule = () => {
           setError('Error al guardar asistencia: ' + insertError.message);
           return false;
         }
-
-        console.log('Asistencia insertada exitosamente:', data);
       }
 
       setSuccess(`✅ Asistencia guardada: ${playerIds.length} jugadores`);
@@ -1180,11 +1169,9 @@ const Schedule = () => {
           onToggleSection={toggleSection}
           onClose={closePlayerHistoryModal}
           onEdit={playerId => {
-            console.log('Editando jugador desde modal:', playerId);
             // Aquí podrías implementar la edición del jugador si es necesario
           }}
           onDelete={playerId => {
-            console.log('Eliminando jugador desde modal:', playerId);
             // Aquí podrías implementar la eliminación del jugador si es necesario
           }}
         />

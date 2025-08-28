@@ -1,6 +1,6 @@
 # 📖 Manual de Usuario - Softball Team Manager
 
-**Versión:** 0.13.0  
+**Versión:** 0.14.0  
 **Fecha:** Agosto 2025
 
 ---
@@ -20,6 +20,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 - ✅ **Historial de Jugadores**: Seguimiento completo de participación y pagos
 - ✅ **Filtros y Ordenamiento**: Búsqueda avanzada y organización de datos
 - ✅ **Interfaz Moderna**: Cards clickeables y modales optimizados
+- ✅ **Gestión de Cuenta**: Página "Mi Cuenta" para datos personales y cambio de contraseña
 
 ---
 
@@ -258,6 +259,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 - **Gestión de Equipos**: Administrar equipos
 - **Gestión de Jugadores**: Gestionar jugadores con filtros avanzados
 - **Gestión de Partidos**: Programar y gestionar partidos
+- **Mi Cuenta**: Gestión de datos personales y contraseña
 - **Panel de Administración**: Funciones administrativas
 
 ---
@@ -285,6 +287,14 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 - Cada equipo mantiene su información independiente
 - **Nuevo**: Estadísticas automáticas por equipo (W-L-D)
 
+### Gestión de Cuenta de Usuario
+
+- **Nuevo**: Accede a "Mi Cuenta" desde el menú principal
+- **Información Personal**: Visualiza tu correo electrónico, ID de usuario y fechas de registro
+- **Cambio de Contraseña**: Formulario seguro para cambiar tu contraseña
+- **Validaciones**: El sistema valida que la nueva contraseña tenga al menos 6 caracteres
+- **Seguridad**: Información sobre las medidas de seguridad implementadas
+
 ### Filtros y Ordenamiento
 
 - **Nuevo**: Filtros avanzados en jugadores:
@@ -311,9 +321,10 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 - **Modales optimizados**: Los formularios aparecen en ventanas modales sin afectar la navegación
 - **Scroll interno**: Los modales tienen su propio scroll para mejor usabilidad
 - **Responsive**: La aplicación funciona en dispositivos móviles y de escritorio
-- **Versión**: El número de versión (0.13.0) se muestra en el pie del menú principal
+- **Versión**: El número de versión (0.14.0) se muestra en el pie del menú principal
 - **Filtros avanzados**: **Nuevo** - Búsqueda y organización mejorada
 - **Cálculo dinámico**: **Nuevo** - Metas de inscripción calculadas automáticamente
+- **Gestión de cuenta**: **Nuevo** - Página dedicada para datos personales y cambio de contraseña
 
 ### Consejos de Uso
 
@@ -324,6 +335,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 5. **Revisa el Dashboard** regularmente para mantener un seguimiento del equipo
 6. **Haz clic en las cards** para ver información detallada
 7. **Aprovecha los filtros** para organizar mejor la información
+8. **Gestiona tu cuenta** desde "Mi Cuenta" para mantener tu información actualizada
 
 ---
 
@@ -350,4 +362,4 @@ Para soporte técnico o preguntas sobre el sistema, contacta al administrador de
 
 ---
 
-**Softball Team Manager v0.13.0** - Desarrollado para la gestión eficiente de equipos de softball.
+**Softball Team Manager v0.14.0** - Desarrollado para la gestión eficiente de equipos de softball.

@@ -7,6 +7,7 @@ import Teams from './pages/Teams';
 import Players from './pages/Players';
 import Schedule from './pages/Schedule';
 import AdminPanel from './pages/AdminPanel';
+import MyAccount from './pages/MyAccount';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout.jsx';
 
@@ -76,6 +77,18 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <Layout>
           <AdminPanel />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+
+  // Ruta protegida para mi cuenta
+  {
+    path: '/myaccount',
+    element: (
+      <ProtectedRoute>
+        <Layout>
+          <MyAccount />
         </Layout>
       </ProtectedRoute>
     ),

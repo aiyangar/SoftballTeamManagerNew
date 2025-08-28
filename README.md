@@ -2,7 +2,7 @@
 
 Una aplicación web moderna para la gestión completa de equipos de softball, desarrollada con React y Supabase.
 
-**Versión Actual: 0.13.0**
+**Versión Actual: 0.14.0**
 
 ## 🏟️ Características
 
@@ -46,6 +46,7 @@ Una aplicación web moderna para la gestión completa de equipos de softball, de
 - Protección de rutas
 - Gestión de sesiones con Supabase
 - **Nuevo**: Deshabilitación de auto-registro para mayor seguridad
+- **Nuevo**: Página "Mi Cuenta" para gestión de datos personales y cambio de contraseña
 
 ### Interfaz de Usuario
 
@@ -116,6 +117,7 @@ src/
 ├── pages/               # Páginas principales de la aplicación
 │   ├── AdminPanel.jsx   # Panel de administración
 │   ├── Dashboard.jsx    # Dashboard principal
+│   ├── MyAccount.jsx    # Gestión de cuenta de usuario
 │   ├── Players.jsx      # Gestión de jugadores (contenedor principal)
 │   ├── Schedule.jsx     # Programación de partidos
 │   ├── Signin.jsx       # Inicio de sesión
@@ -220,6 +222,21 @@ Para más información sobre el proyecto, consulta los archivos de documentació
 - **Nuevo**: Gestión completa de asistencia y pagos por partido
 
 ## 🆕 Changelog
+
+### Versión 0.14.0
+
+- ✅ **Nueva Página "Mi Cuenta":**
+  - Página dedicada para gestión de datos personales del usuario
+  - Formulario para cambiar contraseña con validaciones
+  - Visualización de información de la cuenta (email, ID, fechas)
+  - Información de seguridad y estado de la cuenta
+  - Integración completa con el sistema de autenticación de Supabase
+  - Acceso desde el menú principal de navegación
+
+- ✅ **Mejoras en la Navegación:**
+  - Agregado enlace "Mi Cuenta" en el menú principal
+  - Ruta protegida `/myaccount` para acceso seguro
+  - Interfaz consistente con el resto de la aplicación
 
 ### Versión 0.13.0
 

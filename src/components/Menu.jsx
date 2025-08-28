@@ -156,6 +156,13 @@ const Menu = () => {
               </div>
 
               <div className='border-t border-gray-600 mt-4 pt-4'>
+                <Link
+                  to='/myaccount'
+                  className='block w-full text-left px-3 py-2 text-blue-400 hover:bg-blue-900 rounded transition-colors'
+                  onClick={() => setShowMenu(false)}
+                >
+                  👤 Mi Cuenta
+                </Link>
                 <button
                   onClick={handleSignOut}
                   className='block w-full text-left px-3 py-2 text-red-400 hover:bg-red-900 rounded transition-colors'

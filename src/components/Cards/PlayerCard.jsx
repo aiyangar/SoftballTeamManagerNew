@@ -50,7 +50,7 @@ const PlayerCard = ({
 
   return (
     <div
-      className='bg-gray-800 border border-gray-600 rounded-lg p-4 hover:bg-gray-700 transition-colors cursor-pointer'
+      className='bg-gray-800 border border-gray-600 rounded-lg p-3 sm:p-4 hover:bg-gray-700 transition-colors cursor-pointer min-h-[200px] flex flex-col'
       onClick={() => onViewHistory(player)}
       title='Haz clic para ver el historial del jugador'
     >

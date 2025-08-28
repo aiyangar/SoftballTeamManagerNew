@@ -214,7 +214,7 @@ Para más información sobre el proyecto, consulta los archivos de documentació
 - **Nuevo**: Arquitectura modular mejorada con separación clara entre páginas y componentes
 - **Nuevo**: Componentes de jugadores, dashboard, schedule y teams modularizados para mejor mantenibilidad
 - Modales optimizados con hook personalizado `useModal`
-- Footer de versión consistente en todas las páginas principales
+- Menu footer de versión consistente
 - **Nuevo**: Sistema de filtros y ordenamiento avanzado
 - **Nuevo**: Cálculo dinámico de metas de inscripción por equipo
 - **Nuevo**: Gestión completa de asistencia y pagos por partido

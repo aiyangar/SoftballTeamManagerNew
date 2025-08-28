@@ -1,5 +1,5 @@
 // Control de versión de Softball Team Manager
-export const APP_VERSION = '0.13.0';
+export const APP_VERSION = '0.14.0';
 export const APP_NAME = 'Softball Team Manager';
 
 // Función para obtener la versión completa

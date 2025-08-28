@@ -11,6 +11,7 @@ import React from 'react';
  * @param {Function} onClose - Función para cerrar el modal
  * @param {Function} onEdit - Función para editar el jugador
  * @param {Function} onDelete - Función para eliminar el jugador
+ * @param {number} inscripcionTarget - Meta de inscripción calculada dinámicamente
  */
 const PlayerHistoryModal = ({
   isOpen,
@@ -22,8 +23,27 @@ const PlayerHistoryModal = ({
   onClose,
   onEdit,
   onDelete,
+  inscripcionTarget = 450,
 }) => {
   if (!isOpen || !player) return null;
+
+  // Configuración de la meta de inscripción
+  const inscripcionProgress = Math.min(
+    (history.totalInscripcionPaid / inscripcionTarget) * 100,
+    100
+  );
+  const inscripcionRemaining = Math.max(
+    0,
+    inscripcionTarget - history.totalInscripcionPaid
+  );
+
+  // Determinar el color de la barra de progreso
+  const getProgressColor = () => {
+    if (inscripcionProgress >= 100) return 'bg-green-500';
+    if (inscripcionProgress >= 80) return 'bg-yellow-500';
+    if (inscripcionProgress >= 50) return 'bg-orange-500';
+    return 'bg-red-500';
+  };
 
   return (
     <div className='fixed inset-0 modal-overlay flex items-center justify-center z-50'>
@@ -103,6 +123,44 @@ const PlayerHistoryModal = ({
                         ${history.totalInscripcionPaid.toLocaleString()}
                       </span>
                     </div>
+                  </div>
+                </div>
+                
+                {/* Barra de progreso de inscripción */}
+                <div className='mt-4'>
+                  <div className='flex justify-between items-center mb-2'>
+                    <span className='text-sm text-gray-300'>Progreso de Inscripción</span>
+                    <span className='text-sm text-gray-300'>
+                      ${history.totalInscripcionPaid.toLocaleString()} / ${inscripcionTarget.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className='w-full bg-gray-700 rounded-full h-3'>
+                    <div
+                      className={`h-3 rounded-full transition-all duration-300 ${getProgressColor()}`}
+                      style={{ width: `${inscripcionProgress}%` }}
+                    ></div>
+                  </div>
+                  <div className='flex justify-between items-center mt-2'>
+                    <span className='text-xs text-gray-400'>Meta: ${inscripcionTarget.toLocaleString()}</span>
+                    {inscripcionRemaining > 0 ? (
+                      <span
+                        className={`text-xs font-semibold ${
+                          inscripcionProgress >= 100
+                            ? 'text-green-400'
+                            : inscripcionProgress >= 80
+                              ? 'text-yellow-400'
+                              : inscripcionProgress >= 50
+                                ? 'text-orange-400'
+                                : 'text-red-400'
+                        }`}
+                      >
+                        Faltan: ${inscripcionRemaining.toLocaleString()}
+                      </span>
+                    ) : (
+                      <span className='text-xs text-green-400 font-semibold'>
+                        ✓ Meta completada
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

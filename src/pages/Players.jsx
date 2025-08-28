@@ -1426,6 +1426,7 @@ const Players = () => {
           history={playerHistory}
           loadingHistory={loadingHistory}
           expandedSections={expandedSections}
+          inscripcionTarget={inscripcionTarget}
           onToggleSection={section => {
             console.log('Cambiando sección del modal:', section);
             toggleSection(section);

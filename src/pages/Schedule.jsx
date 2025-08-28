@@ -69,9 +69,47 @@ const Schedule = () => {
     attendance: false,
     payments: false,
   });
+  const [inscripcionTarget, setInscripcionTarget] = useState(450);
 
   // Usar el hook para manejar los modales
   useModal(showGameDetailsModal || showScoreForm || showPlayerHistoryModal);
+
+  // Calcular la meta de inscripción dinámicamente
+  const calculateInscripcionTarget = async () => {
+    if (!selectedTeam) return;
+
+    try {
+      // Obtener el total de inscripción requerida del equipo
+      const { data: teamData, error: teamError } = await supabase
+        .from('equipos')
+        .select('total_inscripcion')
+        .eq('id', selectedTeam)
+        .single();
+
+      if (teamError) throw teamError;
+
+      // Obtener el promedio de asistentes por partido
+      const { data: attendanceData, error: attendanceError } = await supabase
+        .from('asistencia_partidos')
+        .select('partido_id, partidos!inner(equipo_id)')
+        .eq('partidos.equipo_id', selectedTeam);
+
+      if (attendanceError) throw attendanceError;
+
+      // Calcular promedio de asistentes por partido
+      const totalGames = attendanceData.length;
+      const totalAttendance = attendanceData.length; // Cada registro es una asistencia
+
+      if (totalGames > 0) {
+        const averageAttendance = totalAttendance / totalGames;
+        const target = Math.round(teamData.total_inscripcion / averageAttendance);
+        setInscripcionTarget(target);
+      }
+    } catch (error) {
+      console.error('Error calculando meta de inscripción:', error);
+      setInscripcionTarget(450); // Valor por defecto
+    }
+  };
 
   // Limpiar mensaje de éxito después de 5 segundos
   useEffect(() => {
@@ -82,6 +120,13 @@ const Schedule = () => {
       return () => clearTimeout(timer);
     }
   }, [success]);
+
+  // Calcular meta de inscripción cuando cambie el equipo
+  useEffect(() => {
+    if (selectedTeam) {
+      calculateInscripcionTarget();
+    }
+  }, [selectedTeam]);
 
   /**
    * Obtiene la información histórica completa de un jugador
@@ -1131,6 +1176,7 @@ const Schedule = () => {
           history={playerHistory}
           loadingHistory={loadingHistory}
           expandedSections={expandedSections}
+          inscripcionTarget={inscripcionTarget}
           onToggleSection={toggleSection}
           onClose={closePlayerHistoryModal}
           onEdit={playerId => {

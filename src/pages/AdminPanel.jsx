@@ -34,8 +34,11 @@ const AdminPanel = () => {
         setError(null);
 
         try {
-            // Usar signUp en lugar de admin.createUser
-            const { error } = await supabase.auth.signUp({
+            // Guardar la sesión actual del administrador
+            const currentSession = session;
+            
+            // Crear el usuario sin iniciar sesión automáticamente
+            const { data, error } = await supabase.auth.signUp({
                 email: newUser.email,
                 password: newUser.password,
                 options: {
@@ -46,12 +49,27 @@ const AdminPanel = () => {
             if (error) {
                 setError('Error al crear usuario: ' + error.message);
             } else {
+                // Restaurar la sesión del administrador inmediatamente
+                if (currentSession) {
+                    await supabase.auth.setSession(currentSession);
+                }
+                
                 setSuccess('Usuario creado exitosamente. Se ha enviado un email de confirmación.');
                 setNewUser({ email: '', password: '' });
                 setShowCreateForm(false);
             }
-        } catch {
+        } catch (error) {
+            console.error('Error inesperado al crear usuario:', error);
             setError('Error inesperado al crear usuario');
+            
+            // Intentar restaurar la sesión del administrador en caso de error
+            if (session) {
+                try {
+                    await supabase.auth.setSession(session);
+                } catch (restoreError) {
+                    console.error('Error al restaurar sesión del administrador:', restoreError);
+                }
+            }
         } finally {
             setLoading(false);
         }

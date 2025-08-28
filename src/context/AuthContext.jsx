@@ -18,6 +18,9 @@ export const AuthContextProvider = ({ children }) => {
      */
     const signUpNewUser = async (email, password) => {
         try {
+            // Guardar la sesión actual antes de cualquier operación
+            const currentSession = session;
+            
             // Primero intentar hacer signin (para usuarios existentes)
             // Esto evita el problema de "Email no confirmado" para usuarios ya registrados
             const { data: signInData } = await supabase.auth.signInWithPassword({
@@ -26,7 +29,10 @@ export const AuthContextProvider = ({ children }) => {
             })
             
             if (signInData.user) {
-        
+                // Restaurar la sesión original si había una
+                if (currentSession && currentSession !== signInData.session) {
+                    await supabase.auth.setSession(currentSession);
+                }
                 return { success: true, data: signInData, isExistingUser: true }
             }
         } catch {
@@ -48,6 +54,10 @@ export const AuthContextProvider = ({ children }) => {
             return { success: false, error: error.message }
         } 
         
+        // Restaurar la sesión original después de crear el usuario
+        if (currentSession) {
+            await supabase.auth.setSession(currentSession);
+        }
 
         return { success: true, data: data, isExistingUser: false }
     }

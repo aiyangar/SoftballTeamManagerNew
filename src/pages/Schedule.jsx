@@ -8,6 +8,7 @@ import { useModal } from '../hooks/useModal';
 import ScheduleCardsGrid from '../components/CardGrids/ScheduleCardsGrid';
 import ScheduleForm from '../components/Forms/ScheduleForm';
 import ScheduleHistoryModal from '../components/Modals/ScheduleHistoryModal';
+import PlayerHistoryModal from '../components/Modals/PlayerHistoryModal';
 
 const Schedule = () => {
     const { teams, selectedTeam } = useTeam();
@@ -50,8 +51,26 @@ const Schedule = () => {
         payments: []
     });
 
+    // Estados para el modal de historial del jugador
+    const [showPlayerHistoryModal, setShowPlayerHistoryModal] = useState(false);
+    const [selectedPlayerForHistory, setSelectedPlayerForHistory] = useState(null);
+    const [playerHistory, setPlayerHistory] = useState({
+        attendance: [],
+        payments: [],
+        totalUmpirePaid: 0,
+        totalInscripcionPaid: 0,
+        gamesPlayed: 0,
+        gamesAttended: 0,
+        attendanceRate: 0
+    });
+    const [loadingHistory, setLoadingHistory] = useState(false);
+    const [expandedSections, setExpandedSections] = useState({
+        attendance: false,
+        payments: false
+    });
+
     // Usar el hook para manejar los modales
-    useModal(showGameDetailsModal || showScoreForm);
+    useModal(showGameDetailsModal || showScoreForm || showPlayerHistoryModal);
 
     // Limpiar mensaje de éxito después de 5 segundos
     useEffect(() => {
@@ -62,6 +81,157 @@ const Schedule = () => {
             return () => clearTimeout(timer)
         }
     }, [success])
+
+    /**
+     * Obtiene la información histórica completa de un jugador
+     * @param {number} playerId - ID del jugador
+     * @param {number} teamId - ID del equipo
+     */
+    const fetchPlayerHistory = async (playerId, teamId) => {
+        setLoadingHistory(true)
+        try {
+            // Obtener asistencia a partidos (filtrar por partidos del equipo específico)
+            const { data: attendanceData, error: attendanceError } = await supabase
+                .from('asistencia_partidos')
+                .select(`
+                    partido_id,
+                    partidos!inner (
+                        id,
+                        equipo_contrario,
+                        fecha_partido,
+                        lugar,
+                        finalizado,
+                        resultado,
+                        carreras_equipo_local,
+                        carreras_equipo_contrario
+                    )
+                `)
+                .eq('jugador_id', playerId)
+                .eq('partidos.equipo_id', teamId)
+
+            if (attendanceError) {
+                console.error('Error al obtener asistencia:', attendanceError)
+            }
+
+            // Obtener pagos realizados (filtrar por partidos del equipo específico)
+            const { data: paymentsData, error: paymentsError } = await supabase
+                .from('pagos')
+                .select(`
+                    id,
+                    monto_umpire,
+                    monto_inscripcion,
+                    fecha_pago,
+                    metodo_pago,
+                    partidos!inner (
+                        id,
+                        equipo_contrario,
+                        fecha_partido
+                    )
+                `)
+                .eq('jugador_id', playerId)
+                .eq('partidos.equipo_id', teamId)
+                .order('fecha_pago', { ascending: false })
+
+            if (paymentsError) {
+                console.error('Error al obtener pagos:', paymentsError)
+            }
+
+            // Obtener todos los partidos del equipo
+            const { data: allGamesData, error: gamesError } = await supabase
+                .from('partidos')
+                .select('id, fecha_partido, finalizado')
+                .eq('equipo_id', teamId)
+                .order('fecha_partido', { ascending: false })
+
+            if (gamesError) {
+                console.error('Error al obtener partidos:', gamesError)
+            }
+
+            // Calcular estadísticas
+            const attendance = attendanceData || []
+            const payments = paymentsData || []
+            const allGames = allGamesData || []
+            
+            const totalUmpirePaid = payments.reduce((sum, payment) => sum + (payment.monto_umpire || 0), 0)
+            const totalInscripcionPaid = payments.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0)
+            const gamesPlayed = allGames.length
+            const gamesAttended = attendance.length
+            const attendanceRate = gamesPlayed > 0 ? (gamesAttended / gamesPlayed * 100).toFixed(1) : 0
+
+            const historyData = {
+                attendance,
+                payments,
+                totalUmpirePaid,
+                totalInscripcionPaid,
+                gamesPlayed,
+                gamesAttended,
+                attendanceRate
+            }
+            
+            setPlayerHistory(historyData)
+
+        } catch (err) {
+            console.error('Error al obtener historial del jugador:', err)
+        } finally {
+            setLoadingHistory(false)
+        }
+    }
+
+    /**
+     * Abre el modal con la información histórica del jugador
+     * @param {Object} player - Objeto del jugador
+     */
+    const openPlayerHistoryModal = async (player) => {
+        if (!player || !player.id) {
+            return
+        }
+        
+        if (!selectedTeam) {
+            return
+        }
+        
+        setSelectedPlayerForHistory(player)
+        setShowPlayerHistoryModal(true)
+        
+        // Cargar los datos del historial después de abrir el modal
+        try {
+            await fetchPlayerHistory(player.id, selectedTeam)
+        } catch (error) {
+            console.error('Error al cargar historial:', error)
+        }
+    }
+
+    /**
+     * Cierra el modal de historial del jugador
+     */
+    const closePlayerHistoryModal = () => {
+        setShowPlayerHistoryModal(false)
+        setSelectedPlayerForHistory(null)
+        setPlayerHistory({
+            attendance: [],
+            payments: [],
+            totalUmpirePaid: 0,
+            totalInscripcionPaid: 0,
+            gamesPlayed: 0,
+            gamesAttended: 0,
+            attendanceRate: 0
+        })
+        setExpandedSections({
+            attendance: false,
+            payments: false
+        })
+    }
+
+    /**
+     * Cambia el estado de expansión de las secciones del modal
+     * @param {string} section - Nombre de la sección
+     */
+    const toggleSection = (section) => {
+        setExpandedSections(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }))
+    }
 
     // Nota: fetchTeams y handleTeamChange se manejan a través del contexto useTeam
     // No necesitamos implementar estas funciones aquí ya que se manejan en TeamContext
@@ -537,7 +707,7 @@ const Schedule = () => {
                 .from('asistencia_partidos')
                 .select(`
                     jugador_id,
-                    jugadores!inner(nombre)
+                    jugadores!inner(id, nombre)
                 `)
                 .eq('partido_id', gameId);
             
@@ -554,7 +724,7 @@ const Schedule = () => {
                     monto_inscripcion,
                     fecha_pago,
                     metodo_pago,
-                    jugadores!inner(nombre)
+                    jugadores!inner(id, nombre)
                 `)
                 .eq('partido_id', gameId)
                 .order('fecha_pago', { ascending: false });
@@ -613,7 +783,8 @@ const Schedule = () => {
                 setSuccess('Partido eliminado exitosamente');
                 await fetchGames(selectedTeam);
             }
-        } catch (error) {
+        } catch (err) {
+            console.error('Error al eliminar partido:', err);
             setError('Error inesperado al eliminar partido');
         } finally {
             setLoading(false);
@@ -729,7 +900,6 @@ const Schedule = () => {
                                paymentTotals={paymentTotals}
                                gameDetailsData={gameDetailsData}
                                onClose={closeGameDetailsModal}
-                               getLocalTeamName={getLocalTeamName}
                                onEditGame={editGame}
                                onDeleteGame={deleteGame}
                                gameFinalizationStatus={selectedGameForDetails ? gameFinalizationStatus[selectedGameForDetails.id] : false}
@@ -740,6 +910,7 @@ const Schedule = () => {
                                onRecordAttendance={recordAttendance}
                                onLoadExistingAttendance={loadExistingAttendance}
                                onReloadDetails={reloadGameDetails}
+                               onViewPlayerHistory={openPlayerHistoryModal}
                            />
 
              {/* Score Form Modal */}
@@ -837,6 +1008,25 @@ const Schedule = () => {
                     </div>
                 </div>
             )}
+
+            {/* Player History Modal */}
+            <PlayerHistoryModal
+                isOpen={showPlayerHistoryModal}
+                player={selectedPlayerForHistory}
+                history={playerHistory}
+                loadingHistory={loadingHistory}
+                expandedSections={expandedSections}
+                onToggleSection={toggleSection}
+                onClose={closePlayerHistoryModal}
+                onEdit={(playerId) => {
+                    console.log('Editando jugador desde modal:', playerId)
+                    // Aquí podrías implementar la edición del jugador si es necesario
+                }}
+                onDelete={(playerId) => {
+                    console.log('Eliminando jugador desde modal:', playerId)
+                    // Aquí podrías implementar la eliminación del jugador si es necesario
+                }}
+            />
             </div>
         </>
     );

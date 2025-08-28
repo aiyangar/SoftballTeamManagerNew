@@ -35,7 +35,8 @@ const ScheduleHistoryModal = ({
     onAttendanceChange,
     onRecordAttendance,
     onLoadExistingAttendance,
-    onReloadDetails
+    onReloadDetails,
+    onViewPlayerHistory
 }) => {
     const [isEditingAttendance, setIsEditingAttendance] = useState(false);
     const [localAttendance, setLocalAttendance] = useState([]);
@@ -381,9 +382,18 @@ const ScheduleHistoryModal = ({
                                               );
                                               
                                               return (
-                                                  <div key={index} className={`p-3 rounded-lg text-center relative ${
-                                                      hasPayment ? 'bg-gray-800' : 'bg-red-900 border-2 border-red-500'
-                                                  }`}>
+                                                  <div 
+                                                      key={index} 
+                                                      className={`p-3 rounded-lg text-center relative cursor-pointer hover:bg-gray-700 transition-colors ${
+                                                          hasPayment ? 'bg-gray-800' : 'bg-red-900 border-2 border-red-500'
+                                                      }`}
+                                                      onClick={() => {
+                                                          if (onViewPlayerHistory) {
+                                                              onViewPlayerHistory(att.jugadores)
+                                                          }
+                                                      }}
+                                                      title="Haz clic para ver el historial del jugador"
+                                                  >
                                                       <div className={`text-2xl mb-1 ${
                                                           hasPayment ? 'text-green-400' : 'text-red-400'
                                                       }`}>
@@ -395,6 +405,9 @@ const ScheduleHistoryModal = ({
                                                               Sin pago
                                                           </div>
                                                       )}
+                                                      <div className="absolute bottom-1 right-1 text-gray-400 text-xs">
+                                                          👤
+                                                      </div>
                                                   </div>
                                               );
                                           })}
@@ -447,7 +460,16 @@ const ScheduleHistoryModal = ({
                                 {gameDetailsData.payments.length > 0 ? (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                         {gameDetailsData.payments.map((payment) => (
-                                            <div key={payment.id} className="bg-gray-700 rounded-lg p-4 border border-gray-600 hover:border-gray-500 transition-colors">
+                                            <div 
+                                                key={payment.id} 
+                                                className="bg-gray-700 rounded-lg p-4 border border-gray-600 hover:border-gray-500 transition-colors cursor-pointer hover:bg-gray-600"
+                                                onClick={() => {
+                                                    if (onViewPlayerHistory) {
+                                                        onViewPlayerHistory(payment.jugadores)
+                                                    }
+                                                }}
+                                                title="Haz clic para ver el historial del jugador"
+                                            >
                                                 {/* Header de la card */}
                                                 <div className="flex justify-between items-start mb-3">
                                                     <div className="flex-1">
@@ -495,15 +517,20 @@ const ScheduleHistoryModal = ({
                                                     )}
                                                 </div>
                                                 
-                                                {/* Total del pago */}
-                                                <div className="mt-3 pt-3 border-t border-gray-600">
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-white font-semibold">Total:</span>
-                                                        <span className="text-yellow-400 font-bold text-lg">
-                                                            ${((payment.monto_umpire || 0) + (payment.monto_inscripcion || 0)).toLocaleString()}
-                                                        </span>
-                                                    </div>
-                                                </div>
+                                                                                                 {/* Total del pago */}
+                                                 <div className="mt-3 pt-3 border-t border-gray-600">
+                                                     <div className="flex justify-between items-center">
+                                                         <span className="text-white font-semibold">Total:</span>
+                                                         <span className="text-yellow-400 font-bold text-lg">
+                                                             ${((payment.monto_umpire || 0) + (payment.monto_inscripcion || 0)).toLocaleString()}
+                                                         </span>
+                                                     </div>
+                                                 </div>
+                                                 
+                                                 {/* Indicador de click */}
+                                                 <div className="mt-2 text-center">
+                                                     <span className="text-gray-400 text-xs">👤 Ver jugador</span>
+                                                 </div>
                                             </div>
                                         ))}
                                     </div>

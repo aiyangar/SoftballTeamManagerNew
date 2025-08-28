@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -114,30 +114,34 @@ body.modal-open {
 }
 
 /* Estilos para inputs y selects en modo oscuro */
-input, select, textarea {
+input,
+select,
+textarea {
   background-color: #374151 !important;
-  border-color: #4B5563 !important;
-  color: #F9FAFB !important;
+  border-color: #4b5563 !important;
+  color: #f9fafb !important;
 }
 
-input::placeholder, select::placeholder, textarea::placeholder {
-  color: #9CA3AF !important;
+input::placeholder,
+select::placeholder,
+textarea::placeholder {
+  color: #9ca3af !important;
 }
 
 /* Estilos para botones en modo oscuro */
 button {
   background-color: #374151 !important;
-  border-color: #4B5563 !important;
-  color: #F9FAFB !important;
+  border-color: #4b5563 !important;
+  color: #f9fafb !important;
 }
 
 button:hover {
-  background-color: #4B5563 !important;
+  background-color: #4b5563 !important;
 }
 
 button:disabled {
-  background-color: #1F2937 !important;
-  color: #6B7280 !important;
+  background-color: #1f2937 !important;
+  color: #6b7280 !important;
 }
 
 /* Mejoras para dispositivos móviles */
@@ -145,11 +149,11 @@ button:disabled {
   .dashboard-card {
     min-height: auto !important;
   }
-  
+
   .dashboard-card-content {
     font-size: 0.875rem;
   }
-  
+
   .modal-container {
     height: 95vh;
     max-height: 95vh;

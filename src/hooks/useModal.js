@@ -5,7 +5,7 @@ import { useEffect } from 'react';
  * Controla el scroll del body cuando el modal está abierto
  * @param {boolean} isOpen - Estado del modal
  */
-export const useModal = (isOpen) => {
+export const useModal = isOpen => {
   useEffect(() => {
     if (isOpen) {
       // Agregar clase para eliminar scroll del body

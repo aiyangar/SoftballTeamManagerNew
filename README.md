@@ -7,11 +7,13 @@ Una aplicación web moderna para la gestión completa de equipos de softball, de
 ## 🏟️ Características
 
 ### Gestión de Equipos
+
 - Crear y administrar equipos de softball
 - Asignar jugadores a equipos
 - Gestionar información del equipo (nombre, categoría, etc.)
 
 ### Gestión de Jugadores
+
 - Registro completo de jugadores
 - Perfiles detallados con información personal y deportiva
 - Historial de rendimiento y estadísticas
@@ -19,23 +21,27 @@ Una aplicación web moderna para la gestión completa de equipos de softball, de
 - **Nuevo**: Componentes modulares para mejor organización y mantenibilidad
 
 ### Programación de Partidos
+
 - Crear y gestionar calendario de partidos
 - Programar entrenamientos
 - Notificaciones de eventos
 - Vista de calendario interactiva
 
 ### Panel de Administración
+
 - Gestión de usuarios y permisos
 - Configuraciones del sistema
 - Reportes y estadísticas
 - Control de acceso administrativo
 
 ### Sistema de Autenticación
+
 - Registro e inicio de sesión seguro
 - Protección de rutas
 - Gestión de sesiones con Supabase
 
 ### Interfaz de Usuario
+
 - Modales optimizados con scroll interno y sin interferir con el scroll principal
 - Footer de versión visible en todas las páginas principales
 - Diseño responsivo y moderno con Tailwind CSS
@@ -54,6 +60,7 @@ Una aplicación web moderna para la gestión completa de equipos de softball, de
 ## 🚀 Instalación y Configuración
 
 ### Prerrequisitos
+
 - Node.js (versión 18 o superior)
 - npm o yarn
 - Cuenta de Supabase
@@ -61,18 +68,21 @@ Una aplicación web moderna para la gestión completa de equipos de softball, de
 ### Pasos de Instalación
 
 1. **Clonar el repositorio**
+
    ```bash
    git clone [URL_DEL_REPOSITORIO]
    cd SoftballTeamManagerNew
    ```
 
 2. **Instalar dependencias**
+
    ```bash
    npm install
    ```
 
 3. **Configurar variables de entorno**
    Crear un archivo `.env` en la raíz del proyecto:
+
    ```env
    VITE_SUPABASE_URL=tu_url_de_supabase
    VITE_SUPABASE_ANON_KEY=tu_clave_anonima_de_supabase
@@ -80,6 +90,7 @@ Una aplicación web moderna para la gestión completa de equipos de softball, de
    ```
 
 4. **Ejecutar en modo desarrollo**
+
    ```bash
    npm run dev
    ```
@@ -153,6 +164,7 @@ src/
 ## 📖 Documentación
 
 ### Manual de Usuario
+
 Para instrucciones detalladas sobre cómo usar la aplicación, consulta el **[Manual de Usuario](MANUAL_USUARIO.md)** que incluye:
 
 - 🔐 **Acceso al Sistema**: Registro e inicio de sesión
@@ -163,6 +175,7 @@ Para instrucciones detalladas sobre cómo usar la aplicación, consulta el **[Ma
 - 🆘 **Soporte**: Solución de problemas comunes
 
 ### Documentación Técnica
+
 Para más información sobre el proyecto, consulta los archivos de documentación incluidos.
 
 ## 📝 Notas de Desarrollo
@@ -179,6 +192,7 @@ Para más información sobre el proyecto, consulta los archivos de documentació
 ## 🆕 Changelog
 
 ### Versión 0.12.0
+
 - ✅ **Reorganización de Estructura de Componentes:**
   - Creadas subcarpetas organizativas en `src/components/`:
     - `Cards/` - Tarjetas individuales (PlayerCard, DashboardCard, ScheduleCard, TeamCard)
@@ -190,6 +204,7 @@ Para más información sobre el proyecto, consulta los archivos de documentació
   - Componentes agrupados por funcionalidad para mejor mantenibilidad
 
 ### Versión 0.11.0
+
 - ✅ **Modularización de Teams:**
   - Separado `Teams.jsx` en componentes modulares más pequeños y reutilizables:
     - `TeamCard.jsx` - Tarjeta individual de equipo
@@ -204,6 +219,7 @@ Para más información sobre el proyecto, consulta los archivos de documentació
   - **Implementado**: Cálculo automático de estadísticas W-L-D basado en partidos finalizados
 
 ### Versión 0.10.0
+
 - ✅ **Reorganización de Estructura del Proyecto:**
   - Creada carpeta `src/pages/` para páginas principales de la aplicación
   - Movidas todas las páginas principales desde `src/components/` a `src/pages/`
@@ -241,6 +257,7 @@ Para más información sobre el proyecto, consulta los archivos de documentació
   - Imports actualizados en todo el proyecto para mantener la funcionalidad
 
 ### Versión 0.8.0
+
 - ✅ **Nuevas Funcionalidades:**
   - Agregado componente `VersionFooter` que muestra el número de versión en todas las páginas
   - Implementado hook personalizado `useModal` para gestión mejorada de modales

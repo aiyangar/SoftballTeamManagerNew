@@ -6,55 +6,59 @@ Widget reutilizable para mostrar el estado de pagos en diferentes partes de la a
 
 ### Props
 
-| Prop | Tipo | Default | Descripción |
-|------|------|---------|-------------|
-| `paymentTotals` | `Object` | `{}` | Objeto con totales de pagos `{ totalUmpire, totalInscripcion }` |
-| `umpireTarget` | `number` | `550` | Objetivo del umpire |
-| `size` | `string` | `'medium'` | Tamaño del widget: `'small'`, `'medium'`, `'large'` |
-| `showTitle` | `boolean` | `true` | Si mostrar el título "Estado de Pagos" |
-| `className` | `string` | `''` | Clases CSS adicionales |
+| Prop            | Tipo      | Default    | Descripción                                                     |
+| --------------- | --------- | ---------- | --------------------------------------------------------------- |
+| `paymentTotals` | `Object`  | `{}`       | Objeto con totales de pagos `{ totalUmpire, totalInscripcion }` |
+| `umpireTarget`  | `number`  | `550`      | Objetivo del umpire                                             |
+| `size`          | `string`  | `'medium'` | Tamaño del widget: `'small'`, `'medium'`, `'large'`             |
+| `showTitle`     | `boolean` | `true`     | Si mostrar el título "Estado de Pagos"                          |
+| `className`     | `string`  | `''`       | Clases CSS adicionales                                          |
 
 ### Ejemplos de Uso
 
 #### Tamaño pequeño (para tarjetas)
+
 ```jsx
 <PaymentStatusWidget
   paymentTotals={paymentTotals[game.id]}
   umpireTarget={game.umpire || 550}
-  size="small"
+  size='small'
   showTitle={true}
-  className="text-center"
+  className='text-center'
 />
 ```
 
 #### Tamaño mediano (para formularios)
+
 ```jsx
 <PaymentStatusWidget
   paymentTotals={paymentTotals}
   umpireTarget={paymentTotals.umpireTarget}
-  size="medium"
+  size='medium'
   showTitle={true}
 />
 ```
 
 #### Tamaño grande (para modales)
+
 ```jsx
 <PaymentStatusWidget
   paymentTotals={paymentTotals[selectedGame.id]}
   umpireTarget={selectedGame.umpire || 550}
-  size="large"
+  size='large'
   showTitle={true}
 />
 ```
 
 #### Sin título (para dashboards)
+
 ```jsx
 <PaymentStatusWidget
   paymentTotals={paymentTotals}
   umpireTarget={550}
-  size="small"
+  size='small'
   showTitle={false}
-  className="bg-transparent"
+  className='bg-transparent'
 />
 ```
 
@@ -77,7 +81,7 @@ Widget reutilizable para mostrar el estado de pagos en diferentes partes de la a
 
 ```javascript
 const paymentTotals = {
-  totalUmpire: 300,      // Total recaudado para umpire
-  totalInscripcion: 150  // Total recaudado para inscripción
-}
+  totalUmpire: 300, // Total recaudado para umpire
+  totalInscripcion: 150, // Total recaudado para inscripción
+};
 ```

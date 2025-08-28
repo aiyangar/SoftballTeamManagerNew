@@ -24,6 +24,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 ## 🔐 Acceso al Sistema
 
 ### Registro de Usuario
+
 1. Accede a la aplicación en tu navegador
 2. Haz clic en **"Registrarse"** en la página de inicio
 3. Completa el formulario con tu información:
@@ -33,6 +34,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 5. **Importante**: Tu cuenta debe ser aprobada por el administrador antes de poder acceder
 
 ### Inicio de Sesión
+
 1. Ve a la página de **"Iniciar Sesión"**
 2. Ingresa tu correo electrónico y contraseña
 3. Haz clic en **"Iniciar Sesión"**
@@ -45,10 +47,12 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 ### **Paso 1: Crear un Equipo Nuevo**
 
 #### 1.1 Acceder a Gestión de Equipos
+
 - Desde el Dashboard, haz clic en **"Gestión de Equipos"** en el menú
 - O navega directamente a `/teams`
 
 #### 1.2 Crear Nuevo Equipo
+
 1. Haz clic en el botón **"Agregar Equipo"**
 2. Completa el formulario:
    - **Nombre del Equipo** (obligatorio): Ej. "Los Tigres"
@@ -56,6 +60,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 3. Haz clic en **"Crear Equipo"**
 
 #### 1.3 Seleccionar Equipo para Trabajar
+
 - Una vez creado, el equipo aparecerá en la lista
 - Haz clic en el **selector de equipo** en la parte superior para activarlo
 - El equipo seleccionado será el que uses para todas las operaciones
@@ -65,10 +70,12 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 ### **Paso 2: Crear los Jugadores**
 
 #### 2.1 Acceder a Gestión de Jugadores
+
 - Desde el Dashboard, haz clic en **"Gestión de Jugadores"**
 - O navega a `/players`
 
 #### 2.2 Registrar Nuevo Jugador
+
 1. Haz clic en **"Agregar Jugador"**
 2. Completa la información:
    - **Nombre completo** (obligatorio)
@@ -79,6 +86,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 3. Haz clic en **"Crear Jugador"**
 
 #### 2.3 Gestionar Jugadores Existentes
+
 - **Ver lista**: Todos los jugadores aparecen en una tabla
 - **Editar**: Haz clic en el menú de acciones (⋮) y selecciona "Editar"
 - **Eliminar**: Usa el menú de acciones y selecciona "Eliminar"
@@ -89,10 +97,12 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 ### **Paso 3: Crear los Partidos**
 
 #### 3.1 Acceder a Gestión de Partidos
+
 - Desde el Dashboard, haz clic en **"Gestión de Partidos"**
 - O navega a `/schedule`
 
 #### 3.2 Programar Nuevo Partido
+
 1. Haz clic en **"Agregar Partido"**
 2. Completa la información:
    - **Equipo Contrario** (obligatorio): Nombre del equipo rival
@@ -102,6 +112,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 3. Haz clic en **"Registrar Partido"**
 
 #### 3.3 Gestionar Partidos Existentes
+
 - **Ver lista**: Todos los partidos aparecen ordenados por fecha
 - **Editar**: Usa el menú de acciones para modificar detalles
 - **Eliminar**: Elimina partidos que no se realizarán
@@ -111,6 +122,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 ### **Paso 4: Marcar Asistencia**
 
 #### 4.1 Registrar Asistencia de Jugadores
+
 1. En la lista de partidos, busca el partido correspondiente
 2. Haz clic en el menú de acciones (⋮) del partido
 3. Selecciona **"Marcar Asistencia"**
@@ -120,6 +132,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 5. Haz clic en **"Guardar Asistencia"**
 
 #### 4.2 Actualizar Asistencia
+
 - Si necesitas modificar la asistencia:
   1. Haz clic en **"Marcar Asistencia"** nuevamente
   2. Modifica las selecciones según sea necesario
@@ -130,11 +143,13 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 ### **Paso 5: Registrar Pagos**
 
 #### 5.1 Acceder al Formulario de Pagos
+
 1. En la lista de partidos, busca el partido correspondiente
 2. Haz clic en el menú de acciones (⋮)
 3. Selecciona **"Registrar Pago"**
 
 #### 5.2 Registrar Pago de Umpire
+
 1. En el formulario de pagos:
    - Selecciona el **jugador** que realizó el pago
    - Ingresa el **monto del umpire** pagado
@@ -142,6 +157,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 2. Haz clic en **"Registrar Pago"**
 
 #### 5.3 Registrar Pago de Inscripción
+
 1. En el mismo formulario:
    - Selecciona el **jugador** que realizó el pago
    - Ingresa el **monto de inscripción** pagado
@@ -149,6 +165,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 2. Haz clic en **"Registrar Pago"**
 
 #### 5.4 Ver Totales de Pagos
+
 - El sistema muestra automáticamente:
   - Total pagado de umpire
   - Total pagado de inscripción
@@ -160,6 +177,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 ### **Paso 6: Finalizar Partido**
 
 #### 6.1 Registrar Resultado del Partido
+
 1. En la lista de partidos, busca el partido a finalizar
 2. Haz clic en el menú de acciones (⋮)
 3. Selecciona **"Finalizar Partido"**
@@ -169,6 +187,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 5. Haz clic en **"Finalizar Partido"**
 
 #### 6.2 Ver Detalles del Partido
+
 - Una vez finalizado, puedes:
   1. Hacer clic en **"Ver Detalles"** en el menú de acciones
   2. Ver información completa:
@@ -182,6 +201,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 ## 📊 Dashboard y Reportes
 
 ### Información Disponible en el Dashboard
+
 - **Total de Jugadores**: Número de jugadores registrados
 - **Próximo Juego**: Detalles del próximo partido programado
 - **Total Pagado Registro**: Estado de pagos de inscripción
@@ -191,6 +211,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 - **Top Asistencia**: Jugadores con mejor asistencia
 
 ### Navegación Rápida
+
 - **Dashboard**: Vista general del equipo
 - **Gestión de Equipos**: Administrar equipos
 - **Gestión de Jugadores**: Gestionar jugadores
@@ -202,16 +223,19 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 ## 🔧 Funciones Adicionales
 
 ### Gestión de Posiciones
+
 - Los jugadores pueden seleccionar hasta **3 posiciones**
 - Las posiciones disponibles incluyen: Pitcher, Catcher, Primera Base, etc.
 - Se pueden editar las posiciones en cualquier momento
 
 ### Historial de Jugadores
+
 - **Asistencia**: Registro completo de asistencia a partidos
 - **Pagos**: Historial de todos los pagos realizados
 - **Estadísticas**: Resumen de participación
 
 ### Gestión de Múltiples Equipos
+
 - Puedes crear y gestionar **múltiples equipos**
 - Cambia entre equipos usando el selector en la parte superior
 - Cada equipo mantiene su información independiente
@@ -221,17 +245,20 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 ## ⚠️ Notas Importantes
 
 ### Seguridad
+
 - **Autenticación requerida**: Debes iniciar sesión para acceder
 - **Aprobación de cuenta**: Tu cuenta debe ser aprobada por el administrador
 - **Datos seguros**: Toda la información se almacena de forma segura
 
 ### Funcionalidades del Sistema
+
 - **Modales optimizados**: Los formularios aparecen en ventanas modales sin afectar la navegación
 - **Scroll interno**: Los modales tienen su propio scroll para mejor usabilidad
 - **Responsive**: La aplicación funciona en dispositivos móviles y de escritorio
 - **Versión**: El número de versión (0.8.0) se muestra en el pie de página
 
 ### Consejos de Uso
+
 1. **Selecciona siempre un equipo** antes de trabajar con jugadores o partidos
 2. **Registra la asistencia** antes de registrar pagos para mejor organización
 3. **Finaliza los partidos** después de registrar todos los datos
@@ -242,11 +269,13 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 ## 🆘 Soporte
 
 ### Problemas Comunes
+
 - **No puedo acceder**: Verifica que tu cuenta haya sido aprobada
 - **No veo mi equipo**: Asegúrate de haber seleccionado un equipo en el selector
 - **Error al guardar**: Verifica que todos los campos obligatorios estén completos
 
 ### Contacto
+
 Para soporte técnico o preguntas sobre el sistema, contacta al administrador del sistema.
 
 ---

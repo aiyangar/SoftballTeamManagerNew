@@ -1,5 +1,5 @@
-import React from 'react'
-import ScheduleCard from '../Cards/ScheduleCard'
+import React from 'react';
+import ScheduleCard from '../Cards/ScheduleCard';
 
 /**
  * Componente para la cuadrícula de tarjetas de partidos
@@ -21,57 +21,59 @@ import ScheduleCard from '../Cards/ScheduleCard'
  * @param {Object} showAttendanceForm - Estado de formularios de asistencia
  */
 const ScheduleCardsGrid = ({
-    games,
-    paymentTotals,
-    gameFinalizationStatus,
-    onCardClick,
-    onAttendanceFormToggle,
-    onEditGame,
-    onOpenPaymentForm,
-    onOpenScoreForm,
-    players,
-    attendance,
-    onAttendanceChange,
-    onLoadExistingAttendance,
-    onRecordAttendance,
-    onFetchPlayers,
-    selectedTeam,
-    showAttendanceForm
+  games,
+  paymentTotals,
+  gameFinalizationStatus,
+  onCardClick,
+  onAttendanceFormToggle,
+  onEditGame,
+  onOpenPaymentForm,
+  onOpenScoreForm,
+  players,
+  attendance,
+  onAttendanceChange,
+  onLoadExistingAttendance,
+  onRecordAttendance,
+  onFetchPlayers,
+  selectedTeam,
+  showAttendanceForm,
 }) => {
-    if (games.length === 0) {
-        return (
-            <div className="text-center py-8">
-                <p className="text-gray-300">No hay partidos registrados aún.</p>
-                <p className="text-sm text-gray-400 mt-1">Registra tu primer partido usando el formulario de arriba.</p>
-            </div>
-        )
-    }
-
+  if (games.length === 0) {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {games.map(game => (
-                <ScheduleCard
-                    key={game.id}
-                    game={game}
-                    paymentTotals={paymentTotals}
-                    gameFinalizationStatus={gameFinalizationStatus}
-                    onCardClick={onCardClick}
-                    onAttendanceFormToggle={onAttendanceFormToggle}
-                    onEditGame={onEditGame}
-                    onOpenPaymentForm={onOpenPaymentForm}
-                    onOpenScoreForm={onOpenScoreForm}
-                    players={players}
-                    attendance={attendance}
-                    onAttendanceChange={onAttendanceChange}
-                    onLoadExistingAttendance={onLoadExistingAttendance}
-                    onRecordAttendance={onRecordAttendance}
-                    onFetchPlayers={onFetchPlayers}
-                    selectedTeam={selectedTeam}
-                    showAttendanceForm={showAttendanceForm}
-                />
-            ))}
-        </div>
-    )
-}
+      <div className='text-center py-8'>
+        <p className='text-gray-300'>No hay partidos registrados aún.</p>
+        <p className='text-sm text-gray-400 mt-1'>
+          Registra tu primer partido usando el formulario de arriba.
+        </p>
+      </div>
+    );
+  }
 
-export default ScheduleCardsGrid
+  return (
+    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
+      {games.map(game => (
+        <ScheduleCard
+          key={game.id}
+          game={game}
+          paymentTotals={paymentTotals}
+          gameFinalizationStatus={gameFinalizationStatus}
+          onCardClick={onCardClick}
+          onAttendanceFormToggle={onAttendanceFormToggle}
+          onEditGame={onEditGame}
+          onOpenPaymentForm={onOpenPaymentForm}
+          onOpenScoreForm={onOpenScoreForm}
+          players={players}
+          attendance={attendance}
+          onAttendanceChange={onAttendanceChange}
+          onLoadExistingAttendance={onLoadExistingAttendance}
+          onRecordAttendance={onRecordAttendance}
+          onFetchPlayers={onFetchPlayers}
+          selectedTeam={selectedTeam}
+          showAttendanceForm={showAttendanceForm}
+        />
+      ))}
+    </div>
+  );
+};
+
+export default ScheduleCardsGrid;

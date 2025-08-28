@@ -245,7 +245,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 
 - **Total de Jugadores**: Número de jugadores registrados
 - **Próximo Juego**: Detalles del próximo partido programado
-- **Total Pagado Registro**: Estado de pagos de inscripción
+- **Pago de la Inscripción**: Estado de pagos de inscripción
 - **Último Partido**: Resultado del último partido jugado
 - **Estadísticas del Equipo**: **Mejorado** - Victorias, derrotas y empates con porcentajes
 - **Top Contribuyentes**: Jugadores que más han pagado
@@ -311,7 +311,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 - **Modales optimizados**: Los formularios aparecen en ventanas modales sin afectar la navegación
 - **Scroll interno**: Los modales tienen su propio scroll para mejor usabilidad
 - **Responsive**: La aplicación funciona en dispositivos móviles y de escritorio
-- **Versión**: El número de versión (0.13.0) se muestra en el pie de página
+- **Versión**: El número de versión (0.13.0) se muestra en el pie del menú principal
 - **Filtros avanzados**: **Nuevo** - Búsqueda y organización mejorada
 - **Cálculo dinámico**: **Nuevo** - Metas de inscripción calculadas automáticamente
 

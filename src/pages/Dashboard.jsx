@@ -308,9 +308,29 @@ const Dashboard = () => {
                 linkTo: '/players',
                 loading: loadingTeam,
                 content: (
-                  <p className='text-3xl font-bold text-blue-400'>
-                    {teamInfo.totalPlayers}
-                  </p>
+                  <div className='space-y-2 w-full'>
+                    <div className='flex justify-center items-center p-4 bg-gray-800 rounded w-full'>
+                      <span className='text-3xl font-bold text-blue-400'>
+                        {teamInfo.totalPlayers}
+                      </span>
+                    </div>
+                    <div className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'>
+                      <span className='text-white text-sm font-semibold'>
+                        Jugadores activos:
+                      </span>
+                      <span className='text-blue-400 font-bold text-sm'>
+                        {teamInfo.totalPlayers}
+                      </span>
+                    </div>
+                    <div className='flex justify-between items-center p-2 bg-gray-700 rounded w-full border-t-2 border-gray-600'>
+                      <span className='text-white text-sm font-semibold'>
+                        Estado del equipo:
+                      </span>
+                      <span className='text-green-400 font-bold text-sm'>
+                        Completo
+                      </span>
+                    </div>
+                  </div>
                 ),
               },
               // Card: Próximo Juego

@@ -553,6 +553,7 @@ const Schedule = () => {
                     monto_umpire,
                     monto_inscripcion,
                     fecha_pago,
+                    metodo_pago,
                     jugadores!inner(nombre)
                 `)
                 .eq('partido_id', gameId)

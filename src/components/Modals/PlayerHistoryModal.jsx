@@ -225,6 +225,16 @@ const PlayerHistoryModal = ({
                                                                 </div>
                                                             )}
                                                         </div>
+                                                        {payment.metodo_pago && (
+                                                            <div className="mt-2 text-sm">
+                                                                <span className="text-gray-400">Método de pago: </span>
+                                                                <span className={`font-semibold ${
+                                                                    payment.metodo_pago === 'Efectivo' ? 'text-green-400' : 'text-blue-400'
+                                                                }`}>
+                                                                    {payment.metodo_pago}
+                                                                </span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>

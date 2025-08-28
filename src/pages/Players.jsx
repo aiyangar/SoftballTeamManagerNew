@@ -155,6 +155,7 @@ const Players = () => {
                     monto_umpire,
                     monto_inscripcion,
                     fecha_pago,
+                    metodo_pago,
                     partidos (
                         id,
                         equipo_contrario,

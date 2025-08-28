@@ -425,36 +425,34 @@ const Dashboard = () => {
                 linkTo: '/schedule',
                 loading: loadingTeam,
                 content: (
-                  <div className='space-y-2'>
-                    <div className='flex justify-between items-center'>
+                  <div className='space-y-2 w-full'>
+                    <div className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'>
                       <span className='text-white text-sm'>Victorias:</span>
                       <span className='text-green-400 font-bold'>
                         {teamInfo.gameStats.wins}
                       </span>
                     </div>
-                    <div className='flex justify-between items-center'>
+                    <div className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'>
                       <span className='text-white text-sm'>Derrotas:</span>
                       <span className='text-red-400 font-bold'>
                         {teamInfo.gameStats.losses}
                       </span>
                     </div>
-                    <div className='flex justify-between items-center'>
+                    <div className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'>
                       <span className='text-white text-sm'>Empates:</span>
                       <span className='text-yellow-400 font-bold'>
                         {teamInfo.gameStats.ties}
                       </span>
                     </div>
-                    <div className='border-t border-gray-600 pt-2 mt-2'>
-                      <div className='flex justify-between items-center'>
-                        <span className='text-white font-semibold text-sm'>
-                          Total:
-                        </span>
-                        <span className='text-blue-400 font-bold'>
-                          {teamInfo.gameStats.wins +
-                            teamInfo.gameStats.losses +
-                            teamInfo.gameStats.ties}
-                        </span>
-                      </div>
+                    <div className='flex justify-between items-center p-2 bg-gray-700 rounded w-full border-t-2 border-gray-600'>
+                      <span className='text-white font-semibold text-sm'>
+                        Total:
+                      </span>
+                      <span className='text-blue-400 font-bold'>
+                        {teamInfo.gameStats.wins +
+                          teamInfo.gameStats.losses +
+                          teamInfo.gameStats.ties}
+                      </span>
                     </div>
                   </div>
                 ),

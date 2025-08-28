@@ -321,24 +321,41 @@ const Dashboard = () => {
                 linkTo: '/schedule',
                 loading: loadingTeam,
                 content: teamInfo.nextGame ? (
-                  <div className='space-y-2'>
-                    <p className='text-white text-sm'>
-                      <span className='font-semibold'>Oponente:</span>{' '}
-                      {teamInfo.nextGame.equipo_contrario}
-                    </p>
-                    <p className='text-white text-sm'>
-                      <span className='font-semibold'>Fecha:</span>{' '}
-                      {new Date(
-                        teamInfo.nextGame.fecha_partido
-                      ).toLocaleDateString()}
-                    </p>
-                    <p className='text-white text-sm'>
-                      <span className='font-semibold'>Campo:</span>{' '}
-                      {teamInfo.nextGame.lugar}
-                    </p>
-                    <p className='text-white text-sm'>
-                      <span className='font-semibold'>Costo Umpire:</span> $550
-                    </p>
+                  <div className='space-y-2 w-full'>
+                    <div className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'>
+                      <span className='text-white text-sm font-semibold'>
+                        Oponente:
+                      </span>
+                      <span className='text-white text-sm'>
+                        {teamInfo.nextGame.equipo_contrario}
+                      </span>
+                    </div>
+                    <div className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'>
+                      <span className='text-white text-sm font-semibold'>
+                        Fecha:
+                      </span>
+                      <span className='text-white text-sm'>
+                        {new Date(
+                          teamInfo.nextGame.fecha_partido
+                        ).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'>
+                      <span className='text-white text-sm font-semibold'>
+                        Campo:
+                      </span>
+                      <span className='text-white text-sm'>
+                        {teamInfo.nextGame.lugar}
+                      </span>
+                    </div>
+                    <div className='flex justify-between items-center p-2 bg-gray-700 rounded w-full border-t-2 border-gray-600'>
+                      <span className='text-white text-sm font-semibold'>
+                        Costo Umpire:
+                      </span>
+                      <span className='text-green-400 font-bold text-sm'>
+                        $550
+                      </span>
+                    </div>
                   </div>
                 ) : (
                   <p className='text-gray-400'>
@@ -354,25 +371,33 @@ const Dashboard = () => {
                 linkTo: '/teams',
                 loading: loadingTeam,
                 content: (
-                  <div className='space-y-2'>
-                    <p className='text-3xl font-bold text-green-400'>
-                      ${teamInfo.totalRegistrationPaid.toLocaleString()}
-                    </p>
-                    <div className='text-sm text-gray-300'>
-                      <p>
-                        Total requerido: $
-                        {teamInfo.totalRegistrationRequired.toLocaleString()}
-                      </p>
-                      <p
-                        className={
+                  <div className='space-y-2 w-full'>
+                    <div className='flex justify-center items-center p-4 bg-gray-800 rounded w-full'>
+                      <span className='text-3xl font-bold text-green-400'>
+                        ${teamInfo.totalRegistrationPaid.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'>
+                      <span className='text-white text-sm font-semibold'>
+                        Total requerido:
+                      </span>
+                      <span className='text-white text-sm'>
+                        ${teamInfo.totalRegistrationRequired.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className='flex justify-between items-center p-2 bg-gray-700 rounded w-full border-t-2 border-gray-600'>
+                      <span className='text-white text-sm font-semibold'>
+                        Faltan:
+                      </span>
+                      <span
+                        className={`font-bold text-sm ${
                           teamInfo.remainingRegistration > 0
                             ? 'text-red-400'
                             : 'text-green-400'
-                        }
+                        }`}
                       >
-                        Faltan: $
-                        {teamInfo.remainingRegistration.toLocaleString()}
-                      </p>
+                        ${teamInfo.remainingRegistration.toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 ),

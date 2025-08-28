@@ -188,15 +188,15 @@ const ScheduleHistoryModal = ({
                         </div>
                     )}
                     
-                    {/* Asistencia */}
-                    <div className="mb-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-semibold text-white">
-                                Asistencia ({gameDetailsData.attendance.length} jugadores)
-                            </h3>
-                            {!gameFinalizationStatus && isEditingAttendance && (
-                                <div className="flex space-x-2">
-                                                                         <button
+                                         {/* Asistencia */}
+                     <div className="mb-6">
+                         <div className="flex justify-between items-center mb-4">
+                             <h3 className="text-lg font-semibold text-white">
+                                 Asistencia ({gameDetailsData.attendance.length} jugadores)
+                             </h3>
+                             {!gameFinalizationStatus && isEditingAttendance && (
+                                 <div className="flex space-x-2">
+                                     <button
                                          onClick={() => {
                                              console.log('=== DEBUG LIMPIAR ===');
                                              console.log('Limpiando asistencia para partido:', selectedGame.id);
@@ -211,7 +211,7 @@ const ScheduleHistoryModal = ({
                                      >
                                          Limpiar
                                      </button>
-                                                                         <button
+                                     <button
                                          onClick={async () => {
                                              console.log('=== DEBUG GUARDAR ===');
                                              console.log('Guardando asistencia para partido:', selectedGame.id);
@@ -241,96 +241,146 @@ const ScheduleHistoryModal = ({
 
                         {isEditingAttendance && !gameFinalizationStatus ? (
                             // Modo edición
-                                                         <div className="p-4 bg-gray-800 rounded-lg">
-                                 <div className="flex justify-between items-center mb-3">
-                                     <h4 className="text-white font-semibold">Seleccionar Jugadores Asistentes</h4>
-                                     <div className="text-sm text-gray-300">
-                                         {localAttendance.length} de {players.length} seleccionados
-                                     </div>
-                                 </div>
-                                 
-                                 {/* Barra de progreso */}
-                                 {players.length > 0 && (
-                                     <div className="mb-4">
-                                         <div className="w-full bg-gray-700 rounded-full h-2">
-                                             <div 
-                                                 className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                                                 style={{ 
-                                                     width: `${(localAttendance.length / players.length) * 100}%` 
-                                                 }}
-                                             ></div>
-                                         </div>
-                                     </div>
-                                 )}
+                            <div className="p-4 bg-gray-800 rounded-lg">
+                                <div className="flex justify-between items-center mb-3">
+                                    <h4 className="text-white font-semibold">Seleccionar Jugadores Asistentes</h4>
+                                    <div className="text-sm text-gray-300">
+                                        {localAttendance.length} de {players.length} seleccionados
+                                    </div>
+                                </div>
+                                
+                                {/* Barra de progreso */}
+                                {players.length > 0 && (
+                                    <div className="mb-4">
+                                        <div className="w-full bg-gray-700 rounded-full h-2">
+                                            <div 
+                                                className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                                                style={{ 
+                                                    width: `${(localAttendance.length / players.length) * 100}%` 
+                                                }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                )}
                                 {players.length === 0 ? (
                                     <div className="text-yellow-500 text-center">
                                         <p>No hay jugadores registrados en este equipo.</p>
                                     </div>
                                 ) : (
-                                                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                             {players.map(player => {
-                                                 const isSelected = localAttendance.includes(player.id);
-                                                 return (
-                                                     <label 
-                                                         key={player.id} 
-                                                         className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-                                                             isSelected 
-                                                                 ? 'bg-green-700 border-2 border-green-500' 
-                                                                 : 'bg-gray-700 border-2 border-gray-600 hover:bg-gray-600'
-                                                         }`}
-                                                     >
-                                                         <input
-                                                             type="checkbox"
-                                                             checked={isSelected}
-                                                                                                                           onChange={() => {
-                                                                  const newAttendance = isSelected
-                                                                      ? localAttendance.filter(id => id !== player.id)
-                                                                      : [...localAttendance, player.id];
-                                                                  console.log('=== DEBUG CHECKBOX CHANGE ===');
-                                                                  console.log('Player ID:', player.id, 'Tipo:', typeof player.id);
-                                                                  console.log('Player Name:', player.nombre);
-                                                                  console.log('Is Selected:', isSelected);
-                                                                  console.log('Local Attendance antes:', localAttendance);
-                                                                  console.log('Local Attendance después:', newAttendance);
-                                                                  console.log('Game ID:', selectedGame.id);
-                                                                  console.log('================================');
-                                                                  setLocalAttendance(newAttendance);
-                                                                  // También actualizar el estado global
-                                                                  onAttendanceChange(selectedGame.id, newAttendance);
-                                                              }}
-                                                              onClick={(e) => e.stopPropagation()}
-                                                             className="form-checkbox h-5 w-5 text-green-600"
-                                                         />
-                                                         <span className={`font-medium ${isSelected ? 'text-white' : 'text-gray-300'}`}>
-                                                             {player.nombre}
-                                                         </span>
-                                                         {isSelected && (
-                                                             <span className="text-green-400 text-lg">✓</span>
-                                                         )}
-                                                     </label>
-                                                 );
-                                             })}
-                                         </div>
-                                )}
-                            </div>
-                        ) : (
-                            // Modo visualización
-                            gameDetailsData.attendance.length > 0 ? (
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                    {gameDetailsData.attendance.map((att, index) => (
-                                        <div key={index} className="p-3 bg-gray-800 rounded-lg text-center">
-                                            <div className="text-green-400 text-2xl mb-1">✓</div>
-                                            <p className="text-white text-sm">{att.jugadores?.nombre || 'Jugador'}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="p-4 bg-gray-800 rounded-lg text-center">
-                                    <p className="text-gray-400">No hay registros de asistencia</p>
-                                </div>
-                            )
-                        )}
-                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                        {players.map(player => {
+                                            const isSelected = localAttendance.includes(player.id);
+                                            return (
+                                                <label 
+                                                    key={player.id} 
+                                                    className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                                                        isSelected 
+                                                            ? 'bg-green-700 border-2 border-green-500' 
+                                                            : 'bg-gray-700 border-2 border-gray-600 hover:bg-gray-600'
+                                                    }`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={() => {
+                                                           const newAttendance = isSelected
+                                                               ? localAttendance.filter(id => id !== player.id)
+                                                               : [...localAttendance, player.id];
+                                                           console.log('=== DEBUG CHECKBOX CHANGE ===');
+                                                           console.log('Player ID:', player.id, 'Tipo:', typeof player.id);
+                                                           console.log('Player Name:', player.nombre);
+                                                           console.log('Is Selected:', isSelected);
+                                                           console.log('Local Attendance antes:', localAttendance);
+                                                           console.log('Local Attendance después:', newAttendance);
+                                                           console.log('Game ID:', selectedGame.id);
+                                                           console.log('================================');
+                                                           setLocalAttendance(newAttendance);
+                                                           // También actualizar el estado global
+                                                           onAttendanceChange(selectedGame.id, newAttendance);
+                                                       }}
+                                                       onClick={(e) => e.stopPropagation()}
+                                                      className="form-checkbox h-5 w-5 text-green-600"
+                                                  />
+                                                  <span className={`font-medium ${isSelected ? 'text-white' : 'text-gray-300'}`}>
+                                                      {player.nombre}
+                                                  </span>
+                                                  {isSelected && (
+                                                      <span className="text-green-400 text-lg">✓</span>
+                                                  )}
+                                              </label>
+                                          );
+                                      })}
+                                  </div>
+                              )}
+                          </div>
+                      ) : (
+                          // Modo visualización
+                          gameDetailsData.attendance.length > 0 ? (
+                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                  {gameDetailsData.attendance.map((att, index) => {
+                                      // Verificar si el jugador realizó algún pago en este partido
+                                      const hasPayment = gameDetailsData.payments.some(payment => 
+                                          payment.jugadores?.nombre === att.jugadores?.nombre
+                                      );
+                                      
+                                      return (
+                                          <div key={index} className={`p-3 rounded-lg text-center relative ${
+                                              hasPayment ? 'bg-gray-800' : 'bg-red-900 border-2 border-red-500'
+                                          }`}>
+                                              <div className={`text-2xl mb-1 ${
+                                                  hasPayment ? 'text-green-400' : 'text-red-400'
+                                              }`}>
+                                                  {hasPayment ? '✓' : '⚠️'}
+                                              </div>
+                                              <p className="text-white text-sm">{att.jugadores?.nombre || 'Jugador'}</p>
+                                              {!hasPayment && (
+                                                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 rounded-full">
+                                                      Sin pago
+                                                  </div>
+                                              )}
+                                          </div>
+                                      );
+                                  })}
+                              </div>
+                          ) : (
+                              <div className="p-4 bg-gray-800 rounded-lg text-center">
+                                  <p className="text-gray-400">No hay registros de asistencia</p>
+                              </div>
+                          )
+                      )}
+                      
+                      {/* Resumen de asistencia vs pagos */}
+                      {gameDetailsData.attendance.length > 0 && (
+                          <div className="mt-4 p-3 bg-gray-800 rounded-lg">
+                              <div className="flex justify-between items-center text-sm">
+                                  <div className="flex items-center space-x-2">
+                                      <span className="text-gray-300">Asistieron:</span>
+                                      <span className="text-white font-semibold">{gameDetailsData.attendance.length}</span>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                      <span className="text-gray-300">Con pago:</span>
+                                      <span className="text-green-400 font-semibold">
+                                          {gameDetailsData.attendance.filter(att => 
+                                              gameDetailsData.payments.some(payment => 
+                                                  payment.jugadores?.nombre === att.jugadores?.nombre
+                                              )
+                                          ).length}
+                                      </span>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                      <span className="text-gray-300">Sin pago:</span>
+                                      <span className="text-red-400 font-semibold">
+                                          {gameDetailsData.attendance.filter(att => 
+                                              !gameDetailsData.payments.some(payment => 
+                                                  payment.jugadores?.nombre === att.jugadores?.nombre
+                                              )
+                                          ).length}
+                                      </span>
+                                  </div>
+                              </div>
+                          </div>
+                      )}
+                  </div>
                     
                     {/* Pagos Detallados */}
                     <div>

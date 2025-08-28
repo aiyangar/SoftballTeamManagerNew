@@ -12,11 +12,13 @@ El proyecto incluye los siguientes archivos de configuración:
 ## Scripts disponibles
 
 ### Formatear todo el código
+
 ```bash
 npm run format
 ```
 
 ### Verificar formato sin cambiar archivos
+
 ```bash
 npm run format:check
 ```

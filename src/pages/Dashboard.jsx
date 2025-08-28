@@ -91,10 +91,6 @@ const Dashboard = () => {
         return;
       }
 
-
-
-
-
       // Obtener próximo juego (próxima fecha)
       const { data: nextGameData, error: gameError } = await supabase
         .from('partidos')
@@ -472,11 +468,11 @@ const Dashboard = () => {
                 loading: loadingTeam,
                 content:
                   teamInfo.topContributors.length > 0 ? (
-                    <div className='space-y-2'>
+                    <div className='space-y-2 w-full'>
                       {teamInfo.topContributors.map((contributor, index) => (
                         <div
                           key={index}
-                          className='flex justify-between items-center p-2 bg-gray-800 rounded'
+                          className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'
                         >
                           <div className='flex items-center space-x-2 min-w-0 flex-1'>
                             <span
@@ -515,11 +511,11 @@ const Dashboard = () => {
                 loading: loadingTeam,
                 content:
                   teamInfo.topAttendance.length > 0 ? (
-                    <div className='space-y-2'>
+                    <div className='space-y-2 w-full'>
                       {teamInfo.topAttendance.map((attendance, index) => (
                         <div
                           key={index}
-                          className='flex justify-between items-center p-2 bg-gray-800 rounded'
+                          className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'
                         >
                           <div className='flex items-center space-x-2 min-w-0 flex-1'>
                             <span
@@ -557,8 +553,8 @@ const Dashboard = () => {
                 linkTo: '/schedule',
                 loading: loadingTeam,
                 content: (
-                  <div className='space-y-2'>
-                    <div className='flex justify-between items-center p-2 bg-gray-800 rounded'>
+                  <div className='space-y-2 w-full'>
+                    <div className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'>
                       <span className='text-white text-sm'>
                         Total Partidos:
                       </span>
@@ -566,7 +562,7 @@ const Dashboard = () => {
                         {teamInfo.totalGames}
                       </span>
                     </div>
-                    <div className='flex justify-between items-center p-2 bg-gray-800 rounded'>
+                    <div className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'>
                       <span className='text-white text-sm'>
                         Promedio Asistencia:
                       </span>
@@ -574,7 +570,7 @@ const Dashboard = () => {
                         {teamInfo.averageAttendance} jugadores
                       </span>
                     </div>
-                    <div className='flex justify-between items-center p-2 bg-gray-800 rounded'>
+                    <div className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'>
                       <span className='text-white text-sm'>
                         Porcentaje Victoria:
                       </span>

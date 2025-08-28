@@ -19,9 +19,8 @@ export const AuthContextProvider = ({ children }) => {
   const signUpNewUser = async (email, password) => {
     // Guardar la sesión actual antes de cualquier operación
     const currentSession = session;
-    
-    try {
 
+    try {
       // Primero intentar hacer signin (para usuarios existentes)
       // Esto evita el problema de "Email no confirmado" para usuarios ya registrados
       const { data: signInData } = await supabase.auth.signInWithPassword({

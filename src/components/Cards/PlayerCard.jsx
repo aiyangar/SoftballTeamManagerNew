@@ -4,10 +4,14 @@ import React from 'react'
  * Componente para mostrar una tarjeta de jugador individual
  * @param {Object} player - Datos del jugador
  * @param {Function} onViewHistory - Función para ver el historial del jugador
+ * @param {number} totalInscripcionPaid - Total pagado en inscripción por el jugador
+ * @param {number} inscripcionTarget - Meta de inscripción calculada dinámicamente
  */
 const PlayerCard = ({ 
     player, 
-    onViewHistory
+    onViewHistory,
+    totalInscripcionPaid = 0,
+    inscripcionTarget = 450
 }) => {
     // Función para obtener la abreviación de la posición
     const getPositionAbbreviation = (positionName) => {
@@ -24,6 +28,18 @@ const PlayerCard = ({
             'Short Fielder': 'SF'
         }
         return abbreviations[positionName] || positionName
+    }
+
+    // Configuración de la meta de inscripción (ahora viene como parámetro)
+    const inscripcionProgress = Math.min((totalInscripcionPaid / inscripcionTarget) * 100, 100)
+    const inscripcionRemaining = Math.max(0, inscripcionTarget - totalInscripcionPaid)
+    
+    // Determinar el color de la barra de progreso
+    const getProgressColor = () => {
+        if (inscripcionProgress >= 100) return 'bg-green-500'
+        if (inscripcionProgress >= 80) return 'bg-yellow-500'
+        if (inscripcionProgress >= 50) return 'bg-orange-500'
+        return 'bg-red-500'
     }
 
     return (
@@ -60,7 +76,38 @@ const PlayerCard = ({
                     </div>
                 )}
                 
-                
+                {/* Barra de progreso de inscripción */}
+                <div className="mt-3">
+                    <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs text-gray-400">Inscripción</span>
+                        <span className="text-xs text-gray-300">
+                            ${totalInscripcionPaid.toLocaleString()} / ${inscripcionTarget.toLocaleString()}
+                        </span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div 
+                            className={`h-2 rounded-full transition-all duration-300 ${getProgressColor()}`}
+                            style={{ width: `${inscripcionProgress}%` }}
+                        ></div>
+                    </div>
+                    {inscripcionRemaining > 0 && (
+                        <div className="flex justify-between items-center mt-1">
+                            <span className="text-xs text-gray-400">Faltan:</span>
+                            <span className={`text-xs font-semibold ${
+                                inscripcionProgress >= 100 ? 'text-green-400' :
+                                inscripcionProgress >= 80 ? 'text-yellow-400' :
+                                inscripcionProgress >= 50 ? 'text-orange-400' : 'text-red-400'
+                            }`}>
+                                ${inscripcionRemaining.toLocaleString()}
+                            </span>
+                        </div>
+                    )}
+                    {inscripcionProgress >= 100 && (
+                        <div className="flex justify-center mt-1">
+                            <span className="text-xs text-green-400 font-semibold">✓ Meta completada</span>
+                        </div>
+                    )}
+                </div>
                 
                 {/* Teléfono */}
                 {player.telefono && (

@@ -63,6 +63,8 @@ const Players = () => {
         attendance: false,
         payments: false
     })
+    const [playerInscripcionTotals, setPlayerInscripcionTotals] = useState({})
+    const [inscripcionTarget, setInscripcionTarget] = useState(450)
 
     // Usar el hook para manejar el modal
     useModal(showPlayerHistoryModal)
@@ -315,6 +317,121 @@ const Players = () => {
     }
 
     /**
+     * Calcula la meta dinámica de inscripción basada en el total del equipo y promedio de asistentes
+     * @param {number} teamId - ID del equipo
+     * @returns {number} - Meta de inscripción calculada
+     */
+    const calculateInscripcionTarget = async (teamId) => {
+        if (!teamId) return 450 // Valor por defecto si no hay equipo seleccionado
+        
+        try {
+            // Obtener información del equipo (inscripción total)
+            const { data: teamData, error: teamError } = await supabase
+                .from('equipos')
+                .select('inscripcion')
+                .eq('id', teamId)
+                .single()
+
+            if (teamError || !teamData) {
+                console.error('Error al obtener datos del equipo:', teamError)
+                return 450
+            }
+
+            const totalInscripcion = teamData.inscripcion || 0
+            if (totalInscripcion === 0) return 450
+
+            // Obtener estadísticas de asistencia
+            const { data: attendanceData, error: attendanceError } = await supabase
+                .from('asistencia_partidos')
+                .select('partido_id')
+                .eq('equipo_id', teamId)
+
+            if (attendanceError) {
+                console.error('Error al obtener datos de asistencia:', attendanceError)
+                return 450
+            }
+
+            // Obtener total de partidos del equipo
+            const { data: gamesData, error: gamesError } = await supabase
+                .from('partidos')
+                .select('id')
+                .eq('equipo_id', teamId)
+
+            if (gamesError) {
+                console.error('Error al obtener datos de partidos:', gamesError)
+                return 450
+            }
+
+            const totalGames = gamesData?.length || 0
+            const totalAttendance = attendanceData?.length || 0
+
+            // Calcular promedio de asistentes por juego
+            const averageAttendance = totalGames > 0 ? totalAttendance / totalGames : 0
+
+            // Si no hay asistencias registradas, usar un promedio estimado de 12 jugadores
+            const effectiveAverageAttendance = averageAttendance > 0 ? averageAttendance : 12
+
+            // Calcular meta: total de inscripción / promedio de asistentes
+            const calculatedTarget = Math.round(totalInscripcion / effectiveAverageAttendance)
+
+            // Asegurar que la meta esté en un rango razonable ($200 - $800)
+            const finalTarget = Math.max(200, Math.min(800, calculatedTarget))
+
+            console.log('Meta de inscripción calculada:', {
+                totalInscripcion,
+                totalGames,
+                totalAttendance,
+                averageAttendance,
+                effectiveAverageAttendance,
+                calculatedTarget,
+                finalTarget
+            })
+
+            return finalTarget
+        } catch (error) {
+            console.error('Error al calcular meta de inscripción:', error)
+            return 450
+        }
+    }
+
+    /**
+     * Obtiene los totales de inscripción de todos los jugadores
+     * @param {Array} playerIds - Array de IDs de jugadores
+     * @returns {Object} - Totales de inscripción por jugador
+     */
+    const fetchPlayerInscripcionTotals = async (playerIds) => {
+        if (!playerIds || playerIds.length === 0) return {}
+        
+        try {
+            const { data, error } = await supabase
+                .from('pagos')
+                .select('jugador_id, monto_inscripcion')
+                .in('jugador_id', playerIds)
+                .not('monto_inscripcion', 'is', null)
+                .gt('monto_inscripcion', 0)
+
+            if (error) {
+                console.error('Error al obtener totales de inscripción:', error)
+                return {}
+            }
+
+            const totals = {}
+            data.forEach(payment => {
+                const playerId = payment.jugador_id
+                if (!totals[playerId]) {
+                    totals[playerId] = 0
+                }
+                totals[playerId] += payment.monto_inscripcion || 0
+            })
+
+            return totals
+        } catch (error) {
+            console.error('Error inesperado al obtener totales de inscripción:', error)
+            return {}
+        }
+    }
+
+    /**
      * Obtiene los jugadores del usuario autenticado
      * @param {string} propietarioId - ID del usuario propietario
      * @returns {Object} - Resultado de la operación
@@ -348,6 +465,18 @@ const Players = () => {
 
             console.log('Jugadores obtenidos:', data)
             setPlayers(data || [])
+            
+            // Obtener totales de inscripción para todos los jugadores
+            if (data && data.length > 0) {
+                const playerIds = data.map(player => player.id)
+                const inscripcionTotals = await fetchPlayerInscripcionTotals(playerIds)
+                setPlayerInscripcionTotals(inscripcionTotals)
+            }
+            
+            // Calcular meta de inscripción dinámica
+            const calculatedTarget = await calculateInscripcionTarget(selectedTeam)
+            setInscripcionTarget(calculatedTarget)
+            
             setLoadingPlayers(false)
             return { success: true, data: data }
         } catch (error) {
@@ -537,7 +666,7 @@ const Players = () => {
             setSuccess(`${mensaje} en el equipo: ${equipoNombre}`)
             resetForm()
             
-            // Recargar lista de jugadores
+            // Recargar lista de jugadores y totales de inscripción
             await fetchPlayers(session.user.id)
 
             return { success: true, data: playerResult }
@@ -672,7 +801,7 @@ const Players = () => {
 
             console.log('Jugador eliminado exitosamente')
             setSuccess('Jugador eliminado exitosamente')
-            await fetchPlayers(session.user.id) // Recargar lista
+            await fetchPlayers(session.user.id) // Recargar lista, totales y meta
         } catch (error) {
             console.error('Error al eliminar jugador:', error)
             setError(error.message)
@@ -699,6 +828,11 @@ const Players = () => {
         if (selectedTeam) {
             setEquipoId(selectedTeam)
             console.log('Equipo establecido en formulario:', selectedTeam)
+            
+            // Recalcular meta de inscripción cuando cambie el equipo
+            calculateInscripcionTarget(selectedTeam).then(target => {
+                setInscripcionTarget(target)
+            })
         }
     }, [selectedTeam])
 
@@ -1154,6 +1288,8 @@ const Players = () => {
                                 console.log('Abriendo historial del jugador:', player)
                                 openPlayerHistoryModal(player)
                             }}
+                            playerInscripcionTotals={playerInscripcionTotals}
+                            inscripcionTarget={inscripcionTarget}
                         />
                     )}
                 </div>

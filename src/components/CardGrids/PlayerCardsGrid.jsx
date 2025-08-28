@@ -6,11 +6,15 @@ import PlayerCard from '../Cards/PlayerCard'
  * @param {Array} players - Lista de jugadores
  * @param {boolean} loadingPlayers - Estado de carga
  * @param {Function} onViewHistory - Función para ver el historial de un jugador
+ * @param {Object} playerInscripcionTotals - Totales de inscripción por jugador { [playerId]: total }
+ * @param {number} inscripcionTarget - Meta de inscripción calculada dinámicamente
  */
 const PlayerCardsGrid = ({ 
     players, 
     loadingPlayers, 
-    onViewHistory
+    onViewHistory,
+    playerInscripcionTotals = {},
+    inscripcionTarget = 450
 }) => {
     if (loadingPlayers) {
         return (
@@ -37,6 +41,8 @@ const PlayerCardsGrid = ({
                     key={player.id}
                     player={player}
                     onViewHistory={onViewHistory}
+                    totalInscripcionPaid={playerInscripcionTotals[player.id] || 0}
+                    inscripcionTarget={inscripcionTarget}
                 />
             ))}
         </div>

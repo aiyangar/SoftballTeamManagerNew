@@ -5,7 +5,6 @@ import { supabase } from '../supabaseClient'
 import Menu from '../components/Menu'
 import { useTeam } from '../context/useTeam'
 import DashboardCardsGrid from '../components/CardGrids/DashboardCardsGrid'
-import PaymentStatusWidget from '../components/Widgets/PaymentStatusWidget'
 
 /**
  * Componente Dashboard - Página principal para usuarios autenticados
@@ -505,23 +504,7 @@ const Dashboard = () => {
                 </div>
               )
             },
-            // Card: Estado de Pagos (Widget Reutilizable)
-            {
-              title: "Estado de Pagos",
-              icon: "💰",
-              iconColor: "text-green-400",
-              linkTo: "/schedule",
-              loading: loadingTeam,
-              content: (
-                <PaymentStatusWidget
-                  paymentTotals={paymentTotals}
-                  umpireTarget={550}
-                  size="small"
-                  showTitle={false}
-                  className="bg-transparent"
-                />
-              )
-            }
+
           ]}
         />
       )}

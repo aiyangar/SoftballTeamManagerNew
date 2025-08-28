@@ -157,14 +157,17 @@ const TeamHistoryModal = ({
                         )}
                     </div>
 
-                    {/* Botones de acción */}
-                    <div className="flex space-x-4 mt-6">
+                </div>
+
+                {/* Footer con botones de acción */}
+                <div className="modal-footer p-6 border-t border-gray-600 bg-gray-800">
+                    <div className="flex justify-end space-x-3">
                         <button
                             onClick={() => {
                                 onEdit(selectedTeam)
                                 onClose()
                             }}
-                            className="flex-1 px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-2"
                         >
                             <span>✏️</span>
                             <span>Editar Equipo</span>
@@ -174,7 +177,7 @@ const TeamHistoryModal = ({
                                 onDelete(selectedTeam)
                                 onClose()
                             }}
-                            className="flex-1 px-4 py-3 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+                            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center space-x-2"
                         >
                             <span>🗑️</span>
                             <span>Eliminar Equipo</span>

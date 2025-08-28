@@ -35,6 +35,10 @@ const Dashboard = () => {
     totalGames: 0,
     averageAttendance: 0
   })
+  const [paymentTotals, setPaymentTotals] = useState({
+    totalUmpire: 0,
+    totalInscripcion: 0
+  })
   const [loadingTeam, setLoadingTeam] = useState(false)
 
   // Logs para debugging
@@ -88,6 +92,22 @@ const Dashboard = () => {
       if (playersError) {
         console.error('Error fetching players:', playersError)
         return
+      }
+
+      // Obtener totales de pagos del equipo
+      const { data: paymentsData, error: paymentsError } = await supabase
+        .from('pagos')
+        .select('monto_umpire, monto_inscripcion')
+        .eq('equipo_id', teamId)
+
+      if (!paymentsError && paymentsData) {
+        const totalUmpire = paymentsData.reduce((sum, payment) => sum + (payment.monto_umpire || 0), 0);
+        const totalInscripcion = paymentsData.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0);
+        
+        setPaymentTotals({
+          totalUmpire,
+          totalInscripcion
+        });
       }
 
       // Obtener próximo juego (próxima fecha)
@@ -156,13 +176,13 @@ const Dashboard = () => {
       }
 
       // Obtener total pagado para registro del equipo
-      const { data: payments, error: paymentsError } = await supabase
+      const { data: payments, error: registrationPaymentsError } = await supabase
         .from('pagos')
         .select('monto_inscripcion')
         .eq('equipo_id', teamId)
 
-      if (paymentsError) {
-        console.error('Error fetching payments:', paymentsError)
+      if (registrationPaymentsError) {
+        console.error('Error fetching payments:', registrationPaymentsError)
         return
       }
 
@@ -170,68 +190,68 @@ const Dashboard = () => {
       const totalRegistrationRequired = teamData.inscripcion || 0
       const remainingRegistration = Math.max(0, totalRegistrationRequired - totalRegistrationPaid)
 
-       // Obtener los 3 jugadores que más han aportado
-       const { data: contributors, error: contributorsError } = await supabase
-         .from('pagos')
-         .select(`
-           monto_inscripcion,
-           jugadores!inner(nombre)
-         `)
-         .eq('equipo_id', teamId)
-         .not('monto_inscripcion', 'is', null)
-         .gt('monto_inscripcion', 0)
+      // Obtener los 3 jugadores que más han aportado
+      const { data: contributors, error: contributorsError } = await supabase
+        .from('pagos')
+        .select(`
+          monto_inscripcion,
+          jugadores!inner(nombre)
+        `)
+        .eq('equipo_id', teamId)
+        .not('monto_inscripcion', 'is', null)
+        .gt('monto_inscripcion', 0)
 
-             if (contributorsError) {
+      if (contributorsError) {
         console.error('Error fetching contributors:', contributorsError)
       }
 
-       // Agrupar por jugador y sumar sus aportaciones
-       const playerContributions = {}
-       contributors?.forEach(payment => {
-         const playerName = payment.jugadores.nombre
-         if (!playerContributions[playerName]) {
-           playerContributions[playerName] = 0
-         }
-         playerContributions[playerName] += payment.monto_inscripcion || 0
-       })
-
-               // Ordenar por cantidad y tomar los top 3
-        const topContributors = Object.entries(playerContributions)
-          .map(([name, amount]) => ({ name, amount }))
-          .sort((a, b) => b.amount - a.amount)
-          .slice(0, 3)
-
-        // Obtener top 3 jugadores con más asistencias
-        const { data: attendanceData, error: attendanceError } = await supabase
-          .from('asistencia_partidos')
-          .select(`
-            jugadores!inner(nombre)
-          `)
-          .eq('equipo_id', teamId)
-
-        if (attendanceError) {
-          console.error('Error fetching attendance data:', attendanceError)
+      // Agrupar por jugador y sumar sus aportaciones
+      const playerContributions = {}
+      contributors?.forEach(payment => {
+        const playerName = payment.jugadores.nombre
+        if (!playerContributions[playerName]) {
+          playerContributions[playerName] = 0
         }
+        playerContributions[playerName] += payment.monto_inscripcion || 0
+      })
 
-        // Contar asistencias por jugador
-        const playerAttendance = {}
-        attendanceData?.forEach(attendance => {
-          const playerName = attendance.jugadores.nombre
-          if (!playerAttendance[playerName]) {
-            playerAttendance[playerName] = 0
-          }
-          playerAttendance[playerName] += 1
-        })
+      // Ordenar por cantidad y tomar los top 3
+      const topContributors = Object.entries(playerContributions)
+        .map(([name, amount]) => ({ name, amount }))
+        .sort((a, b) => b.amount - a.amount)
+        .slice(0, 3)
 
-        // Ordenar por asistencias y tomar los top 3
-        const topAttendance = Object.entries(playerAttendance)
-          .map(([name, count]) => ({ name, count }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 3)
+      // Obtener top 3 jugadores con más asistencias
+      const { data: attendanceData, error: attendanceError } = await supabase
+        .from('asistencia_partidos')
+        .select(`
+          jugadores!inner(nombre)
+        `)
+        .eq('equipo_id', teamId)
 
-        // Calcular estadísticas adicionales
-        const totalGames = allGames?.length || 0
-        const averageAttendance = totalGames > 0 ? Math.round((attendanceData?.length || 0) / totalGames) : 0
+      if (attendanceError) {
+        console.error('Error fetching attendance data:', attendanceError)
+      }
+
+      // Contar asistencias por jugador
+      const playerAttendance = {}
+      attendanceData?.forEach(attendance => {
+        const playerName = attendance.jugadores.nombre
+        if (!playerAttendance[playerName]) {
+          playerAttendance[playerName] = 0
+        }
+        playerAttendance[playerName] += 1
+      })
+
+      // Ordenar por asistencias y tomar los top 3
+      const topAttendance = Object.entries(playerAttendance)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3)
+
+      // Calcular estadísticas adicionales
+      const totalGames = allGames?.length || 0
+      const averageAttendance = totalGames > 0 ? Math.round((attendanceData?.length || 0) / totalGames) : 0
 
         setTeamInfo({
           totalPlayers: players.length,
@@ -254,26 +274,26 @@ const Dashboard = () => {
 
 
 
-    return (
+  return (
     <>
       <div>
-                                 <div className="flex justify-between items-center mb-8">
-                      <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-                    </div>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+        </div>
 
-             {/* Mensaje de Bienvenida */}
-       <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8 border border-gray-700">
-         <h2 className="text-xl font-semibold text-white">
-           Bienvenido, {session?.user?.email}
-         </h2>
-         {selectedTeam && (
-           <p className="text-gray-300 mt-2">
-             Trabajando con: <span className="font-semibold text-blue-400">
-               {teams.find(team => team.id === selectedTeam)?.nombre_equipo}
-             </span>
-           </p>
-         )}
-       </div>
+        {/* Mensaje de Bienvenida */}
+        <div className="bg-neutral-900 shadow rounded-lg p-6 mb-8 border border-gray-700">
+          <h2 className="text-xl font-semibold text-white">
+            Bienvenido, {session?.user?.email}
+          </h2>
+          {selectedTeam && (
+            <p className="text-gray-300 mt-2">
+              Trabajando con: <span className="font-semibold text-blue-400">
+                {teams.find(team => team.id === selectedTeam)?.nombre_equipo}
+              </span>
+            </p>
+          )}
+        </div>
 
       {/* Información del Equipo */}
       {selectedTeam && (
@@ -317,7 +337,7 @@ const Dashboard = () => {
             },
             // Card: Total Pagado Registro
             {
-              title: "Total Pagado Registro",
+              title: "Pago de la Inscripción",
               icon: "💰",
               iconColor: "text-green-400",
               linkTo: "/teams",
@@ -483,44 +503,43 @@ const Dashboard = () => {
                   </div>
                 </div>
               )
-            }
+            },
+
           ]}
         />
       )}
 
-             {/* Mensaje cuando no hay equipo seleccionado */}
-       {!selectedTeam && !loadingTeams && (
-         <div className="bg-neutral-900 shadow rounded-lg p-8 text-center border border-gray-700">
-           {teams.length === 0 ? (
-             <div>
-               <p className="text-gray-400 mb-4">No tienes equipos registrados</p>
-               <Link 
-                 to="/teams"
-                 className="inline-block px-6 py-3 bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
-               >
-                 Crear Equipo
-               </Link>
-             </div>
-           ) : (
-             <div>
-               <p className="text-gray-400 mb-4">Tienes múltiples equipos. Selecciona uno para trabajar:</p>
-               <div className="space-y-3">
-                 {teams.map(team => (
-                   <button
-                     key={team.id}
-                     onClick={() => handleTeamChange(team.id)}
-                     className="block w-full px-6 py-3 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors"
-                   >
-                     {team.nombre_equipo}
-                   </button>
-                 ))}
-               </div>
-             </div>
-           )}
-         </div>
-       )}
-
-      
+        {/* Mensaje cuando no hay equipo seleccionado */}
+        {!selectedTeam && !loadingTeams && (
+          <div className="bg-neutral-900 shadow rounded-lg p-8 text-center border border-gray-700">
+            {teams.length === 0 ? (
+              <div>
+                <p className="text-gray-400 mb-4">No tienes equipos registrados</p>
+                <Link 
+                  to="/teams"
+                  className="inline-block px-6 py-3 bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors"
+                >
+                  Crear Equipo
+                </Link>
+              </div>
+            ) : (
+              <div>
+                <p className="text-gray-400 mb-4">Tienes múltiples equipos. Selecciona uno para trabajar:</p>
+                <div className="space-y-3">
+                  {teams.map(team => (
+                    <button
+                      key={team.id}
+                      onClick={() => handleTeamChange(team.id)}
+                      className="block w-full px-6 py-3 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors"
+                    >
+                      {team.nombre_equipo}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </>
   )

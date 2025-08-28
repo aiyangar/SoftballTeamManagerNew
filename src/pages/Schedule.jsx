@@ -34,7 +34,6 @@ const Schedule = () => {
     const [selectedGameForPayment, setSelectedGameForPayment] = useState(null);
     const [gameFinalizationStatus, setGameFinalizationStatus] = useState({});
     const [showGameForm, setShowGameForm] = useState(false);
-    const [actionMenuOpen, setActionMenuOpen] = useState(null);
     const [showAttendanceForm, setShowAttendanceForm] = useState({});
     const [editingGame, setEditingGame] = useState(null);
     const [paymentTotals, setPaymentTotals] = useState({});
@@ -118,20 +117,12 @@ const Schedule = () => {
         });
     };
 
-    // Función para manejar el menú de acciones
-    const toggleActionMenu = (gameId) => {
-        setActionMenuOpen(actionMenuOpen === gameId ? null : gameId);
-    };
-
-
-
     // Función para habilitar/deshabilitar formulario de asistencia
     const toggleAttendanceForm = (gameId) => {
         setShowAttendanceForm(prev => ({
             ...prev,
             [gameId]: !prev[gameId]
         }));
-        setActionMenuOpen(null);
     };
 
     // Función para editar partido
@@ -144,7 +135,6 @@ const Schedule = () => {
             umpire: game.umpire || 550
         });
         setShowGameForm(true);
-        setActionMenuOpen(null);
     };
 
     // Función para actualizar partido (comentada por no uso actual)
@@ -244,11 +234,34 @@ const Schedule = () => {
         setSelectedGameForPayment(null);
     };
 
-    const handlePaymentComplete = () => {
+    const handlePaymentComplete = async (paymentRegistered = false) => {
         closePaymentForm();
-        // Refresh payment totals after payment is completed
-        if (games.length > 0) {
-            fetchPaymentTotals(games);
+        
+        // Actualizar los datos del juego específico después del pago
+        if (selectedGameForPayment) {
+            await updateGameAfterPayment(selectedGameForPayment);
+        }
+        
+        // Solo mostrar mensaje y abrir modal si se registró un pago
+        if (paymentRegistered) {
+            // Mostrar mensaje de éxito temporal
+            setSuccess('✅ Pago registrado exitosamente. Abriendo detalles del partido...');
+            
+            // Pequeño delay para transición suave
+            setTimeout(async () => {
+                // Abrir automáticamente el modal de detalles del partido
+                if (selectedGameForPayment) {
+                    const game = games.find(g => g.id === selectedGameForPayment);
+                    if (game) {
+                        await openGameDetailsModal(game);
+                    }
+                }
+            }, 800); // 800ms de delay para que se vea el mensaje
+        } else {
+            // Si no se registró un pago pero el modal de detalles está abierto, actualizar sus datos
+            if (showGameDetailsModal && selectedGameForDetails) {
+                await loadGameDetails(selectedGameForDetails.id);
+            }
         }
     };
 
@@ -259,7 +272,6 @@ const Schedule = () => {
             carreras_equipo_contrario: game.carreras_equipo_contrario || 0
         });
         setShowScoreForm(true);
-        setActionMenuOpen(null);
     };
 
     const closeScoreForm = () => {
@@ -320,68 +332,132 @@ const Schedule = () => {
         }));
     };
 
-    const handleAttendanceChange = (gameId, playerId) => {
+    const handleAttendanceChange = (gameId, playerIds) => {
+        // Asegurar que playerIds sea siempre un array
+        const ids = Array.isArray(playerIds) ? playerIds : [playerIds];
+        
         setAttendance(prev => {
-            const gameAttendance = prev[gameId] || [];
-            if (gameAttendance.includes(playerId)) {
-                return { ...prev, [gameId]: gameAttendance.filter(id => id !== playerId) };
-            } else {
-                return { ...prev, [gameId]: [...gameAttendance, playerId] };
-            }
+            return { ...prev, [gameId]: ids };
         });
     };
 
     const recordAttendance = async (gameId) => {
-        setLoading(true);
         const playerIds = attendance[gameId] || [];
 
-        // First, remove existing attendance for this game
-        const { error: deleteError } = await supabase
-            .from('asistencia_partidos')
-            .delete()
-            .eq('partido_id', gameId);
+        try {
+            console.log('=== DEBUG RECORD ATTENDANCE ===');
+            console.log('Partido ID:', gameId);
+            console.log('Estado completo de asistencia:', attendance);
+            console.log('Jugadores seleccionados para este partido:', playerIds);
+            console.log('Tipo de playerIds:', typeof playerIds);
+            console.log('Es array:', Array.isArray(playerIds));
+            console.log('Equipo seleccionado:', selectedTeam);
+            console.log('===============================');
 
-        if (deleteError) {
-            setError(deleteError.message);
-            setLoading(false);
-            return;
+            // First, remove existing attendance for this game
+            const { error: deleteError } = await supabase
+                .from('asistencia_partidos')
+                .delete()
+                .eq('partido_id', gameId);
+
+            if (deleteError) {
+                console.error('Error al eliminar asistencia anterior:', deleteError);
+                setError('Error al limpiar asistencia anterior: ' + deleteError.message);
+                return false;
+            }
+
+            // Then, insert new attendance only if there are players
+            if (playerIds.length > 0) {
+                // Validar que todos los IDs sean números válidos
+                const validPlayerIds = playerIds.filter(id => {
+                    const isValid = typeof id === 'number' || (typeof id === 'string' && !isNaN(parseInt(id)));
+                    if (!isValid) {
+                        console.error('ID inválido encontrado:', id, 'tipo:', typeof id);
+                    }
+                    return isValid;
+                });
+
+                if (validPlayerIds.length !== playerIds.length) {
+                    console.error('Algunos IDs no son válidos. IDs originales:', playerIds, 'IDs válidos:', validPlayerIds);
+                    setError('Error: Algunos IDs de jugadores no son válidos');
+                    return false;
+                }
+
+                const attendanceToInsert = validPlayerIds.map(playerId => ({
+                    partido_id: parseInt(gameId),
+                    jugador_id: parseInt(playerId),
+                    equipo_id: parseInt(selectedTeam)
+                }));
+
+                console.log('Datos a insertar (validados):', attendanceToInsert);
+
+                const { data, error: insertError } = await supabase
+                    .from('asistencia_partidos')
+                    .insert(attendanceToInsert)
+                    .select();
+
+                if (insertError) {
+                    console.error('Error al insertar asistencia:', insertError);
+                    setError('Error al guardar asistencia: ' + insertError.message);
+                    return false;
+                }
+
+                console.log('Asistencia insertada exitosamente:', data);
+            }
+
+            setSuccess(`✅ Asistencia guardada: ${playerIds.length} jugadores`);
+            
+            // Update local state instead of refetching everything
+            const updatedGames = games.map(game => {
+                if (game.id === gameId) {
+                    return {
+                        ...game,
+                        asistencia_partidos: playerIds.map(id => ({ jugador_id: id }))
+                    };
+                }
+                return game;
+            });
+            setGames(updatedGames);
+            
+            return true;
+        } catch (error) {
+            console.error('Error inesperado al guardar asistencia:', error);
+            setError('Error inesperado al guardar asistencia: ' + error.message);
+            return false;
         }
-
-        // Then, insert new attendance
-        const attendanceToInsert = playerIds.map(playerId => ({
-            partido_id: gameId,
-            jugador_id: playerId,
-            equipo_id: selectedTeam
-        }));
-
-        const { error: insertError } = await supabase
-            .from('asistencia_partidos')
-            .insert(attendanceToInsert);
-
-        if (insertError) {
-            setError(insertError.message);
-        } else {
-            setSuccess('Asistencia guardada con éxito!');
-            // Refresh the games to show updated attendance
-            fetchGames(selectedTeam);
-        }
-        setLoading(false);
     };
 
     const loadExistingAttendance = async (gameId) => {
-        const { data: attendanceData, error } = await supabase
-            .from('asistencia_partidos')
-            .select('jugador_id')
-            .eq('partido_id', gameId);
+        try {
+            const { data: attendanceData, error } = await supabase
+                .from('asistencia_partidos')
+                .select('jugador_id')
+                .eq('partido_id', gameId);
 
-        if (error) {
-            console.error('Error loading attendance:', error);
-        } else {
+            if (error) {
+                console.error('Error loading attendance:', error);
+                setError('Error al cargar asistencia existente: ' + error.message);
+                return false;
+            }
+
             const playerIds = attendanceData.map(a => a.jugador_id);
             setAttendance(prev => ({
                 ...prev,
                 [gameId]: playerIds
             }));
+
+            // Mostrar feedback visual
+            if (playerIds.length > 0) {
+                setSuccess(`📋 Cargada asistencia existente: ${playerIds.length} jugadores`);
+            } else {
+                setSuccess('📋 No hay asistencia previa registrada');
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Error loading attendance:', error);
+            setError('Error inesperado al cargar asistencia: ' + error.message);
+            return false;
         }
     };
 
@@ -405,6 +481,12 @@ const Schedule = () => {
         }
         
         setPaymentTotals(totals);
+        
+        // También actualizar el estado local de los juegos para reflejar los nuevos totales
+        setGames(prevGames => prevGames.map(game => ({
+            ...game,
+            paymentTotals: totals[game.id] || { totalUmpire: 0, totalInscripcion: 0 }
+        })));
     };
 
     const openGameDetailsModal = async (game) => {
@@ -412,6 +494,43 @@ const Schedule = () => {
         setShowGameDetailsModal(true);
         
         // Cargar datos detallados del partido
+        await loadGameDetails(game.id);
+    };
+
+    // Función para recargar datos del modal
+    const reloadGameDetails = async () => {
+        if (selectedGameForDetails) {
+            await loadGameDetails(selectedGameForDetails.id);
+        }
+    };
+
+    const updateGameAfterPayment = async (gameId) => {
+        // Actualizar los totales de pagos para el juego específico
+        const { data: paymentData, error } = await supabase
+            .from('pagos')
+            .select('monto_umpire, monto_inscripcion')
+            .eq('partido_id', gameId);
+        
+        if (!error && paymentData) {
+            const totalUmpire = paymentData.reduce((sum, payment) => sum + (payment.monto_umpire || 0), 0);
+            const totalInscripcion = paymentData.reduce((sum, payment) => sum + (payment.monto_inscripcion || 0), 0);
+            
+            // Actualizar el estado de paymentTotals
+            setPaymentTotals(prev => ({
+                ...prev,
+                [gameId]: { totalUmpire, totalInscripcion }
+            }));
+            
+            // Actualizar el estado de games
+            setGames(prevGames => prevGames.map(game => 
+                game.id === gameId 
+                    ? { ...game, paymentTotals: { totalUmpire, totalInscripcion } }
+                    : game
+            ));
+        }
+    };
+
+    const loadGameDetails = async (gameId) => {
         try {
             // Obtener asistencia detallada
             const { data: attendanceData, error: attendanceError } = await supabase
@@ -420,7 +539,7 @@ const Schedule = () => {
                     jugador_id,
                     jugadores!inner(nombre)
                 `)
-                .eq('partido_id', game.id);
+                .eq('partido_id', gameId);
             
             if (attendanceError) {
                 console.error('Error fetching attendance details:', attendanceError);
@@ -436,7 +555,7 @@ const Schedule = () => {
                     fecha_pago,
                     jugadores!inner(nombre)
                 `)
-                .eq('partido_id', game.id)
+                .eq('partido_id', gameId)
                 .order('fecha_pago', { ascending: false });
             
             if (paymentsError) {
@@ -456,6 +575,48 @@ const Schedule = () => {
         setShowGameDetailsModal(false);
         setSelectedGameForDetails(null);
         setGameDetailsData({ attendance: [], payments: [] });
+    };
+
+    // Función para eliminar partido
+    const deleteGame = async (gameId) => {
+        setLoading(true);
+        try {
+            // Primero eliminar registros relacionados
+            const { error: attendanceError } = await supabase
+                .from('asistencia_partidos')
+                .delete()
+                .eq('partido_id', gameId);
+
+            if (attendanceError) {
+                console.error('Error deleting attendance:', attendanceError);
+            }
+
+            const { error: paymentsError } = await supabase
+                .from('pagos')
+                .delete()
+                .eq('partido_id', gameId);
+
+            if (paymentsError) {
+                console.error('Error deleting payments:', paymentsError);
+            }
+
+            // Luego eliminar el partido
+            const { error } = await supabase
+                .from('partidos')
+                .delete()
+                .eq('id', gameId);
+
+            if (error) {
+                setError('Error al eliminar partido: ' + error.message);
+            } else {
+                setSuccess('Partido eliminado exitosamente');
+                await fetchGames(selectedTeam);
+            }
+        } catch (error) {
+            setError('Error inesperado al eliminar partido');
+        } finally {
+            setLoading(false);
+        }
     };
 
     // Cargar datos cuando cambia el equipo seleccionado
@@ -528,12 +689,10 @@ const Schedule = () => {
                             paymentTotals={paymentTotals}
                             gameFinalizationStatus={gameFinalizationStatus}
                             onCardClick={openGameDetailsModal}
-                            onActionMenuToggle={toggleActionMenu}
                             onAttendanceFormToggle={toggleAttendanceForm}
                             onEditGame={editGame}
                             onOpenPaymentForm={openPaymentForm}
                             onOpenScoreForm={openScoreForm}
-                            actionMenuOpen={actionMenuOpen}
                             players={players}
                             attendance={attendance}
                             onAttendanceChange={handleAttendanceChange}
@@ -563,14 +722,24 @@ const Schedule = () => {
             )}
 
                                                    {/* Game Details Modal */}
-                          <ScheduleHistoryModal
-                              showModal={showGameDetailsModal}
-                              selectedGame={selectedGameForDetails}
-                              paymentTotals={paymentTotals}
-                              gameDetailsData={gameDetailsData}
-                              onClose={closeGameDetailsModal}
-                              getLocalTeamName={getLocalTeamName}
-                          />
+                                                     <ScheduleHistoryModal
+                               showModal={showGameDetailsModal}
+                               selectedGame={selectedGameForDetails}
+                               paymentTotals={paymentTotals}
+                               gameDetailsData={gameDetailsData}
+                               onClose={closeGameDetailsModal}
+                               getLocalTeamName={getLocalTeamName}
+                               onEditGame={editGame}
+                               onDeleteGame={deleteGame}
+                               gameFinalizationStatus={selectedGameForDetails ? gameFinalizationStatus[selectedGameForDetails.id] : false}
+                               onOpenPaymentForm={openPaymentForm}
+                               players={players}
+                               attendance={attendance}
+                               onAttendanceChange={handleAttendanceChange}
+                               onRecordAttendance={recordAttendance}
+                               onLoadExistingAttendance={loadExistingAttendance}
+                               onReloadDetails={reloadGameDetails}
+                           />
 
              {/* Score Form Modal */}
              {showScoreForm && selectedGameForScore && (

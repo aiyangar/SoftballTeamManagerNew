@@ -11,12 +11,13 @@ const DashboardCardsGrid = ({ cards, loading }) => {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 dashboard-grid">
                 {[...Array(8)].map((_, index) => (
-                    <div key={index} className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 min-h-64 flex flex-col border border-gray-700">
-                        <div className="flex items-center justify-between mb-3">
+                    <div key={index} className="bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 h-80 flex flex-col border border-gray-700">
+                        <div className="flex items-center justify-between mb-3 h-16">
                             <div className="h-6 bg-gray-700 rounded w-32 animate-pulse"></div>
-                            <div className="w-16 h-16 bg-gray-700 rounded animate-pulse"></div>
+                            <div className="w-16 h-16 bg-gray-700 rounded animate-pulse flex-shrink-0"></div>
                         </div>
-                        <div className="flex-1 flex items-center justify-center">
+                        <div className="w-[95%] mx-auto mb-3 border-t border-gray-600"></div>
+                        <div className="flex-1 flex items-center justify-start">
                             <p className="text-gray-400">Cargando...</p>
                         </div>
                     </div>

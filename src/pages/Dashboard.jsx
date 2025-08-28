@@ -385,33 +385,50 @@ const Dashboard = () => {
                 linkTo: '/schedule',
                 loading: loadingTeam,
                 content: teamInfo.lastGame ? (
-                  <div className='space-y-2'>
-                    <p className='text-white text-sm'>
-                      <span className='font-semibold'>Oponente:</span>{' '}
-                      {teamInfo.lastGame.equipo_contrario}
-                    </p>
-                    <p className='text-white text-sm'>
-                      <span className='font-semibold'>Fecha:</span>{' '}
-                      {new Date(
-                        teamInfo.lastGame.fecha_partido
-                      ).toLocaleDateString()}
-                    </p>
-                    <p className='text-white text-sm'>
-                      <span className='font-semibold'>Marcador:</span>{' '}
-                      {teamInfo.lastGame.carreras_equipo_local || 0} -{' '}
-                      {teamInfo.lastGame.carreras_equipo_contrario || 0}
-                    </p>
-                    <p
-                      className={`font-semibold text-sm ${
-                        teamInfo.lastGame.resultado === 'Victoria'
-                          ? 'text-green-400'
-                          : teamInfo.lastGame.resultado === 'Derrota'
-                            ? 'text-red-400'
-                            : 'text-yellow-400'
-                      }`}
-                    >
-                      {teamInfo.lastGame.resultado}
-                    </p>
+                  <div className='space-y-2 w-full'>
+                    <div className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'>
+                      <span className='text-white text-sm font-semibold'>
+                        Oponente:
+                      </span>
+                      <span className='text-white text-sm'>
+                        {teamInfo.lastGame.equipo_contrario}
+                      </span>
+                    </div>
+                    <div className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'>
+                      <span className='text-white text-sm font-semibold'>
+                        Fecha:
+                      </span>
+                      <span className='text-white text-sm'>
+                        {new Date(
+                          teamInfo.lastGame.fecha_partido
+                        ).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'>
+                      <span className='text-white text-sm font-semibold'>
+                        Marcador:
+                      </span>
+                      <span className='text-white text-sm'>
+                        {teamInfo.lastGame.carreras_equipo_local || 0} -{' '}
+                        {teamInfo.lastGame.carreras_equipo_contrario || 0}
+                      </span>
+                    </div>
+                    <div className='flex justify-between items-center p-2 bg-gray-700 rounded w-full border-t-2 border-gray-600'>
+                      <span className='text-white text-sm font-semibold'>
+                        Resultado:
+                      </span>
+                      <span
+                        className={`font-semibold text-sm ${
+                          teamInfo.lastGame.resultado === 'Victoria'
+                            ? 'text-green-400'
+                            : teamInfo.lastGame.resultado === 'Derrota'
+                              ? 'text-red-400'
+                              : 'text-yellow-400'
+                        }`}
+                      >
+                        {teamInfo.lastGame.resultado}
+                      </span>
+                    </div>
                   </div>
                 ) : (
                   <p className='text-gray-400'>No hay partidos jugados</p>

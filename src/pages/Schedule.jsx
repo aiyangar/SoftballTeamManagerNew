@@ -82,7 +82,7 @@ const Schedule = () => {
       // Obtener el total de inscripción requerida del equipo
       const { data: teamData, error: teamError } = await supabase
         .from('equipos')
-        .select('total_inscripcion')
+        .select('inscripcion')
         .eq('id', selectedTeam)
         .single();
 
@@ -103,12 +103,11 @@ const Schedule = () => {
       if (totalGames > 0) {
         const averageAttendance = totalAttendance / totalGames;
         const target = Math.round(
-          teamData.total_inscripcion / averageAttendance
+          teamData.inscripcion / averageAttendance
         );
         setInscripcionTarget(target);
       }
     } catch (error) {
-      console.error('Error calculando meta de inscripción:', error);
       setInscripcionTarget(450); // Valor por defecto
     }
   };
@@ -160,7 +159,7 @@ const Schedule = () => {
         .eq('partidos.equipo_id', teamId);
 
       if (attendanceError) {
-        console.error('Error al obtener asistencia:', attendanceError);
+        // Error al obtener asistencia
       }
 
       // Obtener pagos realizados (filtrar por partidos del equipo específico)
@@ -185,7 +184,7 @@ const Schedule = () => {
         .order('fecha_pago', { ascending: false });
 
       if (paymentsError) {
-        console.error('Error al obtener pagos:', paymentsError);
+        // Error al obtener pagos
       }
 
       // Obtener todos los partidos del equipo
@@ -196,7 +195,7 @@ const Schedule = () => {
         .order('fecha_partido', { ascending: false });
 
       if (gamesError) {
-        console.error('Error al obtener partidos:', gamesError);
+        // Error al obtener partidos
       }
 
       // Calcular estadísticas
@@ -229,7 +228,7 @@ const Schedule = () => {
 
       setPlayerHistory(historyData);
     } catch (err) {
-      console.error('Error al obtener historial del jugador:', err);
+      // Error al obtener historial del jugador
     } finally {
       setLoadingHistory(false);
     }
@@ -255,7 +254,7 @@ const Schedule = () => {
     try {
       await fetchPlayerHistory(player.id, selectedTeam);
     } catch (error) {
-      console.error('Error al cargar historial:', error);
+      // Error al cargar historial
     }
   };
 
@@ -300,7 +299,6 @@ const Schedule = () => {
       .select('id, nombre')
       .eq('equipo_id', teamId);
     if (error) {
-      console.error('Error fetching players:', error);
       setError('Error al cargar jugadores: ' + error.message);
     } else {
       setPlayers(data || []);
@@ -314,7 +312,7 @@ const Schedule = () => {
       .eq('equipo_id', teamId)
       .order('fecha_partido', { ascending: false });
     if (error) {
-      console.error('Error fetching games:', error);
+      // Error fetching games
     } else {
       setGames(data);
       // Initialize attendance state with existing attendance data
@@ -598,7 +596,6 @@ const Schedule = () => {
         .eq('partido_id', gameId);
 
       if (deleteError) {
-        console.error('Error al eliminar asistencia anterior:', deleteError);
         setError(
           'Error al limpiar asistencia anterior: ' + deleteError.message
         );
@@ -612,19 +609,10 @@ const Schedule = () => {
           const isValid =
             typeof id === 'number' ||
             (typeof id === 'string' && !isNaN(parseInt(id)));
-          if (!isValid) {
-            console.error('ID inválido encontrado:', id, 'tipo:', typeof id);
-          }
           return isValid;
         });
 
         if (validPlayerIds.length !== playerIds.length) {
-          console.error(
-            'Algunos IDs no son válidos. IDs originales:',
-            playerIds,
-            'IDs válidos:',
-            validPlayerIds
-          );
           setError('Error: Algunos IDs de jugadores no son válidos');
           return false;
         }
@@ -641,7 +629,6 @@ const Schedule = () => {
           .select();
 
         if (insertError) {
-          console.error('Error al insertar asistencia:', insertError);
           setError('Error al guardar asistencia: ' + insertError.message);
           return false;
         }
@@ -663,7 +650,6 @@ const Schedule = () => {
 
       return true;
     } catch (error) {
-      console.error('Error inesperado al guardar asistencia:', error);
       setError('Error inesperado al guardar asistencia: ' + error.message);
       return false;
     }
@@ -677,7 +663,6 @@ const Schedule = () => {
         .eq('partido_id', gameId);
 
       if (error) {
-        console.error('Error loading attendance:', error);
         setError('Error al cargar asistencia existente: ' + error.message);
         return false;
       }
@@ -699,7 +684,6 @@ const Schedule = () => {
 
       return true;
     } catch (error) {
-      console.error('Error loading attendance:', error);
       setError('Error inesperado al cargar asistencia: ' + error.message);
       return false;
     }
@@ -715,11 +699,6 @@ const Schedule = () => {
         .eq('partido_id', game.id);
 
       if (error) {
-        console.error(
-          'Error fetching payment totals for game:',
-          game.id,
-          error
-        );
         totals[game.id] = { totalUmpire: 0, totalInscripcion: 0 };
       } else {
         const totalUmpire = paymentData.reduce(
@@ -811,7 +790,7 @@ const Schedule = () => {
         .eq('partido_id', gameId);
 
       if (attendanceError) {
-        console.error('Error fetching attendance details:', attendanceError);
+        // Error fetching attendance details
       }
 
       // Obtener pagos detallados
@@ -831,7 +810,7 @@ const Schedule = () => {
         .order('fecha_pago', { ascending: false });
 
       if (paymentsError) {
-        console.error('Error fetching payment details:', paymentsError);
+        // Error fetching payment details
       }
 
       setGameDetailsData({
@@ -839,7 +818,7 @@ const Schedule = () => {
         payments: paymentsData || [],
       });
     } catch (err) {
-      console.error('Error loading game details:', err);
+      // Error loading game details
     }
   };
 
@@ -860,7 +839,7 @@ const Schedule = () => {
         .eq('partido_id', gameId);
 
       if (attendanceError) {
-        console.error('Error deleting attendance:', attendanceError);
+        // Error deleting attendance
       }
 
       const { error: paymentsError } = await supabase
@@ -869,7 +848,7 @@ const Schedule = () => {
         .eq('partido_id', gameId);
 
       if (paymentsError) {
-        console.error('Error deleting payments:', paymentsError);
+        // Error deleting payments
       }
 
       // Luego eliminar el partido
@@ -885,7 +864,6 @@ const Schedule = () => {
         await fetchGames(selectedTeam);
       }
     } catch (err) {
-      console.error('Error al eliminar partido:', err);
       setError('Error inesperado al eliminar partido');
     } finally {
       setLoading(false);

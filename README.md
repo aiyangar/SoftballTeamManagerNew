@@ -2,7 +2,7 @@
 
 Una aplicación web moderna para la gestión completa de equipos de softball, desarrollada con React y Supabase.
 
-**Versión Actual: 0.12.0**
+**Versión Actual: 0.13.0**
 
 ## 🏟️ Características
 
@@ -11,6 +11,7 @@ Una aplicación web moderna para la gestión completa de equipos de softball, de
 - Crear y administrar equipos de softball
 - Asignar jugadores a equipos
 - Gestionar información del equipo (nombre, categoría, etc.)
+- **Nuevo**: Estadísticas automáticas de record (Victorias, Derrotas, Empates)
 
 ### Gestión de Jugadores
 
@@ -19,6 +20,8 @@ Una aplicación web moderna para la gestión completa de equipos de softball, de
 - Historial de rendimiento y estadísticas
 - Gestión de pagos y membresías
 - **Nuevo**: Componentes modulares para mejor organización y mantenibilidad
+- **Nuevo**: Filtros avanzados por nombre, número y posiciones
+- **Nuevo**: Cálculo dinámico de meta de inscripción por equipo
 
 ### Programación de Partidos
 
@@ -26,6 +29,9 @@ Una aplicación web moderna para la gestión completa de equipos de softball, de
 - Programar entrenamientos
 - Notificaciones de eventos
 - Vista de calendario interactiva
+- **Nuevo**: Sistema de asistencia integrado
+- **Nuevo**: Gestión de pagos por partido
+- **Nuevo**: Finalización de partidos con resultados
 
 ### Panel de Administración
 
@@ -39,6 +45,7 @@ Una aplicación web moderna para la gestión completa de equipos de softball, de
 - Registro e inicio de sesión seguro
 - Protección de rutas
 - Gestión de sesiones con Supabase
+- **Nuevo**: Deshabilitación de auto-registro para mayor seguridad
 
 ### Interfaz de Usuario
 
@@ -47,6 +54,8 @@ Una aplicación web moderna para la gestión completa de equipos de softball, de
 - Diseño responsivo y moderno con Tailwind CSS
 - Componentes reutilizables y modulares
 - **Nuevo**: Arquitectura modular mejorada con separación de páginas y componentes
+- **Nuevo**: Cards clickeables con modales detallados
+- **Nuevo**: Filtros y ordenamiento avanzados
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -132,19 +141,24 @@ src/
 │   │   ├── ScheduleForm.jsx # Formulario de creación/edición de partidos
 │   │   ├── TeamForm.jsx # Formulario de creación/edición de equipos
 │   │   └── PaymentForm.jsx # Formulario de pagos
-│   └── Modals/          # Modales
-│       ├── PlayerHistoryModal.jsx # Modal de historial de jugador
-│       ├── ScheduleHistoryModal.jsx # Modal de detalles del partido
-│       └── TeamHistoryModal.jsx # Modal de detalles del equipo
+│   ├── Modals/          # Modales
+│   │   ├── PlayerHistoryModal.jsx # Modal de historial de jugador
+│   │   ├── ScheduleHistoryModal.jsx # Modal de detalles del partido
+│   │   └── TeamHistoryModal.jsx # Modal de detalles del equipo
+│   └── Widgets/         # Widgets especializados
+│       ├── PaymentStatusWidget.jsx # Widget de estado de pagos
+│       └── README.md # Documentación de widgets
 ├── hooks/               # Hooks personalizados
 │   └── useModal.js      # Hook para manejo de modales
 ├── context/             # Contextos de React
 │   ├── AuthContext.jsx  # Contexto de autenticación
-│   └── TeamContext.jsx  # Contexto de equipos
+│   ├── TeamContext.jsx  # Contexto de equipos
+│   └── useTeam.js       # Hook personalizado para equipos
 ├── App.jsx              # Componente principal
 ├── main.jsx             # Punto de entrada
 ├── router.jsx           # Configuración de rutas
-└── supabaseClient.js    # Cliente de Supabase
+├── supabaseClient.js    # Cliente de Supabase
+└── version.js           # Configuración de versión
 ```
 
 ## 🔧 Scripts Disponibles
@@ -159,7 +173,20 @@ src/
 1. Crear un proyecto en [Supabase](https://supabase.com)
 2. Configurar las tablas necesarias en la base de datos
 3. Configurar autenticación y políticas de seguridad
-4. Obtener las credenciales de la API y agregarlas al archivo `.env`
+4. **Importante**: Deshabilitar el auto-registro para mayor seguridad
+5. Obtener las credenciales de la API y agregarlas al archivo `.env`
+
+### Estructura de Base de Datos
+
+La aplicación requiere las siguientes tablas principales:
+
+- `equipos` - Información de equipos
+- `jugadores` - Información de jugadores
+- `partidos` - Programación de partidos
+- `asistencia_partidos` - Control de asistencia
+- `pagos` - Gestión de pagos
+- `posiciones` - Posiciones de béisbol/softball
+- `jugador_posiciones` - Relación jugador-posiciones
 
 ## 📖 Documentación
 
@@ -188,8 +215,29 @@ Para más información sobre el proyecto, consulta los archivos de documentació
 - **Nuevo**: Componentes de jugadores, dashboard, schedule y teams modularizados para mejor mantenibilidad
 - Modales optimizados con hook personalizado `useModal`
 - Footer de versión consistente en todas las páginas principales
+- **Nuevo**: Sistema de filtros y ordenamiento avanzado
+- **Nuevo**: Cálculo dinámico de metas de inscripción por equipo
+- **Nuevo**: Gestión completa de asistencia y pagos por partido
 
 ## 🆕 Changelog
+
+### Versión 0.13.0
+
+- ✅ **Correcciones de Errores:**
+  - Corregido error 400 en consulta a tabla `equipos` (columna `total_inscripcion` → `inscripcion`)
+  - Eliminados todos los logs de debugging de `Players.jsx` y `Schedule.jsx`
+  - Optimizado manejo de errores sin mostrar información sensible en consola
+  - Mejorada estabilidad general de la aplicación
+
+- ✅ **Mejoras de Seguridad:**
+  - Deshabilitado auto-registro de usuarios para mayor control
+  - Implementada aprobación manual de usuarios por administrador
+  - Mejorado sistema de autenticación y autorización
+
+- ✅ **Optimizaciones de Rendimiento:**
+  - Eliminados console.log y console.error innecesarios
+  - Mejorado manejo de errores con comentarios informativos
+  - Optimizadas consultas a base de datos
 
 ### Versión 0.12.0
 
@@ -199,6 +247,7 @@ Para más información sobre el proyecto, consulta los archivos de documentació
     - `CardGrids/` - Grids de tarjetas (PlayerCardsGrid, DashboardCardsGrid, ScheduleCardsGrid, TeamCardsGrid)
     - `Forms/` - Formularios (PlayerForm, ScheduleForm, TeamForm, PaymentForm)
     - `Modals/` - Modales (PlayerHistoryModal, ScheduleHistoryModal, TeamHistoryModal)
+    - `Widgets/` - Widgets especializados (PaymentStatusWidget)
   - Actualizados todos los imports para reflejar la nueva estructura
   - Mejorada la organización y escalabilidad del proyecto
   - Componentes agrupados por funcionalidad para mejor mantenibilidad
@@ -294,3 +343,20 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más det
 ## 📞 Soporte
 
 Para soporte técnico o preguntas sobre la aplicación, contacta al equipo de desarrollo.
+
+## 🔧 Solución de Problemas
+
+### Error 400 en consultas a Supabase
+- Verificar que las columnas referenciadas en las consultas existan en la base de datos
+- Asegurar que los nombres de las columnas coincidan exactamente con la estructura de la base de datos
+- Revisar las políticas de seguridad de Supabase para las tablas correspondientes
+
+### Problemas de Autenticación
+- Verificar que las variables de entorno estén configuradas correctamente
+- Asegurar que el auto-registro esté deshabilitado si se requiere aprobación manual
+- Revisar las políticas de autenticación en Supabase
+
+### Problemas de Rendimiento
+- Los logs de debugging han sido eliminados para mejorar el rendimiento
+- Verificar que las consultas a la base de datos estén optimizadas
+- Revisar el uso de memoria en componentes grandes

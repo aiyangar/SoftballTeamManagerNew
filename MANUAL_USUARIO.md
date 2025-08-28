@@ -1,7 +1,7 @@
 # 📖 Manual de Usuario - Softball Team Manager
 
-**Versión:** 0.8.0  
-**Fecha:** Diciembre 2024
+**Versión:** 0.13.0  
+**Fecha:** Agosto 2025
 
 ---
 
@@ -11,13 +11,15 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 
 ### 🚀 Características Principales
 
-- ✅ **Gestión de Equipos**: Crear y administrar múltiples equipos
-- ✅ **Gestión de Jugadores**: Registrar jugadores con información detallada
-- ✅ **Programación de Partidos**: Crear y gestionar calendario de juegos
+- ✅ **Gestión de Equipos**: Crear y administrar múltiples equipos con estadísticas automáticas
+- ✅ **Gestión de Jugadores**: Registrar jugadores con información detallada y filtros avanzados
+- ✅ **Programación de Partidos**: Crear y gestionar calendario de juegos con asistencia integrada
 - ✅ **Control de Asistencia**: Registrar asistencia de jugadores a partidos
-- ✅ **Gestión de Pagos**: Administrar pagos de umpire e inscripción
-- ✅ **Dashboard Informativo**: Vista general del estado del equipo
+- ✅ **Gestión de Pagos**: Administrar pagos de umpire e inscripción con cálculo dinámico de metas
+- ✅ **Dashboard Informativo**: Vista general del estado del equipo con estadísticas en tiempo real
 - ✅ **Historial de Jugadores**: Seguimiento completo de participación y pagos
+- ✅ **Filtros y Ordenamiento**: Búsqueda avanzada y organización de datos
+- ✅ **Interfaz Moderna**: Cards clickeables y modales optimizados
 
 ---
 
@@ -32,6 +34,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
    - **Contraseña** (mínimo 6 caracteres)
 4. Haz clic en **"Crear cuenta"**
 5. **Importante**: Tu cuenta debe ser aprobada por el administrador antes de poder acceder
+6. **Nota**: El auto-registro está deshabilitado para mayor seguridad
 
 ### Inicio de Sesión
 
@@ -65,6 +68,18 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 - Haz clic en el **selector de equipo** en la parte superior para activarlo
 - El equipo seleccionado será el que uses para todas las operaciones
 
+#### 1.4 Ver Estadísticas del Equipo
+
+- **Nuevo**: Haz clic en cualquier card de equipo para ver detalles completos
+- **Estadísticas automáticas**: El sistema calcula automáticamente:
+  - Victorias, Derrotas, Empates (W-L-D)
+  - Total de partidos jugados
+  - Porcentaje de victorias
+- **Información detallada**: En el modal verás:
+  - Lista de jugadores del equipo
+  - Historial de partidos
+  - Estado de pagos
+
 ---
 
 ### **Paso 2: Crear los Jugadores**
@@ -87,10 +102,23 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 
 #### 2.3 Gestionar Jugadores Existentes
 
-- **Ver lista**: Todos los jugadores aparecen en una tabla
-- **Editar**: Haz clic en el menú de acciones (⋮) y selecciona "Editar"
-- **Eliminar**: Usa el menú de acciones y selecciona "Eliminar"
+- **Ver lista**: Todos los jugadores aparecen en cards organizadas
+- **Filtros avanzados**: **Nuevo** - Usa los filtros para buscar por:
+  - Nombre del jugador
+  - Número de camiseta
+  - Posiciones (al menos una o todas las seleccionadas)
+- **Ordenamiento**: **Nuevo** - Ordena por nombre o número
+- **Editar**: Haz clic en la card del jugador y selecciona "Editar"
+- **Eliminar**: Usa el botón "Eliminar" en el modal de detalles
 - **Ver historial**: Haz clic en "Ver Historial" para ver asistencia y pagos
+
+#### 2.4 Historial Detallado de Jugadores
+
+- **Nuevo**: Al hacer clic en "Ver Historial" verás:
+  - **Asistencia**: Lista completa de partidos asistidos
+  - **Pagos**: Historial de todos los pagos realizados
+  - **Estadísticas**: Porcentaje de asistencia, totales pagados
+  - **Meta de inscripción**: Cálculo dinámico basado en el equipo
 
 ---
 
@@ -113,8 +141,9 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 
 #### 3.3 Gestionar Partidos Existentes
 
-- **Ver lista**: Todos los partidos aparecen ordenados por fecha
-- **Editar**: Usa el menú de acciones para modificar detalles
+- **Ver lista**: Todos los partidos aparecen en cards ordenadas por fecha
+- **Cards clickeables**: **Nuevo** - Haz clic en cualquier card para ver detalles
+- **Editar**: Usa el botón "Editar" en el modal de detalles
 - **Eliminar**: Elimina partidos que no se realizarán
 
 ---
@@ -124,14 +153,23 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 #### 4.1 Registrar Asistencia de Jugadores
 
 1. En la lista de partidos, busca el partido correspondiente
-2. Haz clic en el menú de acciones (⋮) del partido
-3. Selecciona **"Marcar Asistencia"**
-4. En el formulario que aparece:
+2. Haz clic en la **card del partido** para abrir el modal de detalles
+3. En el modal, busca la sección **"Asistencia"**
+4. Haz clic en **"Marcar Asistencia"**
+5. En el formulario que aparece:
    - Marca las casillas de los jugadores que asistirán
    - Desmarca los que no asistirán
-5. Haz clic en **"Guardar Asistencia"**
+6. Haz clic en **"Guardar Asistencia"**
 
-#### 4.2 Actualizar Asistencia
+#### 4.2 Cargar Asistencia Existente
+
+- **Nuevo**: Si ya hay asistencia registrada:
+  1. Haz clic en **"Cargar Asistencia Existente"**
+  2. El sistema cargará automáticamente los jugadores que ya están marcados
+  3. Modifica según sea necesario
+  4. Guarda los cambios
+
+#### 4.3 Actualizar Asistencia
 
 - Si necesitas modificar la asistencia:
   1. Haz clic en **"Marcar Asistencia"** nuevamente
@@ -145,8 +183,9 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 #### 5.1 Acceder al Formulario de Pagos
 
 1. En la lista de partidos, busca el partido correspondiente
-2. Haz clic en el menú de acciones (⋮)
-3. Selecciona **"Registrar Pago"**
+2. Haz clic en la **card del partido** para abrir el modal de detalles
+3. En el modal, busca la sección **"Pagos"**
+4. Haz clic en **"Registrar Pago"**
 
 #### 5.2 Registrar Pago de Umpire
 
@@ -170,6 +209,7 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
   - Total pagado de umpire
   - Total pagado de inscripción
   - Monto objetivo de umpire por partido
+  - **Nuevo**: Meta de inscripción calculada dinámicamente por equipo
   - Estado de pagos por jugador
 
 ---
@@ -179,22 +219,23 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 #### 6.1 Registrar Resultado del Partido
 
 1. En la lista de partidos, busca el partido a finalizar
-2. Haz clic en el menú de acciones (⋮)
-3. Selecciona **"Finalizar Partido"**
-4. En el formulario:
+2. Haz clic en la **card del partido** para abrir el modal de detalles
+3. En el modal, busca la sección **"Resultado"**
+4. Haz clic en **"Finalizar Partido"**
+5. En el formulario:
    - Ingresa las **carreras de tu equipo**
    - Ingresa las **carreras del equipo contrario**
-5. Haz clic en **"Finalizar Partido"**
+6. Haz clic en **"Finalizar Partido"**
 
 #### 6.2 Ver Detalles del Partido
 
 - Una vez finalizado, puedes:
-  1. Hacer clic en **"Ver Detalles"** en el menú de acciones
-  2. Ver información completa:
+  1. Ver información completa en el modal de detalles:
      - Asistencia registrada
      - Pagos realizados
      - Resultado del partido
      - Estadísticas
+  2. **Nuevo**: El resultado se refleja automáticamente en las estadísticas del equipo
 
 ---
 
@@ -206,15 +247,16 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 - **Próximo Juego**: Detalles del próximo partido programado
 - **Total Pagado Registro**: Estado de pagos de inscripción
 - **Último Partido**: Resultado del último partido jugado
-- **Estadísticas del Equipo**: Victorias, derrotas y empates
+- **Estadísticas del Equipo**: **Mejorado** - Victorias, derrotas y empates con porcentajes
 - **Top Contribuyentes**: Jugadores que más han pagado
 - **Top Asistencia**: Jugadores con mejor asistencia
+- **Nuevo**: Meta de inscripción calculada dinámicamente
 
 ### Navegación Rápida
 
 - **Dashboard**: Vista general del equipo
 - **Gestión de Equipos**: Administrar equipos
-- **Gestión de Jugadores**: Gestionar jugadores
+- **Gestión de Jugadores**: Gestionar jugadores con filtros avanzados
 - **Gestión de Partidos**: Programar y gestionar partidos
 - **Panel de Administración**: Funciones administrativas
 
@@ -227,18 +269,30 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 - Los jugadores pueden seleccionar hasta **3 posiciones**
 - Las posiciones disponibles incluyen: Pitcher, Catcher, Primera Base, etc.
 - Se pueden editar las posiciones en cualquier momento
+- **Nuevo**: Filtros por posiciones (al menos una o todas las seleccionadas)
 
 ### Historial de Jugadores
 
 - **Asistencia**: Registro completo de asistencia a partidos
 - **Pagos**: Historial de todos los pagos realizados
-- **Estadísticas**: Resumen de participación
+- **Estadísticas**: Resumen de participación con porcentajes
+- **Nuevo**: Meta de inscripción personalizada por equipo
 
 ### Gestión de Múltiples Equipos
 
 - Puedes crear y gestionar **múltiples equipos**
 - Cambia entre equipos usando el selector en la parte superior
 - Cada equipo mantiene su información independiente
+- **Nuevo**: Estadísticas automáticas por equipo (W-L-D)
+
+### Filtros y Ordenamiento
+
+- **Nuevo**: Filtros avanzados en jugadores:
+  - Por nombre (búsqueda parcial)
+  - Por número de camiseta
+  - Por posiciones (múltiples opciones)
+- **Nuevo**: Ordenamiento por nombre o número
+- **Nuevo**: Indicadores visuales de filtros activos
 
 ---
 
@@ -248,21 +302,28 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 
 - **Autenticación requerida**: Debes iniciar sesión para acceder
 - **Aprobación de cuenta**: Tu cuenta debe ser aprobada por el administrador
+- **Auto-registro deshabilitado**: **Nuevo** - Mayor control de acceso
 - **Datos seguros**: Toda la información se almacena de forma segura
 
 ### Funcionalidades del Sistema
 
+- **Cards clickeables**: **Nuevo** - Haz clic en cualquier card para ver detalles
 - **Modales optimizados**: Los formularios aparecen en ventanas modales sin afectar la navegación
 - **Scroll interno**: Los modales tienen su propio scroll para mejor usabilidad
 - **Responsive**: La aplicación funciona en dispositivos móviles y de escritorio
-- **Versión**: El número de versión (0.8.0) se muestra en el pie de página
+- **Versión**: El número de versión (0.13.0) se muestra en el pie de página
+- **Filtros avanzados**: **Nuevo** - Búsqueda y organización mejorada
+- **Cálculo dinámico**: **Nuevo** - Metas de inscripción calculadas automáticamente
 
 ### Consejos de Uso
 
 1. **Selecciona siempre un equipo** antes de trabajar con jugadores o partidos
-2. **Registra la asistencia** antes de registrar pagos para mejor organización
-3. **Finaliza los partidos** después de registrar todos los datos
-4. **Revisa el Dashboard** regularmente para mantener un seguimiento del equipo
+2. **Usa los filtros** para encontrar jugadores rápidamente
+3. **Registra la asistencia** antes de registrar pagos para mejor organización
+4. **Finaliza los partidos** después de registrar todos los datos
+5. **Revisa el Dashboard** regularmente para mantener un seguimiento del equipo
+6. **Haz clic en las cards** para ver información detallada
+7. **Aprovecha los filtros** para organizar mejor la información
 
 ---
 
@@ -273,6 +334,15 @@ El **Softball Team Manager** es una aplicación web moderna diseñada para la ge
 - **No puedo acceder**: Verifica que tu cuenta haya sido aprobada
 - **No veo mi equipo**: Asegúrate de haber seleccionado un equipo en el selector
 - **Error al guardar**: Verifica que todos los campos obligatorios estén completos
+- **No encuentro un jugador**: Usa los filtros de búsqueda para localizarlo
+- **Error 400 en consultas**: Contacta al administrador si persiste
+
+### Mejoras Recientes
+
+- **Eliminación de logs**: Los logs de debugging han sido removidos para mejor rendimiento
+- **Optimización de consultas**: Mejoradas las consultas a la base de datos
+- **Interfaz más limpia**: Cards clickeables y modales optimizados
+- **Filtros avanzados**: Búsqueda y organización mejorada
 
 ### Contacto
 
@@ -280,4 +350,4 @@ Para soporte técnico o preguntas sobre el sistema, contacta al administrador de
 
 ---
 
-**Softball Team Manager v0.8.0** - Desarrollado para la gestión eficiente de equipos de softball.
+**Softball Team Manager v0.13.0** - Desarrollado para la gestión eficiente de equipos de softball.

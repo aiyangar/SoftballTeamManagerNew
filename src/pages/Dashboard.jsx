@@ -337,7 +337,7 @@ const Dashboard = () => {
             },
             // Card: Total Pagado Registro
             {
-              title: "Total Pagado Registro",
+              title: "Pago de la Inscripción",
               icon: "💰",
               iconColor: "text-green-400",
               linkTo: "/teams",

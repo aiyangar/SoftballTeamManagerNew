@@ -333,9 +333,9 @@ const Dashboard = () => {
                   </div>
                 ),
               },
-              // Card: Próximo Juego
+              // Card: Próximo Partido
               {
-                title: 'Próximo Juego',
+                title: 'Próximo Partido',
                 icon: '⚾',
                 iconColor: 'text-green-400',
                 linkTo: '/schedule',
@@ -383,7 +383,7 @@ const Dashboard = () => {
                   </p>
                 ),
               },
-              // Card: Total Pagado Registro
+              // Card: Total Pagado por concepto de inscripción
               {
                 title: 'Pago de la Inscripción',
                 icon: '💰',

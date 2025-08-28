@@ -27,7 +27,7 @@ const PlayerForm = ({
 }) => {
     const handleSubmit = (e) => {
         e.preventDefault()
-        onSubmit(formData)
+        onSubmit(e)
     }
 
     return (
@@ -109,6 +109,11 @@ const PlayerForm = ({
                                 </option>
                             ))}
                         </select>
+                        {formData.equipoId && (
+                            <p className="text-xs text-blue-400 mt-1">
+                                Equipo seleccionado: {teams.find(team => team.id === formData.equipoId)?.nombre_equipo}
+                            </p>
+                        )}
                     </div>
                 </div>
 

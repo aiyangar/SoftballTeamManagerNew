@@ -70,6 +70,7 @@ const Schedule = () => {
     payments: false,
   });
   const [inscripcionTarget, setInscripcionTarget] = useState(450);
+  const [playerInscripcionTarget, setPlayerInscripcionTarget] = useState(450);
 
   // Usar el hook para manejar los modales
   useModal(showGameDetailsModal || showScoreForm || showPlayerHistoryModal);
@@ -128,6 +129,75 @@ const Schedule = () => {
       calculateInscripcionTarget();
     }
   }, [selectedTeam]);
+
+  /**
+   * Calcula la meta personal de inscripción para un jugador específico
+   * @param {number} playerId - ID del jugador
+   * @param {number} teamId - ID del equipo del jugador
+   * @returns {number} - Meta personal calculada
+   */
+  const calculatePlayerInscripcionTarget = async (playerId, teamId) => {
+    if (!playerId || !teamId) return 450;
+
+    try {
+      // Obtener información del equipo del jugador
+      const { data: teamData, error: teamError } = await supabase
+        .from('equipos')
+        .select('inscripcion')
+        .eq('id', teamId)
+        .single();
+
+      if (teamError || !teamData) {
+        return 450;
+      }
+
+      const totalInscripcion = teamData.inscripcion || 0;
+      if (totalInscripcion === 0) return 450;
+
+      // Obtener estadísticas de asistencia del equipo del jugador
+      const { data: attendanceData, error: attendanceError } = await supabase
+        .from('asistencia_partidos')
+        .select('partido_id')
+        .eq('equipo_id', teamId);
+
+      if (attendanceError) {
+        return 450;
+      }
+
+      // Obtener total de partidos del equipo del jugador
+      const { data: gamesData, error: gamesError } = await supabase
+        .from('partidos')
+        .select('id')
+        .eq('equipo_id', teamId);
+
+      if (gamesError) {
+        return 450;
+      }
+
+      const totalGames = gamesData?.length || 0;
+      const totalAttendance = attendanceData?.length || 0;
+
+      // Calcular promedio de asistentes por juego
+      const averageAttendance =
+        totalGames > 0 ? totalAttendance / totalGames : 0;
+
+      // Si no hay asistencias registradas, usar un promedio estimado de 12 jugadores
+      const effectiveAverageAttendance =
+        averageAttendance > 0 ? averageAttendance : 12;
+
+      // Calcular meta: total de inscripción / promedio de asistentes
+      const calculatedTarget = Math.round(
+        totalInscripcion / effectiveAverageAttendance
+      );
+
+      // Asegurar que la meta esté en un rango razonable ($200 - $800)
+      const finalTarget = Math.max(200, Math.min(800, calculatedTarget));
+
+      return finalTarget;
+    } catch (error) {
+      return 450;
+    }
+  };
 
   /**
    * Obtiene la información histórica completa de un jugador
@@ -250,6 +320,11 @@ const Schedule = () => {
     setSelectedPlayerForHistory(player);
     setShowPlayerHistoryModal(true);
 
+    // Calcular la meta personal del jugador basada en su equipo
+    const playerTeamId = player.equipo_id || selectedTeam;
+    const personalTarget = await calculatePlayerInscripcionTarget(player.id, playerTeamId);
+    setPlayerInscripcionTarget(personalTarget);
+
     // Cargar los datos del historial después de abrir el modal
     try {
       await fetchPlayerHistory(player.id, selectedTeam);
@@ -264,6 +339,7 @@ const Schedule = () => {
   const closePlayerHistoryModal = () => {
     setShowPlayerHistoryModal(false);
     setSelectedPlayerForHistory(null);
+    setPlayerInscripcionTarget(450); // Resetear la meta personal
     setPlayerHistory({
       attendance: [],
       payments: [],
@@ -1143,7 +1219,7 @@ const Schedule = () => {
           history={playerHistory}
           loadingHistory={loadingHistory}
           expandedSections={expandedSections}
-          inscripcionTarget={inscripcionTarget}
+          inscripcionTarget={playerInscripcionTarget}
           onToggleSection={toggleSection}
           onClose={closePlayerHistoryModal}
           onEdit={playerId => {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserAuth } from '../context/AuthContext.jsx';
+import MySoftballClubLogo from '../assets/MySoftballClubLogoV2.png';
 
 /**
  * Componente para el inicio de sesión de usuarios existentes
@@ -53,6 +54,15 @@ const Signin = () => {
     <>
       <div className='min-h-screen bg-gray-900 flex items-center justify-center'>
         <form onSubmit={handleSignIn} className='max-w-md w-full mx-4'>
+          {/* Logo */}
+          <div className='flex justify-center mb-6'>
+            <img 
+              src={MySoftballClubLogo} 
+              alt='MySoftballClub Logo' 
+              className='h-20 w-auto'
+            />
+          </div>
+          
           <h2 className='font-bold pb-2 text-2xl text-white'>Iniciar Sesión</h2>
           <p className='text-gray-400 mb-6'>
             ¿No tienes una cuenta?{' '}

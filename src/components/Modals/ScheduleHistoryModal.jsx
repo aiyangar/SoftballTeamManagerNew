@@ -19,6 +19,7 @@ import PaymentStatusWidget from '../Widgets/PaymentStatusWidget';
  * @param {Function} onRecordAttendance - Función para guardar asistencia
  * @param {Function} onLoadExistingAttendance - Función para cargar asistencia existente
  * @param {Function} onReloadDetails - Función para recargar detalles del modal
+ * @param {Function} onOpenScoreForm - Función para abrir formulario de resultado
  */
 const ScheduleHistoryModal = ({
   showModal,
@@ -37,6 +38,7 @@ const ScheduleHistoryModal = ({
   onLoadExistingAttendance,
   onReloadDetails,
   onViewPlayerHistory,
+  onOpenScoreForm,
 }) => {
   const [isEditingAttendance, setIsEditingAttendance] = useState(false);
   const [localAttendance, setLocalAttendance] = useState([]);
@@ -139,6 +141,17 @@ const ScheduleHistoryModal = ({
               >
                 <span>💰</span>
                 <span>Pagos</span>
+              </button>
+              <button
+                onClick={() => {
+                  onOpenScoreForm(selectedGame);
+                  onClose();
+                }}
+                className='px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors flex items-center space-x-2'
+                title='Terminar partido'
+              >
+                <span>🏁</span>
+                <span>Terminar Partido</span>
               </button>
               <button
                 onClick={() => setShowDeleteWarning(true)}

@@ -1089,6 +1089,7 @@ const Schedule = () => {
           onLoadExistingAttendance={loadExistingAttendance}
           onReloadDetails={reloadGameDetails}
           onViewPlayerHistory={openPlayerHistoryModal}
+          onOpenScoreForm={openScoreForm}
         />
 
         {/* Score Form Modal */}

@@ -890,6 +890,148 @@ const Players = () => {
     setShowFilters(false);
   };
 
+  /**
+   * Obtiene los datos de pagos de umpire para todos los jugadores
+   * @param {Array} playerIds - Array de IDs de jugadores
+   * @returns {Object} - Totales de umpire por jugador
+   */
+  const fetchPlayerUmpireTotals = async playerIds => {
+    if (!playerIds || playerIds.length === 0) return {};
+
+    try {
+      const { data, error } = await supabase
+        .from('pagos')
+        .select('jugador_id, monto_umpire')
+        .in('jugador_id', playerIds)
+        .not('monto_umpire', 'is', null)
+        .gt('monto_umpire', 0);
+
+      if (error) {
+        return {};
+      }
+
+      const totals = {};
+      data.forEach(payment => {
+        const playerId = payment.jugador_id;
+        if (!totals[playerId]) {
+          totals[playerId] = 0;
+        }
+        totals[playerId] += payment.monto_umpire || 0;
+      });
+
+      return totals;
+    } catch (error) {
+      return {};
+    }
+  };
+
+  /**
+   * Exporta los datos de jugadores a un archivo CSV
+   */
+  const exportPlayersToCSV = async () => {
+    try {
+      setLoading(true);
+      
+      // Obtener todos los jugadores del usuario
+      const { data: allPlayers, error: playersError } = await supabase
+        .from('jugadores')
+        .select(`
+          *,
+          equipos (
+            id,
+            nombre_equipo
+          )
+        `)
+        .eq('propietario_id', session.user.id)
+        .order('numero', { ascending: true });
+
+      if (playersError) {
+        setError('Error al obtener datos de jugadores: ' + playersError.message);
+        return;
+      }
+
+      if (!allPlayers || allPlayers.length === 0) {
+        setError('No hay jugadores para exportar');
+        return;
+      }
+
+      // Obtener IDs de todos los jugadores
+      const playerIds = allPlayers.map(player => player.id);
+
+      // Obtener totales de umpire e inscripción
+      const [umpireTotals, inscripcionTotals] = await Promise.all([
+        fetchPlayerUmpireTotals(playerIds),
+        fetchPlayerInscripcionTotals(playerIds)
+      ]);
+
+      // Calcular meta de inscripción
+      const targetInscripcion = await calculateInscripcionTarget(selectedTeam);
+
+      // Preparar datos para CSV
+      const csvData = allPlayers.map(player => {
+        const umpirePaid = umpireTotals[player.id] || 0;
+        const inscripcionPaid = inscripcionTotals[player.id] || 0;
+        const inscripcionDifference = targetInscripcion - inscripcionPaid;
+        
+        return {
+          'Número de Playera': player.numero,
+          'Nombre': player.nombre,
+          'Equipo': player.equipos?.nombre_equipo || 'Sin equipo',
+          'Teléfono': player.telefono || '',
+          'Email': player.email || '',
+          'Umpire Pagado': `$${umpirePaid.toLocaleString()}`,
+          'Inscripción Pagada': `$${inscripcionPaid.toLocaleString()}`,
+          'Meta Inscripción': `$${targetInscripcion.toLocaleString()}`,
+          'Diferencia Inscripción': inscripcionDifference > 0 
+            ? `$${inscripcionDifference.toLocaleString()} (Debe)` 
+            : inscripcionDifference < 0 
+            ? `$${Math.abs(inscripcionDifference).toLocaleString()} (Sobrepago)`
+            : '$0 (Completo)'
+        };
+      });
+
+      // Convertir a CSV
+      const headers = Object.keys(csvData[0]);
+      const csvContent = [
+        headers.join(','),
+        ...csvData.map(row => 
+          headers.map(header => {
+            const value = row[header];
+            // Convertir a string y manejar valores nulos/undefined
+            const stringValue = value !== null && value !== undefined ? String(value) : '';
+            // Escapar comillas y envolver en comillas si contiene comas o comillas
+            return stringValue.includes(',') || stringValue.includes('"') 
+              ? `"${stringValue.replace(/"/g, '""')}"` 
+              : stringValue;
+          }).join(',')
+        )
+      ].join('\n');
+
+      // Crear y descargar archivo
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      
+      // Generar nombre de archivo con fecha
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
+      const teamName = teams.find(team => team.id === selectedTeam)?.nombre_equipo || 'Todos';
+      link.setAttribute('download', `jugadores_${teamName}_${dateStr}.csv`);
+      
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setSuccess(`✅ Datos exportados exitosamente: ${allPlayers.length} jugadores. Para importar a Google Sheets: 1) Ve a sheets.google.com, 2) Crea una nueva hoja, 3) Archivo > Importar > Subir archivo, 4) Selecciona el archivo CSV descargado`);
+    } catch (error) {
+      setError('Error al exportar datos: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Obtener jugadores filtrados y ordenados
   const filteredPlayers = filterPlayers(players, filters);
   const sortedPlayers = sortConfig.key
@@ -996,8 +1138,8 @@ const Players = () => {
           />
         )}
 
-        {/* Botón para mostrar/ocultar formulario */}
-        <div className='mb-6 sm:mb-8'>
+        {/* Botones de acción */}
+        <div className='mb-6 sm:mb-8 flex flex-col sm:flex-row gap-3'>
           <button
             onClick={() => setShowForm(!showForm)}
             className='w-full sm:w-auto px-4 sm:px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center justify-center sm:justify-start space-x-2'
@@ -1016,6 +1158,28 @@ const Players = () => {
               />
             </svg>
             <span>{showForm ? 'Cancelar' : 'Agregar Jugador'}</span>
+          </button>
+          
+          <button
+            onClick={exportPlayersToCSV}
+            disabled={loading || players.length === 0}
+            className='w-full sm:w-auto px-4 sm:px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center sm:justify-start space-x-2'
+            title='Exportar datos de jugadores a hoja de cálculo'
+          >
+            <svg
+              className='w-5 h-5'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+              />
+            </svg>
+            <span>{loading ? 'Exportando...' : 'Exportar a CSV'}</span>
           </button>
         </div>
 

@@ -66,9 +66,13 @@ const Players = () => {
   });
   const [playerInscripcionTotals, setPlayerInscripcionTotals] = useState({});
   const [inscripcionTarget, setInscripcionTarget] = useState(450);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPlayerForPayment, setSelectedPlayerForPayment] = useState(null);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('Efectivo');
 
-  // Usar el hook para manejar el modal
-  useModal(showPlayerHistoryModal);
+  // Usar el hook para manejar los modales
+  useModal(showPlayerHistoryModal || showPaymentModal);
 
   // Hook para navegación programática
   const navigate = useNavigate();
@@ -926,6 +930,94 @@ const Players = () => {
   };
 
   /**
+   * Abre el modal para aceptar pagos de inscripción
+   * @param {Object} player - Jugador para el cual aceptar el pago
+   */
+  const handleAcceptInscripcionPayment = (player) => {
+    // Calcular el monto restante de inscripción
+    const currentInscripcionPaid = playerInscripcionTotals[player.id] || 0;
+    const remainingAmount = inscripcionTarget - currentInscripcionPaid;
+    
+    if (remainingAmount <= 0) {
+      setError('Este jugador ya ha completado su pago de inscripción');
+      return;
+    }
+
+    setSelectedPlayerForPayment(player);
+    setPaymentAmount(remainingAmount.toString());
+    setPaymentMethod('Efectivo');
+    setShowPaymentModal(true);
+  };
+
+  /**
+   * Cierra el modal de pago
+   */
+  const closePaymentModal = () => {
+    setShowPaymentModal(false);
+    setSelectedPlayerForPayment(null);
+    setPaymentAmount('');
+    setPaymentMethod('Efectivo');
+  };
+
+  /**
+   * Procesa el pago de inscripción
+   */
+  const processInscripcionPayment = async () => {
+    if (!selectedPlayerForPayment || !paymentAmount) {
+      setError('Por favor, ingresa una cantidad válida');
+      return;
+    }
+
+    const amount = parseFloat(paymentAmount);
+    if (isNaN(amount) || amount <= 0) {
+      setError('Por favor, ingresa una cantidad válida mayor a 0');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Crear un pago de inscripción
+      const { data: paymentData, error: paymentError } = await supabase
+        .from('pagos')
+        .insert([
+          {
+            jugador_id: selectedPlayerForPayment.id,
+            equipo_id: selectedPlayerForPayment.equipo_id || selectedTeam,
+            monto_umpire: 0,
+            monto_inscripcion: amount,
+            fecha_pago: new Date().toISOString(),
+            metodo_pago: paymentMethod,
+          },
+        ])
+        .select();
+
+      if (paymentError) {
+        setError('Error al registrar el pago: ' + paymentError.message);
+        return;
+      }
+
+      setSuccess(`✅ Pago de inscripción registrado exitosamente: $${amount.toLocaleString()} para ${selectedPlayerForPayment.nombre}`);
+      
+      // Cerrar modal
+      closePaymentModal();
+      
+      // Recargar datos del jugador y totales
+      await fetchPlayers(session.user.id);
+      
+      // Si el modal de historial está abierto, recargar sus datos
+      if (showPlayerHistoryModal && selectedPlayerForHistory?.id === selectedPlayerForPayment.id) {
+        await fetchPlayerHistory(selectedPlayerForPayment.id, selectedPlayerForPayment.equipo_id || selectedTeam);
+      }
+      
+    } catch (error) {
+      setError('Error inesperado al registrar el pago: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
    * Exporta los datos de jugadores a un archivo CSV
    */
   const exportPlayersToCSV = async () => {
@@ -1460,7 +1552,118 @@ const Players = () => {
           onDelete={playerId => {
             deletePlayer(playerId);
           }}
+          onAcceptPayment={handleAcceptInscripcionPayment}
         />
+
+        {/* Modal de Confirmación de Pago */}
+        {showPaymentModal && selectedPlayerForPayment && (
+          <div className='fixed inset-0 modal-overlay flex items-center justify-center z-50'>
+            <div className='bg-neutral-900 border border-gray-600 rounded-lg w-full max-w-md mx-4 modal-container'>
+              <div className='modal-header p-6 border-b border-gray-600'>
+                <div className='flex justify-between items-center'>
+                  <h2 className='text-xl font-semibold text-white'>
+                    Aceptar Pago de Inscripción
+                  </h2>
+                  <button
+                    onClick={closePaymentModal}
+                    className='text-gray-400 hover:text-white text-2xl'
+                    title='Cerrar modal de pago'
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+
+              <div className='modal-content p-6'>
+                {/* Información del jugador */}
+                <div className='mb-6 p-4 bg-gray-800 rounded-lg'>
+                  <h3 className='text-lg font-semibold text-white mb-2'>
+                    {selectedPlayerForPayment.nombre}
+                  </h3>
+                  <p className='text-gray-300'>
+                    Número: {selectedPlayerForPayment.numero}
+                  </p>
+                  <p className='text-gray-300'>
+                    Equipo: {selectedPlayerForPayment.equipos?.nombre_equipo || 'Sin equipo'}
+                  </p>
+                </div>
+
+                {/* Información de pago actual */}
+                <div className='mb-6 p-4 bg-gray-800 rounded-lg'>
+                  <div className='flex justify-between items-center mb-2'>
+                    <span className='text-gray-300'>Pagado actualmente:</span>
+                    <span className='text-blue-400 font-semibold'>
+                      ${(playerInscripcionTotals[selectedPlayerForPayment.id] || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className='flex justify-between items-center mb-2'>
+                    <span className='text-gray-300'>Meta de inscripción:</span>
+                    <span className='text-white font-semibold'>
+                      ${inscripcionTarget.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className='flex justify-between items-center'>
+                    <span className='text-gray-300'>Falta por pagar:</span>
+                    <span className='text-red-400 font-semibold'>
+                      ${(inscripcionTarget - (playerInscripcionTotals[selectedPlayerForPayment.id] || 0)).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Formulario de pago */}
+                <div className='space-y-4'>
+                  <div>
+                    <label className='block text-white mb-2 text-sm font-medium'>
+                      Cantidad a pagar
+                    </label>
+                    <input
+                      type='number'
+                      value={paymentAmount}
+                      onChange={(e) => setPaymentAmount(e.target.value)}
+                      min='0'
+                      step='0.01'
+                      className='w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white text-lg font-semibold'
+                      placeholder='0.00'
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className='block text-white mb-2 text-sm font-medium'>
+                      Método de pago
+                    </label>
+                    <select
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className='w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white'
+                    >
+                      <option value='Efectivo'>Efectivo</option>
+                      <option value='Transferencia'>Transferencia</option>
+                      <option value='Tarjeta'>Tarjeta</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Botones */}
+                <div className='flex space-x-3 mt-6'>
+                  <button
+                    onClick={closePaymentModal}
+                    className='flex-1 px-4 py-3 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors'
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={processInscripcionPayment}
+                    disabled={loading || !paymentAmount}
+                    className='flex-1 px-4 py-3 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
+                  >
+                    {loading ? 'Procesando...' : 'Aceptar Pago'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

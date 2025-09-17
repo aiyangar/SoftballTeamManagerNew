@@ -12,6 +12,7 @@ import React from 'react';
  * @param {Function} onEdit - Función para editar el jugador
  * @param {Function} onDelete - Función para eliminar el jugador
  * @param {number} inscripcionTarget - Meta de inscripción calculada dinámicamente
+ * @param {Function} onAcceptPayment - Función para aceptar pagos de inscripción
  */
 const PlayerHistoryModal = ({
   isOpen,
@@ -24,6 +25,7 @@ const PlayerHistoryModal = ({
   onEdit,
   onDelete,
   inscripcionTarget = 450,
+  onAcceptPayment,
 }) => {
   if (!isOpen || !player) return null;
 
@@ -168,6 +170,7 @@ const PlayerHistoryModal = ({
                     )}
                   </div>
                 </div>
+
               </div>
 
               {/* Historial de Asistencias */}
@@ -374,27 +377,54 @@ const PlayerHistoryModal = ({
 
         {/* Footer con botones de acción */}
         <div className='modal-footer p-6 border-t border-gray-600 bg-gray-800'>
-          <div className='flex justify-end space-x-3'>
-            <button
-              onClick={() => {
-                onEdit(player.id);
-                onClose();
-              }}
-              className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-2'
-            >
-              <span>✏️</span>
-              <span>Editar Jugador</span>
-            </button>
-            <button
-              onClick={() => {
-                onDelete(player.id);
-                onClose();
-              }}
-              className='px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center space-x-2'
-            >
-              <span>🗑️</span>
-              <span>Eliminar Jugador</span>
-            </button>
+          <div className='flex justify-between items-center'>
+            {/* Botón de pago de inscripción (izquierda) */}
+            {inscripcionRemaining > 0 && onAcceptPayment && (
+              <button
+                onClick={() => onAcceptPayment(player)}
+                className='px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center space-x-2'
+                title='Registrar pago de inscripción para este jugador'
+              >
+                <svg
+                  className='w-5 h-5'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1'
+                  />
+                </svg>
+                <span>Aceptar Pago</span>
+              </button>
+            )}
+            
+            {/* Botones de edición y eliminación (derecha) */}
+            <div className='flex space-x-3'>
+              <button
+                onClick={() => {
+                  onEdit(player.id);
+                  onClose();
+                }}
+                className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-2'
+              >
+                <span>✏️</span>
+                <span>Editar Jugador</span>
+              </button>
+              <button
+                onClick={() => {
+                  onDelete(player.id);
+                  onClose();
+                }}
+                className='px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center space-x-2'
+              >
+                <span>🗑️</span>
+                <span>Eliminar Jugador</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

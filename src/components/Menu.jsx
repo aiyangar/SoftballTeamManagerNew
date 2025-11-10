@@ -96,13 +96,16 @@ const Menu = () => {
                     Seleccionar Equipo
                   </label>
                   <select
-                    value={selectedTeam}
-                    onChange={e => handleTeamChange(e.target.value)}
+                    value={selectedTeam ? String(selectedTeam) : ''}
+                    onChange={e => {
+                      const teamId = e.target.value === '' ? '' : e.target.value;
+                      handleTeamChange(teamId);
+                    }}
                     className='w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white text-sm'
                   >
                     <option value=''>Selecciona un equipo</option>
                     {teams.map(team => (
-                      <option key={team.id} value={team.id}>
+                      <option key={team.id} value={String(team.id)}>
                         {team.nombre_equipo}
                       </option>
                     ))}

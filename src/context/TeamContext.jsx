@@ -83,7 +83,7 @@ export const TeamProvider = ({ children }) => {
 
       // Si solo hay un equipo, seleccionarlo automáticamente
       if (teamsWithInfo && teamsWithInfo.length === 1) {
-        setSelectedTeam(teamsWithInfo[0].id);
+        setSelectedTeam(String(teamsWithInfo[0].id));
       }
     } catch (error) {
       console.error('Error in fetchTeams:', error);
@@ -93,7 +93,8 @@ export const TeamProvider = ({ children }) => {
   };
 
   const handleTeamChange = teamId => {
-    setSelectedTeam(teamId);
+    // Normalizar a string para mantener consistencia con el selector HTML
+    setSelectedTeam(teamId === '' || teamId === null || teamId === undefined ? '' : String(teamId));
   };
 
   useEffect(() => {

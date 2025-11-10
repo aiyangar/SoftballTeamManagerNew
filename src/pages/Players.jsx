@@ -70,9 +70,13 @@ const Players = () => {
   const [selectedPlayerForPayment, setSelectedPlayerForPayment] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Efectivo');
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [selectedTeamToImport, setSelectedTeamToImport] = useState('');
+  const [importingPlayers, setImportingPlayers] = useState(false);
+  const [importError, setImportError] = useState(null);
 
   // Usar el hook para manejar los modales
-  useModal(showPlayerHistoryModal || showPaymentModal);
+  useModal(showPlayerHistoryModal || showPaymentModal || showImportModal);
 
   // Hook para navegación programática
   const navigate = useNavigate();
@@ -539,11 +543,14 @@ const Players = () => {
       }
 
       // Validar que el equipo existe si se especifica uno
-      if (
-        playerData.equipo_id &&
-        !teams.find(team => team.id === playerData.equipo_id)
-      ) {
-        throw new Error('El equipo seleccionado no es válido');
+      if (playerData.equipo_id) {
+        // Normalizar tipos para la comparación (convertir ambos a número)
+        const equipoIdNormalizado = Number(playerData.equipo_id);
+        const equipoEncontrado = teams.find(team => Number(team.id) === equipoIdNormalizado);
+        
+        if (!equipoEncontrado) {
+          throw new Error('El equipo seleccionado no es válido');
+        }
       }
 
       let playerResult;
@@ -630,7 +637,7 @@ const Players = () => {
         ? 'Jugador actualizado exitosamente'
         : 'Jugador registrado exitosamente';
       const equipoNombre =
-        teams.find(team => team.id === playerData.equipo_id)?.nombre_equipo ||
+        teams.find(team => Number(team.id) === Number(playerData.equipo_id))?.nombre_equipo ||
         'Sin equipo';
       setSuccess(`${mensaje} en el equipo: ${equipoNombre}`);
       resetForm();
@@ -655,7 +662,18 @@ const Players = () => {
     e.preventDefault();
 
     // Determinar el equipo correcto: usar el seleccionado en el formulario o el equipo actualmente seleccionado
-    const equipoSeleccionado = equipoId || selectedTeam || null;
+    // Convertir cadenas vacías a null y normalizar el tipo
+    let equipoSeleccionado = equipoId || selectedTeam || null;
+    
+    // Convertir a número si es una cadena numérica, o mantener null si está vacío
+    if (equipoSeleccionado === '' || equipoSeleccionado === null || equipoSeleccionado === undefined) {
+      equipoSeleccionado = null;
+    } else {
+      // Asegurar que sea un número para la comparación
+      equipoSeleccionado = typeof equipoSeleccionado === 'string' && equipoSeleccionado !== '' 
+        ? parseInt(equipoSeleccionado, 10) 
+        : equipoSeleccionado;
+    }
 
     const playerData = {
       nombre: name,
@@ -1131,7 +1149,7 @@ const Players = () => {
       // Generar nombre de archivo con fecha
       const now = new Date();
       const dateStr = now.toISOString().split('T')[0];
-      const teamName = teams.find(team => team.id === selectedTeam)?.nombre_equipo || 'Todos';
+      const teamName = teams.find(team => String(team.id) === String(selectedTeam))?.nombre_equipo || 'Todos';
       link.setAttribute('download', `jugadores_${teamName}_${dateStr}.csv`);
       
       link.style.visibility = 'hidden';
@@ -1145,6 +1163,236 @@ const Players = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  /**
+   * Importa todos los jugadores de otro equipo al equipo actual
+   * @param {number} sourceTeamId - ID del equipo del cual importar jugadores
+   * @param {number} targetTeamId - ID del equipo al cual importar jugadores
+   */
+  const importPlayersFromTeam = async (sourceTeamId, targetTeamId) => {
+    if (!sourceTeamId || !targetTeamId) {
+      setImportError('Debes seleccionar un equipo para importar jugadores');
+      return;
+    }
+
+    // Normalizar los IDs para comparación
+    const normalizedSourceId = Number(sourceTeamId);
+    const normalizedTargetId = Number(targetTeamId);
+    
+    if (normalizedSourceId === normalizedTargetId) {
+      setImportError('No puedes importar jugadores del mismo equipo. Selecciona un equipo diferente.');
+      return;
+    }
+
+    // Validar que el usuario sea dueño de ambos equipos
+    const sourceTeam = teams.find(team => Number(team.id) === Number(sourceTeamId));
+    const targetTeam = teams.find(team => Number(team.id) === Number(targetTeamId));
+
+    if (!sourceTeam || !targetTeam) {
+      setImportError('Uno o ambos equipos no son válidos o no te pertenecen');
+      return;
+    }
+
+    try {
+      setImportingPlayers(true);
+      setImportError(null);
+
+      // Obtener todos los jugadores del equipo origen con sus posiciones
+      const { data: sourcePlayers, error: playersError } = await supabase
+        .from('jugadores')
+        .select(
+          `
+            *,
+            jugador_posiciones (
+              posicion_id,
+              posiciones (
+                id
+              )
+            )
+          `
+        )
+        .eq('equipo_id', sourceTeamId)
+        .eq('propietario_id', session.user.id);
+
+      if (playersError) {
+        throw new Error(`Error al obtener jugadores: ${playersError.message}`);
+      }
+
+      if (!sourcePlayers || sourcePlayers.length === 0) {
+        setImportError('El equipo seleccionado no tiene jugadores para importar');
+        return;
+      }
+
+      // Verificar si hay jugadores duplicados (mismo nombre y número en el equipo destino)
+      // También verificar a nivel de propietario por si hay restricción única
+      const { data: existingPlayers, error: existingError } = await supabase
+        .from('jugadores')
+        .select('nombre, numero, equipo_id')
+        .eq('propietario_id', session.user.id);
+
+      if (existingError) {
+        throw new Error(`Error al verificar jugadores existentes: ${existingError.message}`);
+      }
+
+      // Crear un Set con las claves de jugadores existentes (nombre + numero + propietario)
+      // Esto cubre tanto duplicados en el mismo equipo como a nivel de propietario
+      const existingPlayerKeys = new Set(
+        (existingPlayers || []).map(p => `${p.nombre.toLowerCase()}_${p.numero}`)
+      );
+
+      // Filtrar jugadores que no estén duplicados
+      const playersToImport = sourcePlayers.filter(player => {
+        const playerKey = `${player.nombre.toLowerCase()}_${player.numero}`;
+        return !existingPlayerKeys.has(playerKey);
+      });
+
+      if (playersToImport.length === 0) {
+        setImportError('Todos los jugadores del equipo seleccionado ya existen en tus equipos');
+        return;
+      }
+
+      // Insertar jugadores uno por uno para manejar errores individuales
+      const newPlayers = [];
+      const failedImports = [];
+      
+      for (const player of playersToImport) {
+        try {
+          const playerData = {
+            nombre: player.nombre,
+            numero: parseInt(player.numero),
+            telefono: player.telefono || null,
+            email: player.email || null,
+            equipo_id: Number(targetTeamId),
+            propietario_id: session.user.id,
+          };
+
+          const { data: newPlayer, error: insertError } = await supabase
+            .from('jugadores')
+            .insert([playerData])
+            .select();
+
+          if (insertError) {
+            // Si hay un error de conflicto, agregar a la lista de fallidos
+            if (insertError.code === '23505' || insertError.message.includes('duplicate') || insertError.message.includes('unique')) {
+              failedImports.push({
+                nombre: player.nombre,
+                numero: player.numero,
+                razon: 'Ya existe un jugador con el mismo nombre y número'
+              });
+            } else {
+              failedImports.push({
+                nombre: player.nombre,
+                numero: player.numero,
+                razon: insertError.message
+              });
+            }
+          } else if (newPlayer && newPlayer.length > 0) {
+            newPlayers.push(newPlayer[0]);
+          }
+        } catch (error) {
+          failedImports.push({
+            nombre: player.nombre,
+            numero: player.numero,
+            razon: error.message || 'Error desconocido'
+          });
+        }
+      }
+
+      if (newPlayers.length === 0) {
+        throw new Error('No se pudo importar ningún jugador. Todos los jugadores ya existen o hubo un error.');
+      }
+
+      // Copiar las posiciones de cada jugador importado
+      // Crear un mapa de jugadores originales por nombre y número para mapear correctamente
+      const originalPlayersMap = new Map();
+      playersToImport.forEach(player => {
+        const key = `${player.nombre.toLowerCase()}_${player.numero}`;
+        originalPlayersMap.set(key, player);
+      });
+
+      const positionInserts = [];
+      for (const newPlayer of newPlayers) {
+        // Buscar el jugador original correspondiente
+        const originalPlayer = originalPlayersMap.get(`${newPlayer.nombre.toLowerCase()}_${newPlayer.numero}`);
+        
+        if (originalPlayer && originalPlayer.jugador_posiciones && originalPlayer.jugador_posiciones.length > 0) {
+          originalPlayer.jugador_posiciones.forEach(jp => {
+            // Usar posicion_id directamente o posiciones.id como respaldo
+            const posicionId = jp.posicion_id || jp.posiciones?.id;
+            if (posicionId) {
+              positionInserts.push({
+                jugador_id: newPlayer.id,
+                posicion_id: posicionId,
+              });
+            }
+          });
+        }
+      }
+
+      if (positionInserts.length > 0) {
+        const { error: positionError } = await supabase
+          .from('jugador_posiciones')
+          .insert(positionInserts);
+
+        if (positionError) {
+          // No lanzar error aquí, solo registrar que hubo un problema con las posiciones
+          console.warn('Error al importar posiciones:', positionError);
+        }
+      }
+
+      const skippedCount = sourcePlayers.length - playersToImport.length;
+      const importedCount = newPlayers.length;
+      const failedCount = failedImports.length;
+
+      let successMessage = `✅ ${importedCount} jugador${importedCount !== 1 ? 'es' : ''} importado${importedCount !== 1 ? 's' : ''} exitosamente`;
+      
+      if (skippedCount > 0 || failedCount > 0) {
+        const totalSkipped = skippedCount + failedCount;
+        successMessage += ` (${totalSkipped} jugador${totalSkipped !== 1 ? 'es' : ''} omitido${totalSkipped !== 1 ? 's' : ''}`;
+        if (skippedCount > 0 && failedCount > 0) {
+          successMessage += `: ${skippedCount} por duplicados, ${failedCount} por errores)`;
+        } else if (skippedCount > 0) {
+          successMessage += ` por duplicados)`;
+        } else {
+          successMessage += ` por errores)`;
+        }
+      }
+
+      setSuccess(successMessage);
+      setShowImportModal(false);
+      setSelectedTeamToImport('');
+
+      // Recargar la lista de jugadores
+      await fetchPlayers(session.user.id, targetTeamId);
+    } catch (error) {
+      setImportError(error.message);
+    } finally {
+      setImportingPlayers(false);
+    }
+  };
+
+  /**
+   * Abre el modal de importación de jugadores
+   */
+  const openImportModal = () => {
+    if (!selectedTeam) {
+      setError('Debes seleccionar un equipo primero');
+      return;
+    }
+    setShowImportModal(true);
+    setSelectedTeamToImport('');
+    setImportError(null);
+  };
+
+  /**
+   * Cierra el modal de importación
+   */
+  const closeImportModal = () => {
+    setShowImportModal(false);
+    setSelectedTeamToImport('');
+    setImportError(null);
+    setError(null);
   };
 
   // Obtener jugadores filtrados y ordenados
@@ -1296,6 +1544,28 @@ const Players = () => {
             </svg>
             <span>{loading ? 'Exportando...' : 'Exportar a CSV'}</span>
           </button>
+
+          <button
+            onClick={openImportModal}
+            disabled={!selectedTeam || loading}
+            className='w-full sm:w-auto px-4 sm:px-6 py-3 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center sm:justify-start space-x-2'
+            title='Importar jugadores de otro equipo'
+          >
+            <svg
+              className='w-5 h-5'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12'
+              />
+            </svg>
+            <span>Importar Jugadores</span>
+          </button>
         </div>
 
         {/* Lista de jugadores */}
@@ -1311,7 +1581,7 @@ const Players = () => {
                   <span className='text-gray-400'>Equipo: </span>
                   <span className='font-medium text-blue-400'>
                     {
-                      teams.find(team => team.id === selectedTeam)
+                      teams.find(team => String(team.id) === String(selectedTeam))
                         ?.nombre_equipo
                     }
                   </span>
@@ -1681,6 +1951,117 @@ const Players = () => {
                     className='flex-1 px-4 py-3 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
                   >
                     {loading ? 'Procesando...' : 'Aceptar Pago'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Importación de Jugadores */}
+        {showImportModal && (
+          <div className='fixed inset-0 modal-overlay flex items-center justify-center z-50'>
+            <div className='bg-neutral-900 border border-gray-600 rounded-lg w-full max-w-md mx-4 modal-container'>
+              <div className='modal-header p-6 border-b border-gray-600'>
+                <div className='flex justify-between items-center'>
+                  <h2 className='text-xl font-semibold text-white'>
+                    Importar Jugadores de Otro Equipo
+                  </h2>
+                  <button
+                    onClick={closeImportModal}
+                    className='text-gray-400 hover:text-white text-2xl'
+                    title='Cerrar modal de importación'
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+
+              <div className='modal-content p-6'>
+                {/* Mensajes de error dentro del modal */}
+                {importError && (
+                  <div className='mb-4 p-4 bg-red-900 border border-red-600 text-red-200 rounded-lg'>
+                    <div className='flex items-start justify-between'>
+                      <p className='text-sm'>{importError}</p>
+                      <button
+                        onClick={() => setImportError(null)}
+                        className='ml-2 text-red-300 hover:text-red-100 text-xl'
+                        title='Cerrar mensaje de error'
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Información del equipo actual */}
+                <div className='mb-6 p-4 bg-gray-800 rounded-lg'>
+                  <h3 className='text-lg font-semibold text-white mb-2'>
+                    Equipo Actual
+                  </h3>
+                  <p className='text-gray-300'>
+                    {teams.find(team => String(team.id) === String(selectedTeam))?.nombre_equipo || 'Sin equipo seleccionado'}
+                  </p>
+                </div>
+
+                {/* Selector de equipo origen */}
+                <div className='space-y-4'>
+                  <div>
+                    <label className='block text-white mb-2 text-sm font-medium'>
+                      Seleccionar equipo del cual importar jugadores
+                    </label>
+                    <select
+                      value={selectedTeamToImport}
+                      onChange={(e) => setSelectedTeamToImport(e.target.value)}
+                      className='w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white'
+                      disabled={importingPlayers}
+                    >
+                      <option value=''>Seleccionar equipo...</option>
+                      {teams.map(team => (
+                        <option key={team.id} value={String(team.id)}>
+                          {team.nombre_equipo}
+                          {String(team.id) === String(selectedTeam) ? ' (Equipo actual)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                    {teams.length === 0 && (
+                      <p className='text-sm text-gray-400 mt-2'>
+                        No tienes equipos disponibles
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Información sobre la importación */}
+                  <div className='p-4 bg-blue-900/30 border border-blue-700 rounded-lg'>
+                    <p className='text-sm text-blue-200'>
+                      <strong>Nota:</strong> Se importarán todos los jugadores del equipo seleccionado al equipo actual. 
+                      Los jugadores con el mismo nombre y número serán omitidos para evitar duplicados. 
+                      Las posiciones de cada jugador también se copiarán.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Botones */}
+                <div className='flex space-x-3 mt-6'>
+                  <button
+                    onClick={closeImportModal}
+                    disabled={importingPlayers}
+                    className='flex-1 px-4 py-3 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (selectedTeamToImport && selectedTeam) {
+                        importPlayersFromTeam(selectedTeamToImport, selectedTeam);
+                      } else {
+                        setImportError('Por favor, selecciona un equipo para importar');
+                      }
+                    }}
+                    disabled={importingPlayers || !selectedTeamToImport}
+                    className='flex-1 px-4 py-3 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
+                  >
+                    {importingPlayers ? 'Importando...' : 'Importar Jugadores'}
                   </button>
                 </div>
               </div>

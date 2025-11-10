@@ -1,4 +1,5 @@
 import React from 'react';
+import '../../styles/modalStyles.css';
 
 /**
  * Componente para el modal de historial del jugador

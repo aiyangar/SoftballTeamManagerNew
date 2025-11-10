@@ -1,0 +1,44 @@
+/* Estilos compartidos para modales */
+
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+}
+
+.modal-container {
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal-header {
+  position: sticky;
+  top: 0;
+  background-color: rgb(23, 23, 23);
+  z-index: 10;
+}
+
+.modal-content {
+  max-height: calc(90vh - 100px);
+  overflow-y: auto;
+}
+
+/* Scrollbar personalizado para modales */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: rgb(38, 38, 38);
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: rgb(75, 85, 99);
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: rgb(107, 114, 128);
+}
+

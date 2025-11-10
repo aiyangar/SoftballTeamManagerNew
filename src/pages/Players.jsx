@@ -16,7 +16,7 @@ import PlayerHistoryModal from '../components/Modals/PlayerHistoryModal';
  * Permite crear, editar y eliminar jugadores
  * Permite asignar jugadores a equipos
  * Permite eliminar jugadores de equipos
- * Permite ver la lista de jugadores existentes
+ * Permite ver la lista de jugadores 
  * Permite que los jugadores elijan hasta 3 posiciones
  */
 const Players = () => {
@@ -399,11 +399,12 @@ const Players = () => {
   /**
    * Obtiene los jugadores del usuario autenticado
    * @param {string} propietarioId - ID del usuario propietario
+   * @param {string} teamId - ID del equipo para filtrar (opcional)
    * @returns {Object} - Resultado de la operación
    */
-  const fetchPlayers = async propietarioId => {
+  const fetchPlayers = async (propietarioId, teamId = null) => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('jugadores')
         .select(
           `
@@ -420,8 +421,20 @@ const Players = () => {
                     )
                 `
         )
-        .eq('propietario_id', propietarioId)
-        .order('id', { ascending: false });
+        .eq('propietario_id', propietarioId);
+
+      // Filtrar por equipo si hay uno seleccionado
+      // Si no hay equipo seleccionado, no mostrar ningún jugador
+      if (teamId) {
+        query = query.eq('equipo_id', teamId);
+      } else {
+        // Si no hay equipo seleccionado, retornar array vacío
+        setPlayers([]);
+        setLoadingPlayers(false);
+        return { success: true, data: [] };
+      }
+
+      const { data, error } = await query.order('id', { ascending: false });
 
       if (error) {
         setLoadingPlayers(false);
@@ -623,7 +636,7 @@ const Players = () => {
       resetForm();
 
       // Recargar lista de jugadores y totales de inscripción
-      await fetchPlayers(session.user.id);
+      await fetchPlayers(session.user.id, selectedTeam);
 
       return { success: true, data: playerResult };
     } catch (error) {
@@ -652,11 +665,11 @@ const Players = () => {
       equipo_id: equipoSeleccionado,
     };
 
-    const result = await registerPlayer(playerData);
+      const result = await registerPlayer(playerData);
 
     if (result.success) {
       // Recargar la lista de jugadores después de un registro exitoso
-      await fetchPlayers(session.user.id);
+      await fetchPlayers(session.user.id, selectedTeam);
     }
   };
 
@@ -734,7 +747,7 @@ const Players = () => {
       }
 
       setSuccess('Jugador eliminado exitosamente');
-      await fetchPlayers(session.user.id); // Recargar lista, totales y meta
+      await fetchPlayers(session.user.id, selectedTeam); // Recargar lista, totales y meta
     } catch (error) {
       setError(error.message);
     } finally {
@@ -742,10 +755,10 @@ const Players = () => {
     }
   };
 
-  // Cargar datos al montar el componente
+  // Cargar datos al montar el componente (solo cuando cambia la sesión)
   useEffect(() => {
     if (session?.user?.id) {
-      fetchPlayers(session.user.id);
+      fetchPlayers(session.user.id, selectedTeam);
       fetchPositions();
     } else {
     }
@@ -760,6 +773,16 @@ const Players = () => {
       calculateInscripcionTarget(selectedTeam).then(target => {
         setInscripcionTarget(target);
       });
+
+      // Recargar jugadores cuando cambie el equipo seleccionado
+      if (session?.user?.id) {
+        fetchPlayers(session.user.id, selectedTeam);
+      }
+    } else {
+      // Si no hay equipo seleccionado, no mostrar jugadores
+      setPlayers([]);
+      setPlayerInscripcionTotals({});
+      setInscripcionTarget(450);
     }
   }, [selectedTeam]);
 
@@ -1003,7 +1026,7 @@ const Players = () => {
       closePaymentModal();
       
       // Recargar datos del jugador y totales
-      await fetchPlayers(session.user.id);
+      await fetchPlayers(session.user.id, selectedTeam);
       
       // Si el modal de historial está abierto, recargar sus datos
       if (showPlayerHistoryModal && selectedPlayerForHistory?.id === selectedPlayerForPayment.id) {

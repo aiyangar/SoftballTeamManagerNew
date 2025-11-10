@@ -734,6 +734,39 @@ const Players = () => {
   };
 
   /**
+   * Abre el formulario para editar un jugador
+   * @param {number} playerId - ID del jugador a editar
+   */
+  const openEditForm = playerId => {
+    const player = players.find(p => p.id === playerId);
+    if (player) {
+      setEditingPlayer(player);
+      setName(player.nombre);
+      setNumero(player.numero.toString());
+      setTelefono(player.telefono || '');
+      setEmail(player.email || '');
+      // Usar el equipo del jugador o el equipo seleccionado actualmente
+      setEquipoId(player.equipo_id || selectedTeam || '');
+
+      // Obtener las posiciones del jugador
+      const playerPositions =
+        player.jugador_posiciones
+          ?.map(jp => jp.posiciones?.id)
+          .filter(id => id) || [];
+
+      setSelectedPositions(playerPositions);
+      setShowForm(true);
+      // Scroll al formulario
+      setTimeout(() => {
+        const formElement = document.querySelector('.bg-neutral-900.shadow.rounded-lg');
+        if (formElement) {
+          formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  };
+
+  /**
    * Elimina un jugador
    * @param {number} playerId - ID del jugador a eliminar
    */
@@ -1488,29 +1521,9 @@ const Players = () => {
 
   // Función para manejar el menú de acciones
 
-  // Función para editar jugador
+  // Función para editar jugador (mantener para compatibilidad)
   const editPlayer = playerId => {
-    const player = players.find(p => p.id === playerId);
-    if (player) {
-      setEditingPlayer(player);
-      setName(player.nombre);
-      setNumero(player.numero.toString());
-      setTelefono(player.telefono || '');
-      setEmail(player.email || '');
-      // Usar el equipo del jugador o el equipo seleccionado actualmente
-      setEquipoId(player.equipo_id || selectedTeam || '');
-
-      // Obtener las posiciones del jugador
-      const playerPositions =
-        player.jugador_posiciones
-          ?.map(jp => jp.posiciones?.id)
-          .filter(id => id) || [];
-
-      setSelectedPositions(playerPositions);
-
-      setShowForm(true);
-    } else {
-    }
+    openEditForm(playerId);
   };
 
   // Si no hay sesión, redirigir al login
@@ -1581,7 +1594,7 @@ const Players = () => {
               handleSubmit(e);
             }}
             onCancel={() => {
-              setShowForm(false);
+              resetForm();
             }}
           />
         )}
@@ -1589,7 +1602,13 @@ const Players = () => {
         {/* Botones de acción */}
         <div className='mb-6 sm:mb-8 flex flex-col sm:flex-row gap-3'>
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => {
+              if (showForm) {
+                resetForm();
+              } else {
+                setShowForm(true);
+              }
+            }}
             className='w-full sm:w-auto px-4 sm:px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center justify-center sm:justify-start space-x-2'
           >
             <svg
@@ -1925,7 +1944,11 @@ const Players = () => {
             closePlayerHistoryModal();
           }}
           onEdit={playerId => {
-            editPlayer(playerId);
+            closePlayerHistoryModal();
+            // Usar setTimeout para asegurar que el modal se cierre antes de abrir el formulario
+            setTimeout(() => {
+              openEditForm(playerId);
+            }, 100);
           }}
           onDelete={playerId => {
             deletePlayer(playerId);

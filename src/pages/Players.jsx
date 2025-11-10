@@ -1224,31 +1224,73 @@ const Players = () => {
         return;
       }
 
-      // Verificar si hay jugadores duplicados (mismo nombre y número en el equipo destino)
-      // También verificar a nivel de propietario por si hay restricción única
+      // Verificar si hay jugadores duplicados SOLO en el equipo destino
+      // Permitimos que un jugador esté en múltiples equipos, solo verificamos duplicados en el mismo equipo
       const { data: existingPlayers, error: existingError } = await supabase
         .from('jugadores')
-        .select('nombre, numero, equipo_id')
+        .select('nombre, numero, telefono, email')
+        .eq('equipo_id', targetTeamId)
         .eq('propietario_id', session.user.id);
 
       if (existingError) {
         throw new Error(`Error al verificar jugadores existentes: ${existingError.message}`);
       }
 
-      // Crear un Set con las claves de jugadores existentes (nombre + numero + propietario)
-      // Esto cubre tanto duplicados en el mismo equipo como a nivel de propietario
+      // Verificar también jugadores con teléfono/email únicos a nivel de propietario
+      // para evitar conflictos con restricciones únicas en la base de datos
+      const { data: allExistingPlayers, error: allExistingError } = await supabase
+        .from('jugadores')
+        .select('telefono, email')
+        .eq('propietario_id', session.user.id);
+
+      if (allExistingError) {
+        console.warn('Error al verificar jugadores con teléfono/email:', allExistingError);
+      }
+
+      // Crear Sets con las claves de jugadores existentes
       const existingPlayerKeys = new Set(
         (existingPlayers || []).map(p => `${p.nombre.toLowerCase()}_${p.numero}`)
       );
+      
+      // Crear Sets con teléfonos y emails existentes para detectar conflictos
+      const existingTelefonos = new Set(
+        (allExistingPlayers || [])
+          .filter(p => p.telefono)
+          .map(p => p.telefono)
+      );
+      
+      const existingEmails = new Set(
+        (allExistingPlayers || [])
+          .filter(p => p.email)
+          .map(p => p.email.toLowerCase())
+      );
 
-      // Filtrar jugadores que no estén duplicados
-      const playersToImport = sourcePlayers.filter(player => {
-        const playerKey = `${player.nombre.toLowerCase()}_${player.numero}`;
-        return !existingPlayerKeys.has(playerKey);
-      });
+      // Filtrar jugadores que no estén duplicados en el equipo destino
+      // y preparar datos sin teléfono/email si hay conflictos
+      const playersToImport = sourcePlayers
+        .filter(player => {
+          const playerKey = `${player.nombre.toLowerCase()}_${player.numero}`;
+          return !existingPlayerKeys.has(playerKey);
+        })
+        .map(player => {
+          // Si hay conflicto con teléfono o email, establecerlos como null
+          const hasTelefonoConflict = player.telefono && existingTelefonos.has(player.telefono);
+          const hasEmailConflict = player.email && existingEmails.has(player.email.toLowerCase());
+          
+          return {
+            ...player,
+            telefono: hasTelefonoConflict ? null : (player.telefono || null),
+            email: hasEmailConflict ? null : (player.email || null),
+            _hasConflicts: hasTelefonoConflict || hasEmailConflict,
+            _conflictReasons: [
+              hasTelefonoConflict ? 'teléfono' : null,
+              hasEmailConflict ? 'email' : null
+            ].filter(Boolean)
+          };
+        });
 
       if (playersToImport.length === 0) {
-        setImportError('Todos los jugadores del equipo seleccionado ya existen en tus equipos');
+        setImportError('Todos los jugadores del equipo seleccionado ya existen en el equipo actual');
         return;
       }
 
@@ -1273,13 +1315,54 @@ const Players = () => {
             .select();
 
           if (insertError) {
-            // Si hay un error de conflicto, agregar a la lista de fallidos
+            // Si hay un error de conflicto, intentar insertar sin teléfono/email si el conflicto es por esos campos
             if (insertError.code === '23505' || insertError.message.includes('duplicate') || insertError.message.includes('unique')) {
-              failedImports.push({
-                nombre: player.nombre,
-                numero: player.numero,
-                razon: 'Ya existe un jugador con el mismo nombre y número'
-              });
+              // Verificar si el error es por teléfono o email
+              const isTelefonoConflict = insertError.message.toLowerCase().includes('telefono') || insertError.message.toLowerCase().includes('phone');
+              const isEmailConflict = insertError.message.toLowerCase().includes('email') || insertError.message.toLowerCase().includes('correo');
+              
+              if (isTelefonoConflict || isEmailConflict) {
+                // Intentar insertar sin el campo conflictivo
+                try {
+                  const retryPlayerData = {
+                    nombre: player.nombre,
+                    numero: parseInt(player.numero),
+                    telefono: isTelefonoConflict ? null : (player.telefono || null),
+                    email: isEmailConflict ? null : (player.email || null),
+                    equipo_id: Number(targetTeamId),
+                    propietario_id: session.user.id,
+                  };
+
+                  const { data: retryPlayer, error: retryError } = await supabase
+                    .from('jugadores')
+                    .insert([retryPlayerData])
+                    .select();
+
+                  if (retryError) {
+                    // Si aún falla, agregar a la lista de fallidos
+                    failedImports.push({
+                      nombre: player.nombre,
+                      numero: player.numero,
+                      razon: `Conflicto con ${isTelefonoConflict ? 'teléfono' : ''}${isTelefonoConflict && isEmailConflict ? ' y ' : ''}${isEmailConflict ? 'email' : ''}`
+                    });
+                  } else if (retryPlayer && retryPlayer.length > 0) {
+                    newPlayers.push(retryPlayer[0]);
+                  }
+                } catch (retryError) {
+                  failedImports.push({
+                    nombre: player.nombre,
+                    numero: player.numero,
+                    razon: `Conflicto con ${isTelefonoConflict ? 'teléfono' : ''}${isTelefonoConflict && isEmailConflict ? ' y ' : ''}${isEmailConflict ? 'email' : ''}`
+                  });
+                }
+              } else {
+                // Si el conflicto no es por teléfono/email, agregar a la lista de fallidos
+                failedImports.push({
+                  nombre: player.nombre,
+                  numero: player.numero,
+                  razon: 'Ya existe un jugador con el mismo nombre y número o hay un conflicto de restricción única'
+                });
+              }
             } else {
               failedImports.push({
                 nombre: player.nombre,

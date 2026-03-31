@@ -967,10 +967,10 @@ const Schedule = () => {
               partido_id: parseInt(partidoId),
               equipo_id: parseInt(equipoId),
               jugador_id: parseInt(row.jugador_id),
-              orden_bateo: row.orden_bateo,
+              ...(row.orden_bateo != null && { orden_bateo: row.orden_bateo }),
               posicion_campo: row.posicion_campo,
-              es_titular: true,
-              activo: true,
+              es_titular: row.es_titular ?? true,
+              activo: row.activo ?? true,
             }))
           );
         if (insertError) throw insertError;
@@ -1263,6 +1263,7 @@ const Schedule = () => {
           show={showSubstitutionModal}
           game={selectedGameForLineup}
           players={players}
+          attendingPlayerIds={gameDetailsData.attendance.map(a => a.jugadores.id)}
           activeLineup={activeLineupForSubstitution}
           onClose={closeSubstitutionModal}
           onSave={saveSubstitution}

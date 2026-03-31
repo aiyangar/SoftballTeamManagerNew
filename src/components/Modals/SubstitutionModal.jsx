@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 
-const POSITIONS = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
+const FIELD_POSITIONS = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CLF', 'CRF', 'RF'];
+const DESIGNATED_POSITIONS = ['DH', 'BD', 'CD'];
 
 const SubstitutionModal = ({
   show,
   game,
   players,
+  attendingPlayerIds,
   activeLineup,
   onClose,
   onSave,
@@ -45,7 +47,11 @@ const SubstitutionModal = ({
   if (!show || !game) return null;
 
   const activeIds = new Set(activeLineup.map(r => String(r.jugador_id)));
-  const availableToEnter = players.filter(p => !activeIds.has(String(p.id)));
+  const availableToEnter = players.filter(p => {
+    if (activeIds.has(String(p.id))) return false;
+    if (attendingPlayerIds != null && !attendingPlayerIds.includes(p.id)) return false;
+    return true;
+  });
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -183,11 +189,16 @@ const SubstitutionModal = ({
                   }
                   className='w-full p-2 bg-gray-800 border border-gray-600 rounded text-white'
                 >
-                  {POSITIONS.map(pos => (
-                    <option key={pos} value={pos}>
-                      {pos}
-                    </option>
-                  ))}
+                  <optgroup label='Campo'>
+                    {FIELD_POSITIONS.map(pos => (
+                      <option key={pos} value={pos}>{pos}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label='Designados'>
+                    {DESIGNATED_POSITIONS.map(pos => (
+                      <option key={pos} value={pos}>{pos}</option>
+                    ))}
+                  </optgroup>
                 </select>
               </div>
             </div>

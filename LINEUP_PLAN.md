@@ -9,25 +9,25 @@
 
 ## Fase 2 — Lógica en Schedule.jsx
 
-- [ ] Agregar `numero` al `fetchPlayers`
-- [ ] Agregar estados para lineup y sustituciones
-- [ ] Implementar `fetchLineup`
-- [ ] Implementar `saveLineup`
-- [ ] Implementar `saveSubstitution`
-- [ ] Agregar handlers de apertura/cierre de modales
-- [ ] Actualizar el `useModal` call
+- [x] Agregar `numero` al `fetchPlayers`
+- [x] Agregar estados para lineup y sustituciones
+- [x] Implementar `fetchLineup`
+- [x] Implementar `saveLineup`
+- [x] Implementar `saveSubstitution`
+- [x] Agregar handlers de apertura/cierre de modales
+- [x] Actualizar el `useModal` call
 
 ## Fase 3 — Componentes nuevos
 
-- [ ] Crear `src/components/Modals/LineupModal.jsx`
-- [ ] Crear `src/components/Modals/SubstitutionModal.jsx`
+- [x] Crear `src/components/Modals/LineupModal.jsx`
+- [x] Crear `src/components/Modals/SubstitutionModal.jsx`
 
 ## Fase 4 — Integración
 
-- [ ] Modificar `ScheduleHistoryModal.jsx` — agregar botón "Lineup"
-- [ ] Modificar `ScheduleHistoryModal.jsx` — agregar acordeón de resumen
-- [ ] Conectar `LineupModal` y `SubstitutionModal` en el JSX de `Schedule.jsx`
-- [ ] Pruebas end-to-end del flujo completo
+- [x] Modificar `ScheduleHistoryModal.jsx` — agregar botón "Lineup"
+- [x] Modificar `ScheduleHistoryModal.jsx` — agregar acordeón de resumen
+- [x] Conectar `LineupModal` y `SubstitutionModal` en el JSX de `Schedule.jsx`
+- [x] Pruebas end-to-end del flujo completo
 
 ## Fase 5 — Pulido
 

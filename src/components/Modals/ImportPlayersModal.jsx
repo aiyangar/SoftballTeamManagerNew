@@ -1,5 +1,4 @@
 import React from 'react';
-import '../../styles/modalStyles.css';
 
 /**
  * Modal para importar jugadores de otro equipo

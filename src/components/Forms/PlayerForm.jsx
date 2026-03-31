@@ -149,14 +149,14 @@ const PlayerForm = ({
           <button
             type='button'
             onClick={onCancel}
-            className='px-4 py-2 text-gray-300 border border-gray-600 rounded-md hover:bg-gray-800'
+            className='btn btn-secondary'
           >
             Cancelar
           </button>
           <button
             type='submit'
             disabled={loading}
-            className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
+            className='btn btn-primary'
           >
             {loading
               ? editingPlayer

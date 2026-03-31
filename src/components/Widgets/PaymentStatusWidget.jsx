@@ -52,10 +52,10 @@ const PaymentStatusWidget = ({
 
   // Determinar color del progreso del umpire
   const getUmpireProgressColor = () => {
-    if (totalUmpire >= umpireTarget) return '#10B981'; // Verde cuando se alcanza el objetivo
-    if (totalUmpire >= umpireTarget * 0.8) return '#F59E0B'; // Amarillo cuando está cerca (80%+)
-    if (totalUmpire >= umpireTarget * 0.5) return '#F97316'; // Naranja cuando está a la mitad (50%+)
-    return '#DC2626'; // Rojo por defecto
+    if (totalUmpire >= umpireTarget) return 'bg-emerald-500';
+    if (totalUmpire >= umpireTarget * 0.8) return 'bg-amber-500';
+    if (totalUmpire >= umpireTarget * 0.5) return 'bg-orange-500';
+    return 'bg-red-500';
   };
 
   return (
@@ -74,11 +74,8 @@ const PaymentStatusWidget = ({
         </div>
         <div className='w-full bg-gray-700 rounded-full'>
           <div
-            className={`rounded-full transition-all duration-300 ${config.progress}`}
-            style={{
-              width: `${umpirePercentage}%`,
-              backgroundColor: getUmpireProgressColor(),
-            }}
+            className={`rounded-full transition-all duration-300 ${config.progress} ${getUmpireProgressColor()}`}
+            style={{ width: `${umpirePercentage}%` }}
           ></div>
         </div>
         <div className='flex justify-between mt-1'>

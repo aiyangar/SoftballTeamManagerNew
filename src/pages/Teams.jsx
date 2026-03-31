@@ -231,7 +231,7 @@ const Teams = () => {
                 setShowForm(true);
               }
             }}
-            className='px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-2'
+            className='btn btn-primary'
           >
             <svg
               className='w-5 h-5'

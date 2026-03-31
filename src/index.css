@@ -1,71 +1,114 @@
 @import 'tailwindcss';
 
+/* ─── Design Tokens ─────────────────────────────────────────────────────── */
+
+@theme {
+  /* Breakpoint: foldable desplegado portrait (Huawei Mate X6 ≈ 747px CSS) */
+  --breakpoint-fold: 45rem; /* 720px */
+
+  /* Breakpoint: ultrawide 21:9 (≥ 1792px) */
+  --breakpoint-3xl: 112rem;
+
+  /* Superficie — dark theme */
+  --color-surface-900: #0f0f0f;
+  --color-surface-800: #161622;
+  --color-surface-700: #1e1e2e;
+  --color-surface-600: #2a2a3e;
+  --color-surface-border: #313147;
+
+  /* Acento principal */
+  --color-accent-500: #818cf8;
+  --color-accent-600: #6366f1;
+  --color-accent-700: #4f46e5;
+
+  /* Estado */
+  --color-status-success: #10b981;
+  --color-status-warning: #f59e0b;
+  --color-status-danger: #ef4444;
+
+  /* Tipografía */
+  --font-sans: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* ─── Componentes base ──────────────────────────────────────────────────── */
+
+@layer components {
+  /* Base: siempre usar junto con una variante, ej: className="btn btn-primary" */
+  .btn {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
+           transition-colors cursor-pointer
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Variantes — solo definen color; requieren clase .btn en el elemento */
+  .btn-primary {
+    @apply bg-accent-600 text-white hover:bg-accent-700;
+  }
+
+  .btn-secondary {
+    @apply bg-surface-700 text-slate-200 border border-surface-border hover:bg-surface-600;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700;
+  }
+
+  .btn-ghost {
+    @apply text-slate-300 hover:bg-surface-700;
+  }
+}
+
+/* ─── Reset y base ──────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: #0f0f0f;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Fondo oscuro para toda la aplicación */
-html {
-  background-color: #0f0f0f;
-}
-
-body {
+html,
+body,
+#root {
   background-color: #0f0f0f;
   min-height: 100vh;
   margin: 0;
   padding: 0;
 }
 
-#root {
-  background-color: #0f0f0f;
-  min-height: 100vh;
-}
-
 a {
   font-weight: 500;
-  color: #646cff;
+  color: #818cf8;
   text-decoration: inherit;
 }
 a:hover {
-  color: #535bf2;
+  color: #6366f1;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
+/* Focus ring accesible para botones */
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
+  font-family: inherit;
+  font-weight: 500;
 }
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
 }
 
-/* Estilos específicos para el dashboard */
+/* ─── Dashboard ─────────────────────────────────────────────────────────── */
+
 .dashboard-card {
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -76,29 +119,34 @@ button:focus-visible {
   text-overflow: ellipsis;
 }
 
-/* Estilos para modales - eliminar scroll del body */
+/* ─── Modales ───────────────────────────────────────────────────────────── */
+
 body.modal-open {
   overflow: hidden;
 }
 
-/* Overlay oscuro para modales */
 .modal-overlay {
   background-color: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(4px);
 }
 
-/* Estilos para modales con scroll interno */
 .modal-container {
   height: 90vh;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
   background-color: #111827;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.3),
+    0 10px 10px -5px rgba(0, 0, 0, 0.2);
 }
 
 .modal-header {
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
   background-color: #111827;
+  z-index: 10;
 }
 
 .modal-content {
@@ -108,46 +156,28 @@ body.modal-open {
   background-color: #111827;
 }
 
-/* Asegurar que todos los elementos tengan fondo oscuro */
-* {
-  box-sizing: border-box;
+/* Scrollbar personalizado para modales */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+.modal-content::-webkit-scrollbar-track {
+  background: rgb(38, 38, 38);
+  border-radius: 4px;
+}
+.modal-content::-webkit-scrollbar-thumb {
+  background: rgb(75, 85, 99);
+  border-radius: 4px;
+}
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: rgb(107, 114, 128);
 }
 
-/* Estilos para inputs y selects en modo oscuro */
-input,
-select,
-textarea {
-  background-color: #374151 !important;
-  border-color: #4b5563 !important;
-  color: #f9fafb !important;
-}
+/* ─── Responsive ────────────────────────────────────────────────────────── */
 
-input::placeholder,
-select::placeholder,
-textarea::placeholder {
-  color: #9ca3af !important;
-}
-
-/* Estilos para botones en modo oscuro */
-button {
-  background-color: #374151 !important;
-  border-color: #4b5563 !important;
-  color: #f9fafb !important;
-}
-
-button:hover {
-  background-color: #4b5563 !important;
-}
-
-button:disabled {
-  background-color: #1f2937 !important;
-  color: #6b7280 !important;
-}
-
-/* Mejoras para dispositivos móviles */
+/* Móviles y foldables plegados */
 @media (max-width: 768px) {
   .dashboard-card {
-    min-height: auto !important;
+    min-height: auto;
   }
 
   .dashboard-card-content {
@@ -160,29 +190,15 @@ button:disabled {
   }
 }
 
-/* Asegurar que el contenido no se desborde en pantallas pequeñas */
-@media (max-width: 640px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr !important;
-  }
-}
-
-/* Forzar tema oscuro en toda la aplicación */
+/* Forzar tema oscuro incluso en sistemas con preferencia light */
 @media (prefers-color-scheme: light) {
   :root {
     color: rgba(255, 255, 255, 0.87);
     background-color: #0f0f0f;
   }
-  body {
-    background-color: #0f0f0f;
-  }
+  html,
+  body,
   #root {
     background-color: #0f0f0f;
-  }
-  a:hover {
-    color: #535bf2;
-  }
-  button {
-    background-color: #1a1a1a;
   }
 }

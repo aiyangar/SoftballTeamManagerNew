@@ -70,14 +70,14 @@ const ScheduleForm = ({
           <button
             type='button'
             onClick={onCancel}
-            className='flex-1 px-4 py-3 border border-gray-600 text-gray-300 rounded hover:bg-gray-800 transition-colors'
+            className='btn btn-secondary flex-1'
           >
             Cancelar
           </button>
           <button
             type='submit'
             disabled={loading}
-            className='flex-1 px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
+            className='btn btn-primary flex-1'
           >
             {loading
               ? editingGame

@@ -40,16 +40,14 @@ const Menu = () => {
       {/* Botón fijo para ir al Dashboard */}
       <button
         onClick={handleGoToDashboard}
-        className='!px-4 !py-2 !bg-black !text-white !rounded hover:!bg-gray-900 !transition-colors !flex !items-center !space-x-2'
+        className='p-2 rounded-lg text-slate-200 hover:bg-surface-700 transition-colors flex items-center border border-surface-border'
         title='Ir al Dashboard'
-        style={{ backgroundColor: '#000000', color: 'white' }}
       >
         <svg
           className='w-6 h-6'
           fill='none'
           stroke='currentColor'
           viewBox='0 0 24 24'
-          style={{ color: 'white' }}
         >
           <path
             strokeLinecap='round'
@@ -64,8 +62,7 @@ const Menu = () => {
       <div className='relative'>
         <button
           onClick={() => setShowMenu(!showMenu)}
-          className='!px-4 !py-2 !bg-black !text-white !rounded hover:!bg-gray-900 !transition-colors !flex !items-center !space-x-2'
-          style={{ backgroundColor: '#000000', color: 'white' }}
+          className='p-2 rounded-lg text-slate-200 hover:bg-surface-700 transition-colors flex items-center border border-surface-border'
           title='Abrir menú de navegación'
         >
           <svg
@@ -73,7 +70,6 @@ const Menu = () => {
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
-            style={{ color: 'white' }}
           >
             <path
               strokeLinecap='round'

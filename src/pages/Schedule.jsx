@@ -909,7 +909,7 @@ const Schedule = () => {
       // Obtener lineup del partido
       const { data: lineupData, error: lineupError } = await supabase
         .from('lineup_partidos')
-        .select('orden_bateo, posicion_campo, es_titular, activo, batea_por_id, jugadores!lineup_partidos_jugador_id_fkey(nombre, numero)')
+        .select('orden_bateo, posicion_campo, es_titular, activo, batea_por_id, jugadores!lineup_partidos_jugador_id_fkey(id, nombre, numero)')
         .eq('partido_id', gameId)
         .order('orden_bateo');
 

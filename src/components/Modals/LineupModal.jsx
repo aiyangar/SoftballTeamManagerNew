@@ -17,20 +17,35 @@ const LineupModal = ({
   onSave,
   onOpenSubstitution,
   gameFinalizationStatus,
+  refreshKey = 0,
 }) => {
   const [lineupRows, setLineupRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const [editMode, setEditMode] = useState(false);
+  const [subMsg, setSubMsg] = useState(null);
   const dragIndexRef = useRef(null);
+  const prevRefreshKey = useRef(refreshKey);
 
   useEffect(() => {
     if (show && game) loadLineup();
   }, [show, game]);
 
   useEffect(() => {
-    if (!show) { setLineupRows([]); setEditMode(false); }
+    if (!show) { setLineupRows([]); setEditMode(false); setSubMsg(null); }
   }, [show]);
+
+  // Recargar lineup cuando se registre una sustitución
+  useEffect(() => {
+    if (refreshKey !== prevRefreshKey.current) {
+      prevRefreshKey.current = refreshKey;
+      if (show && game) {
+        loadLineup();
+        setSubMsg('✅ Sustitución registrada');
+        setTimeout(() => setSubMsg(null), 4000);
+      }
+    }
+  }, [refreshKey]);
 
   const loadLineup = async () => {
     setLoading(true);
@@ -46,6 +61,10 @@ const LineupModal = ({
           posicion_campo: entry.posicion_campo,
           es_titular: entry.es_titular,
           activo: entry.activo,
+          batea_por_id: entry.batea_por_id || null,
+          batea_por_nombre: entry.batea_por_id
+            ? (players.find(p => p.id === entry.batea_por_id)?.nombre || '')
+            : '',
         }))
       );
     } else if (attendingPlayerIds != null && attendingPlayerIds.length > 0) {
@@ -62,6 +81,8 @@ const LineupModal = ({
           posicion_campo: 'P',
           es_titular: idx < MAX_BATTING_ORDER,
           activo: true,
+          batea_por_id: null,
+          batea_por_nombre: '',
         }))
       );
     }
@@ -69,11 +90,13 @@ const LineupModal = ({
     setLoading(false);
   };
 
-  // Recalculate es_titular and orden_bateo after any reorder
+  // Recalculate es_titular and orden_bateo after any reorder.
+  // BD players with a batea_por target keep their inherited orden_bateo.
   const recalcOrder = rows => {
     let counter = 1;
     return rows.map(row => {
       if (!row.activo) return row;
+      if (row.posicion_campo === 'BD' && row.batea_por_id) return row;
       if (counter <= MAX_BATTING_ORDER) {
         return { ...row, es_titular: true, orden_bateo: counter++ };
       }
@@ -94,6 +117,8 @@ const LineupModal = ({
         posicion_campo: 'P',
         es_titular: isTitular,
         activo: true,
+        batea_por_id: null,
+        batea_por_nombre: '',
       },
     ]);
   };
@@ -109,6 +134,23 @@ const LineupModal = ({
         if (field === 'jugador_id') {
           const player = players.find(p => String(p.id) === value);
           return { ...row, jugador_id: value, nombre: player?.nombre || '', numero: player?.numero || '' };
+        }
+        if (field === 'posicion_campo' && row.posicion_campo === 'BD' && value !== 'BD') {
+          // Changing away from BD: clear the batea_por association
+          return { ...row, posicion_campo: value, batea_por_id: null, batea_por_nombre: '' };
+        }
+        if (field === 'batea_por_id') {
+          if (!value) {
+            return { ...row, batea_por_id: null, batea_por_nombre: '', es_titular: true };
+          }
+          const target = prev.find(r => String(r.jugador_id) === value);
+          return {
+            ...row,
+            batea_por_id: value,
+            batea_por_nombre: target?.nombre || '',
+            orden_bateo: target?.orden_bateo ?? null,
+            es_titular: false,
+          };
         }
         return { ...row, [field]: value };
       })
@@ -159,49 +201,56 @@ const LineupModal = ({
     await onSave(game.id, game.equipo_id, validRows);
   };
 
-  // Build render list: when substitutions exist, show subs inline below their replaced player
+  // Build render list: starters in order, then banco separator, then bench.
+  // In-game subs appear indented below the player they replaced (activo=false).
+  // BD players with batea_por_id appear in the bench section (available for sub).
   const renderRows = useMemo(() => {
-    const hasSubs = lineupRows.some(r => !r.es_titular);
+    const isBDWithTarget = r => r.posicion_campo === 'BD' && r.batea_por_id;
+    const hasInGameSubs = lineupRows.some(
+      r => !r.es_titular && r.orden_bateo != null && !isBDWithTarget(r)
+    );
 
-    if (!hasSubs) {
-      // Simple case: no substitutions yet — direct map, drag works normally
-      return lineupRows.map((r, i) => ({
-        ...r,
-        originalIndex: i,
-        indent: false,
-        showBancoSep: false,
-      }));
-    }
-
-    // With substitutions: interleave subs below the player they replaced
     const indexed = lineupRows.map((r, i) => ({ ...r, originalIndex: i }));
     const starters = indexed
       .filter(r => r.es_titular)
       .sort((a, b) => (a.orden_bateo || 0) - (b.orden_bateo || 0));
-    const subs = indexed.filter(r => !r.es_titular);
+    // Only active players with no batting order (excludes already-entered bench players)
+    const bench = indexed.filter(
+      r => !r.es_titular && r.orden_bateo == null && !isBDWithTarget(r) && r.activo
+    );
+    const inGameSubs = indexed.filter(
+      r => !r.es_titular && r.orden_bateo != null && !isBDWithTarget(r)
+    );
+    // BD players always appear in bench section (available for substitution)
+    const bdPlayers = indexed.filter(r => isBDWithTarget(r));
 
     const result = [];
-    const usedSubIdx = new Set();
+    const usedIdx = new Set();
 
     for (const starter of starters) {
       result.push({ ...starter, indent: false, showBancoSep: false });
-      if (!starter.activo) {
-        // Find substitutes with same batting position
-        const linked = subs.filter(s => s.orden_bateo === starter.orden_bateo);
+
+      // In-game subs under an inactive starter
+      if (hasInGameSubs && !starter.activo) {
+        const linked = inGameSubs.filter(s => s.orden_bateo === starter.orden_bateo);
         for (const sub of linked) {
           result.push({ ...sub, indent: true, showBancoSep: false });
-          usedSubIdx.add(sub.originalIndex);
+          usedIdx.add(sub.originalIndex);
         }
       }
     }
 
-    // Unlinked substitutes → banco section
-    let firstUnlinked = true;
-    for (const sub of subs) {
-      if (!usedSubIdx.has(sub.originalIndex)) {
-        result.push({ ...sub, indent: false, showBancoSep: firstUnlinked });
-        firstUnlinked = false;
-      }
+    // Remaining in-game subs without a matched starter (edge case)
+    for (const sub of inGameSubs) {
+      if (!usedIdx.has(sub.originalIndex)) bench.push(sub);
+    }
+
+    // Banco section: regular bench + BD players
+    const allBench = [...bench, ...bdPlayers];
+    let firstBench = true;
+    for (const row of allBench) {
+      result.push({ ...row, indent: false, showBancoSep: firstBench, isBD: isBDWithTarget(row) });
+      firstBench = false;
     }
 
     return result;
@@ -214,9 +263,20 @@ const LineupModal = ({
       ? players.filter(p => attendingPlayerIds.includes(p.id))
       : players;
 
-  const activeLineup = lineupRows.filter(r => r.activo);
+  const activeLineup = lineupRows.filter(r => r.activo && r.es_titular);
   const usedPlayerIds = new Set(lineupRows.map(r => String(r.jugador_id)));
   const hasSubs = lineupRows.some(r => !r.es_titular);
+
+  // Detect duplicate field positions among active players (excludes DH/BD/CD)
+  const FIELD_POSITIONS = new Set(['P','C','1B','2B','3B','SS','LF','CLF','CRF','RF']);
+  const posCount = {};
+  for (const r of lineupRows) {
+    if (r.activo && r.jugador_id && FIELD_POSITIONS.has(r.posicion_campo)) {
+      posCount[r.posicion_campo] = (posCount[r.posicion_campo] || []);
+      posCount[r.posicion_campo].push(r.nombre || r.jugador_id);
+    }
+  }
+  const duplicatePositions = Object.entries(posCount).filter(([, names]) => names.length > 1);
   const colSpan = gameFinalizationStatus ? 4 : 6;
 
   return (
@@ -252,6 +312,26 @@ const LineupModal = ({
                     ⚠️ No hay jugadores con asistencia registrada. Registra la asistencia antes de armar el lineup.
                   </div>
                 )}
+
+              {/* Mensaje de sustitución */}
+              {subMsg && (
+                <div className='mb-4 p-3 bg-green-900 border border-green-600 rounded text-green-200 text-sm'>
+                  {subMsg}
+                </div>
+              )}
+
+              {/* Aviso posiciones duplicadas */}
+              {duplicatePositions.length > 0 && (
+                <div className='mb-4 p-3 bg-orange-900 border border-orange-600 rounded text-orange-200 text-sm'>
+                  ⚠️ Posición duplicada en el campo:{' '}
+                  {duplicatePositions.map(([pos, names]) => (
+                    <span key={pos} className='font-semibold'>
+                      {pos} ({names.join(', ')})
+                    </span>
+                  )).reduce((a, b) => [a, ', ', b])}
+                  . Mueve uno de ellos a otra posición.
+                </div>
+              )}
 
               {/* Acciones */}
               {!gameFinalizationStatus && (
@@ -304,18 +384,24 @@ const LineupModal = ({
                           <th className='pb-2 pr-3'>Estado</th>
                           {!gameFinalizationStatus && <th className='pb-2' />}
                         </tr>
+                        {/* Encabezado sección Titulares */}
+                        <tr className='bg-green-900/20'>
+                          <td colSpan={colSpan} className='px-1 py-1'>
+                            <span className='text-xs font-semibold text-green-400 uppercase tracking-wide'>
+                              Titulares
+                            </span>
+                          </td>
+                        </tr>
                       </thead>
                       <tbody>
                         {renderRows.map((row, renderIdx) => (
                           <React.Fragment key={row.originalIndex}>
                             {row.showBancoSep && (
-                              <tr>
-                                <td colSpan={colSpan} className='py-2 px-0'>
-                                  <div className='flex items-center gap-2 text-xs text-gray-500'>
-                                    <div className='flex-1 border-t border-gray-700' />
-                                    <span>Banco / Sustitutos</span>
-                                    <div className='flex-1 border-t border-gray-700' />
-                                  </div>
+                              <tr className='bg-gray-800/60'>
+                                <td colSpan={colSpan} className='px-1 py-1'>
+                                  <span className='text-xs font-semibold text-gray-400 uppercase tracking-wide'>
+                                    Banca
+                                  </span>
                                 </td>
                               </tr>
                             )}
@@ -328,7 +414,11 @@ const LineupModal = ({
                               className={[
                                 'border-b border-gray-800 transition-colors',
                                 !row.activo ? 'opacity-50' : '',
-                                dragOverIndex === renderIdx ? 'bg-blue-900/40' : '',
+                                dragOverIndex === renderIdx
+                                  ? 'bg-blue-900/40'
+                                  : row.isBD
+                                    ? 'bg-purple-900/20'
+                                    : '',
                               ].join(' ')}
                             >
                               {/* Handle arrastre */}
@@ -411,15 +501,42 @@ const LineupModal = ({
                                 )}
                               </td>
 
-                              {/* Estado */}
+                              {/* Estado / Batea por */}
                               <td className='py-2 pr-3'>
-                                {row.es_titular ? (
-                                  <span className='text-green-400 text-xs'>Titular</span>
+                                {row.posicion_campo === 'BD' && !gameFinalizationStatus ? (
+                                  <select
+                                    value={row.batea_por_id || ''}
+                                    onChange={e => updateRow(row.originalIndex, 'batea_por_id', e.target.value)}
+                                    className='p-1 bg-purple-900 border border-purple-600 rounded text-purple-200 text-xs min-w-28'
+                                  >
+                                    <option value=''>Batea por...</option>
+                                    {lineupRows
+                                      .filter(r =>
+                                        r.jugador_id &&
+                                        r.es_titular &&
+                                        String(r.jugador_id) !== String(row.jugador_id)
+                                      )
+                                      .map(r => (
+                                        <option key={r.jugador_id} value={r.jugador_id}>
+                                          {r.numero ? `#${r.numero} ` : ''}{r.nombre}
+                                        </option>
+                                      ))}
+                                  </select>
+                                ) : row.posicion_campo === 'BD' && row.batea_por_id ? (
+                                  <span className='text-purple-400 text-xs'>
+                                    por: {row.batea_por_nombre || `#${row.batea_por_id}`}
+                                  </span>
                                 ) : (
-                                  <span className='text-yellow-400 text-xs'>Sustituto</span>
-                                )}
-                                {!row.activo && (
-                                  <span className='ml-1 text-red-400 text-xs'>(relevado)</span>
+                                  <>
+                                    {row.es_titular ? (
+                                      <span className='text-green-400 text-xs'>Titular</span>
+                                    ) : (
+                                      <span className='text-yellow-400 text-xs'>Sustituto</span>
+                                    )}
+                                    {!row.activo && (
+                                      <span className='ml-1 text-red-400 text-xs'>(relevado)</span>
+                                    )}
+                                  </>
                                 )}
                               </td>
 

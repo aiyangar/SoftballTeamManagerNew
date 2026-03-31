@@ -32,6 +32,7 @@ const Schedule = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [lineupRefreshKey, setLineupRefreshKey] = useState(0);
   const [attendance, setAttendance] = useState({}); // { [gameId]: [playerId1, playerId2] }
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [selectedGameForPayment, setSelectedGameForPayment] = useState(null);
@@ -908,7 +909,7 @@ const Schedule = () => {
       // Obtener lineup del partido
       const { data: lineupData, error: lineupError } = await supabase
         .from('lineup_partidos')
-        .select('orden_bateo, posicion_campo, es_titular, activo, jugadores!inner(nombre, numero)')
+        .select('orden_bateo, posicion_campo, es_titular, activo, batea_por_id, jugadores!lineup_partidos_jugador_id_fkey(nombre, numero)')
         .eq('partido_id', gameId)
         .order('orden_bateo');
 
@@ -938,8 +939,8 @@ const Schedule = () => {
     const { data, error } = await supabase
       .from('lineup_partidos')
       .select(
-        `id, orden_bateo, posicion_campo, es_titular, activo,
-         jugadores!inner(id, nombre, numero)`
+        `id, orden_bateo, posicion_campo, es_titular, activo, batea_por_id,
+         jugadores!lineup_partidos_jugador_id_fkey(id, nombre, numero)`
       )
       .eq('partido_id', partidoId)
       .order('orden_bateo');
@@ -971,6 +972,7 @@ const Schedule = () => {
               posicion_campo: row.posicion_campo,
               es_titular: row.es_titular ?? true,
               activo: row.activo ?? true,
+              ...(row.batea_por_id && { batea_por_id: parseInt(row.batea_por_id) }),
             }))
           );
         if (insertError) throw insertError;
@@ -1024,7 +1026,15 @@ const Schedule = () => {
         ]);
       if (insertError) throw insertError;
 
-      setSuccess('✅ Sustitución registrada');
+      // Desactivar fila de banca del jugador que entra (si existía)
+      await supabase
+        .from('lineup_partidos')
+        .update({ activo: false })
+        .eq('partido_id', parseInt(partidoId))
+        .eq('jugador_id', parseInt(sub.jugador_entra_id))
+        .is('orden_bateo', null);
+
+      setLineupRefreshKey(prev => prev + 1);
     } catch (err) {
       setError('Error al registrar sustitución: ' + err.message);
     } finally {
@@ -1251,6 +1261,7 @@ const Schedule = () => {
           onFetchLineup={fetchLineup}
           onSave={saveLineup}
           onOpenSubstitution={openSubstitutionModal}
+          refreshKey={lineupRefreshKey}
           gameFinalizationStatus={
             selectedGameForLineup
               ? gameFinalizationStatus[selectedGameForLineup.id]

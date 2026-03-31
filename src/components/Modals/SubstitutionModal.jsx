@@ -16,7 +16,7 @@ const SubstitutionModal = ({
     jugador_sale_id: '',
     jugador_entra_id: '',
     inning: 1,
-    posicion_campo: 'P',
+    posicion_campo: '',
     notas: '',
   });
 
@@ -26,23 +26,11 @@ const SubstitutionModal = ({
         jugador_sale_id: '',
         jugador_entra_id: '',
         inning: 1,
-        posicion_campo: 'P',
+        posicion_campo: '',
         notas: '',
       });
     }
   }, [show]);
-
-  // Heredar posición del jugador que sale
-  useEffect(() => {
-    if (form.jugador_sale_id) {
-      const entry = activeLineup.find(
-        r => String(r.jugador_id) === String(form.jugador_sale_id)
-      );
-      if (entry) {
-        setForm(prev => ({ ...prev, posicion_campo: entry.posicion_campo }));
-      }
-    }
-  }, [form.jugador_sale_id, activeLineup]);
 
   if (!show || !game) return null;
 
@@ -55,7 +43,7 @@ const SubstitutionModal = ({
 
   const handleSubmit = async e => {
     e.preventDefault();
-    if (!form.jugador_sale_id || !form.jugador_entra_id) return;
+    if (!form.jugador_sale_id || !form.jugador_entra_id || !form.posicion_campo) return;
 
     const saleEntry = activeLineup.find(
       r => String(r.jugador_id) === String(form.jugador_sale_id)
@@ -188,7 +176,9 @@ const SubstitutionModal = ({
                     }))
                   }
                   className='w-full p-2 bg-gray-800 border border-gray-600 rounded text-white'
+                  required
                 >
+                  <option value=''>Seleccionar...</option>
                   <optgroup label='Campo'>
                     {FIELD_POSITIONS.map(pos => (
                       <option key={pos} value={pos}>{pos}</option>

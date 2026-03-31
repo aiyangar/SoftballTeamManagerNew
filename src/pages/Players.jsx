@@ -120,8 +120,7 @@ const Players = () => {
           // Si no hay equipos, usar un array vacío
           teamIds = [];
         }
-      } else {
-      }
+      } else { /* intentional */ }
 
       // Obtener asistencia a partidos (de todos los equipos si no hay equipo específico)
 
@@ -153,8 +152,7 @@ const Players = () => {
 
       if (attendanceError) {
         // Error al obtener asistencia
-      } else {
-      }
+      } else { /* intentional */ }
 
       // Obtener pagos realizados (de todos los equipos si no hay equipo específico)
 
@@ -185,8 +183,7 @@ const Players = () => {
 
       if (paymentsError) {
         // Error al obtener pagos
-      } else {
-      }
+      } else { /* intentional */ }
 
       // Obtener todos los partidos de los equipos para calcular estadísticas
 
@@ -203,8 +200,7 @@ const Players = () => {
 
       if (gamesError) {
         // Error al obtener partidos
-      } else {
-      }
+      } else { /* intentional */ }
 
       // Calcular estadísticas
       let attendance = attendanceData || [];
@@ -242,7 +238,7 @@ const Players = () => {
         gamesAttended,
         attendanceRate,
       });
-    } catch (error) {
+    } catch (_error) {
       setError('Error al cargar el historial del jugador');
     } finally {
       setLoadingHistory(false);
@@ -362,7 +358,7 @@ const Players = () => {
       const finalTarget = Math.max(200, Math.min(800, calculatedTarget));
 
       return finalTarget;
-    } catch (error) {
+    } catch (_error) {
       return 450;
     }
   };
@@ -397,7 +393,7 @@ const Players = () => {
       });
 
       return totals;
-    } catch (error) {
+    } catch (_error) {
       return {};
     }
   };
@@ -631,8 +627,7 @@ const Players = () => {
 
         if (positionError) {
           // Error al registrar posiciones - no lanzamos error aquí porque el jugador ya se registró/actualizó
-        } else {
-        }
+        } else { /* intentional */ }
       }
 
       const mensaje = editingPlayer
@@ -786,8 +781,7 @@ const Players = () => {
 
       if (positionError) {
         // Error al eliminar posiciones
-      } else {
-      }
+      } else { /* intentional */ }
 
       // Luego eliminar el jugador
       const { error: playerError } = await supabase
@@ -813,8 +807,8 @@ const Players = () => {
     if (session?.user?.id) {
       fetchPlayers(session.user.id, selectedTeam);
       fetchPositions();
-    } else {
-    }
+    } else { /* intentional */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   // Establecer el equipo seleccionado por defecto cuando cambie
@@ -837,6 +831,7 @@ const Players = () => {
       setPlayerInscripcionTotals({});
       setInscripcionTarget(450);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTeam]);
 
   // Función para ordenar los jugadores
@@ -1000,7 +995,7 @@ const Players = () => {
       });
 
       return totals;
-    } catch (error) {
+    } catch (_error) {
       return {};
     }
   };
@@ -1054,7 +1049,7 @@ const Players = () => {
       setLoading(true);
       
       // Crear un pago de inscripción
-      const { data: paymentData, error: paymentError } = await supabase
+      const { data: _paymentData, error: paymentError } = await supabase
         .from('pagos')
         .insert([
           {
@@ -1383,7 +1378,7 @@ const Players = () => {
                   } else if (retryPlayer && retryPlayer.length > 0) {
                     newPlayers.push(retryPlayer[0]);
                   }
-                } catch (retryError) {
+                } catch (_retryError) {
                   failedImports.push({
                     nombre: player.nombre,
                     numero: player.numero,
@@ -1522,7 +1517,7 @@ const Players = () => {
   // Función para manejar el menú de acciones
 
   // Función para editar jugador (mantener para compatibilidad)
-  const editPlayer = playerId => {
+  const _editPlayer = playerId => {
     openEditForm(playerId);
   };
 

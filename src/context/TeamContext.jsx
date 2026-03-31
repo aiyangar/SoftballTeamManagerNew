@@ -101,6 +101,7 @@ export const TeamProvider = ({ children }) => {
     if (session?.user?.id) {
       fetchTeams();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id]);
 
   const value = {

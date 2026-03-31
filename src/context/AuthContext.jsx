@@ -35,7 +35,7 @@ export const AuthContextProvider = ({ children }) => {
         }
         return { success: true, data: signInData, isExistingUser: true };
       }
-    } catch {}
+    } catch { /* intentional */ }
 
     // Si el usuario no existe, crear una nueva cuenta
     const { data, error } = await supabase.auth.signUp({

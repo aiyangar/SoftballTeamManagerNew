@@ -32,6 +32,7 @@ const LineupModal = ({
 
   useEffect(() => {
     if (show && game) loadLineup();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, game]);
 
   useEffect(() => {
@@ -54,6 +55,7 @@ const LineupModal = ({
         setTimeout(() => setSubMsg(null), 4000);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey]);
 
   const loadLineup = async () => {

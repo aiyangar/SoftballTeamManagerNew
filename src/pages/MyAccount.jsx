@@ -88,7 +88,7 @@ const MyAccount = () => {
           confirmPassword: '',
         });
       }
-    } catch (error) {
+    } catch (_error) {
       setError('Error inesperado al cambiar la contraseña');
     } finally {
       setLoading(false);

@@ -9,7 +9,7 @@
  * Supabase está completamente mockeado; no se requiere conexión a red.
  */
 import React, { useState } from 'react';
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import LineupModal from '../../components/Modals/LineupModal';

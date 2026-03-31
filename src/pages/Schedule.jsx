@@ -73,7 +73,7 @@ const Schedule = () => {
     attendance: false,
     payments: false,
   });
-  const [inscripcionTarget, setInscripcionTarget] = useState(450);
+  const [_inscripcionTarget, setInscripcionTarget] = useState(450);
   const [playerInscripcionTarget, setPlayerInscripcionTarget] = useState(450);
 
   // Estados para lineup y sustituciones
@@ -124,7 +124,7 @@ const Schedule = () => {
         );
         setInscripcionTarget(target);
       }
-    } catch (error) {
+    } catch (_error) {
       setInscripcionTarget(450); // Valor por defecto
     }
   };
@@ -144,6 +144,7 @@ const Schedule = () => {
     if (selectedTeam) {
       calculateInscripcionTarget();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTeam]);
 
   /**
@@ -210,7 +211,7 @@ const Schedule = () => {
       const finalTarget = Math.max(200, Math.min(800, calculatedTarget));
 
       return finalTarget;
-    } catch (error) {
+    } catch (_error) {
       return 450;
     }
   };
@@ -313,7 +314,7 @@ const Schedule = () => {
       };
 
       setPlayerHistory(historyData);
-    } catch (err) {
+    } catch (_err) {
       // Error al obtener historial del jugador
     } finally {
       setLoadingHistory(false);
@@ -344,7 +345,7 @@ const Schedule = () => {
     // Cargar los datos del historial después de abrir el modal
     try {
       await fetchPlayerHistory(player.id, selectedTeam);
-    } catch (error) {
+    } catch (_error) {
       // Error al cargar historial
     }
   };
@@ -716,7 +717,7 @@ const Schedule = () => {
           equipo_id: parseInt(selectedTeam),
         }));
 
-        const { data, error: insertError } = await supabase
+        const { data: _data, error: insertError } = await supabase
           .from('asistencia_partidos')
           .insert(attendanceToInsert)
           .select();
@@ -922,7 +923,7 @@ const Schedule = () => {
         payments: paymentsData || [],
         lineup: lineupData || [],
       });
-    } catch (err) {
+    } catch (_err) {
       // Error loading game details
     }
   };
@@ -1097,7 +1098,7 @@ const Schedule = () => {
         setSuccess('Partido eliminado exitosamente');
         await fetchGames(selectedTeam);
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Error inesperado al eliminar partido');
     } finally {
       setLoading(false);
@@ -1113,6 +1114,7 @@ const Schedule = () => {
       setPlayers([]);
       setGames([]);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTeam]);
 
   return (
@@ -1411,10 +1413,10 @@ const Schedule = () => {
           inscripcionTarget={playerInscripcionTarget}
           onToggleSection={toggleSection}
           onClose={closePlayerHistoryModal}
-          onEdit={playerId => {
+          onEdit={() => {
             // Aquí podrías implementar la edición del jugador si es necesario
           }}
-          onDelete={playerId => {
+          onDelete={() => {
             // Aquí podrías implementar la eliminación del jugador si es necesario
           }}
         />

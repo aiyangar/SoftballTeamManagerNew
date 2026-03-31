@@ -37,6 +37,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
     };
 
     initializeForm();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId, gameId]);
 
   const fetchPlayers = async () => {

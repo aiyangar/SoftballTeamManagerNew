@@ -563,10 +563,16 @@ const ScheduleHistoryModal = ({
               const usedIdx = new Set();
               starters.forEach(starter => {
                 rows.push({ ...starter, indent: false, section: 'titular' });
+
+                // BD players batting for this starter → appear right below them
+                bdPlayers
+                  .filter(bd => bd.batea_por_id === starter.jugadores?.id)
+                  .forEach(bd => rows.push({ ...bd, indent: true, section: 'bd' }));
+
                 if (!starter.activo) {
                   inGameSubs
                     .filter(s => s.orden_bateo === starter.orden_bateo)
-                    .forEach((sub, si) => {
+                    .forEach(sub => {
                       rows.push({ ...sub, indent: true, section: 'sub' });
                       usedIdx.add(sub);
                     });
@@ -574,7 +580,7 @@ const ScheduleHistoryModal = ({
               });
               inGameSubs.filter(s => !usedIdx.has(s)).forEach(s => bench.push(s));
 
-              const allBench = [...bench, ...bdPlayers];
+              const allBench = [...bench]; // BD players are now inline
 
               const playerName = e =>
                 `${e.jugadores?.numero ? `#${e.jugadores.numero} ` : ''}${e.jugadores?.nombre || ''}`;
@@ -602,21 +608,34 @@ const ScheduleHistoryModal = ({
                           className={[
                             'border-b border-gray-600 transition-colors',
                             !entry.activo ? 'opacity-40' : '',
+                            entry.section === 'bd' ? 'bg-purple-900/20' : '',
                             entry.section === 'sub' ? 'bg-yellow-900/15' : '',
                           ].join(' ')}
                         >
-                          <td className={`py-2 pr-3 font-mono text-white ${entry.indent ? 'pl-6' : 'pl-3'}`}>
+                          <td className={`py-2 pr-3 font-mono ${entry.section === 'bd' ? 'text-purple-300' : 'text-white'} ${entry.indent ? 'pl-6' : 'pl-3'}`}>
                             {entry.orden_bateo ?? '—'}
                           </td>
-                          <td className='py-2 pr-3 text-white'>
-                            {entry.indent && <span className='text-gray-500 mr-1'>↳</span>}
-                            <span className={!entry.activo ? 'line-through text-gray-500' : ''}>
+                          <td className='py-2 pr-3'>
+                            {entry.indent && (
+                              <span className={`mr-1 ${entry.section === 'bd' ? 'text-purple-400' : 'text-gray-500'}`}>↳</span>
+                            )}
+                            <span className={
+                              entry.section === 'bd'
+                                ? 'text-purple-200'
+                                : !entry.activo
+                                  ? 'line-through text-gray-500'
+                                  : 'text-white'
+                            }>
                               {playerName(entry)}
                             </span>
                           </td>
-                          <td className='py-2 pr-3 text-white font-mono'>{entry.posicion_campo}</td>
+                          <td className={`py-2 pr-3 font-mono ${entry.section === 'bd' ? 'text-purple-300' : 'text-white'}`}>
+                            {entry.posicion_campo}
+                          </td>
                           <td className='py-2 pr-3'>
-                            {entry.es_titular ? (
+                            {entry.section === 'bd' ? (
+                              <span className='text-purple-400 text-xs'>BD</span>
+                            ) : entry.es_titular ? (
                               <span className='text-green-400 text-xs'>Titular</span>
                             ) : (
                               <span className='text-yellow-400 text-xs'>Sustituto</span>

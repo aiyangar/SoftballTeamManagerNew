@@ -249,6 +249,14 @@ const LineupModal = ({
     for (const starter of starters) {
       result.push({ ...starter, indent: false, showBancoSep: false });
 
+      // BD players batting for this starter → appear right below them, indented
+      const linkedBD = bdPlayers.filter(
+        r => String(r.batea_por_id) === String(starter.jugador_id)
+      );
+      for (const bd of linkedBD) {
+        result.push({ ...bd, indent: true, showBancoSep: false, isBD: true });
+      }
+
       // In-game subs under an inactive starter
       if (hasInGameSubs && !starter.activo) {
         const linked = inGameSubs.filter(s => s.orden_bateo === starter.orden_bateo);
@@ -264,11 +272,10 @@ const LineupModal = ({
       if (!usedIdx.has(sub.originalIndex)) bench.push(sub);
     }
 
-    // Banco section: regular bench + BD players
-    const allBench = [...bench, ...bdPlayers];
+    // Banco section: only regular bench (BD players are now inline)
     let firstBench = true;
-    for (const row of allBench) {
-      result.push({ ...row, indent: false, showBancoSep: firstBench, isBD: isBDWithTarget(row) });
+    for (const row of bench) {
+      result.push({ ...row, indent: false, showBancoSep: firstBench });
       firstBench = false;
     }
 

@@ -21,6 +21,9 @@ const LineupModal = ({
 }) => {
   const [lineupRows, setLineupRows] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const [lineupFromDB, setLineupFromDB] = useState(false);
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [subMsg, setSubMsg] = useState(null);
@@ -32,7 +35,13 @@ const LineupModal = ({
   }, [show, game]);
 
   useEffect(() => {
-    if (!show) { setLineupRows([]); setEditMode(false); setSubMsg(null); }
+    if (!show) {
+      setLineupRows([]);
+      setEditMode(false);
+      setSubMsg(null);
+      setSaveError(null);
+      setLineupFromDB(false);
+    }
   }, [show]);
 
   // Recargar lineup cuando se registre una sustitución
@@ -52,6 +61,7 @@ const LineupModal = ({
     const data = await onFetchLineup(game.id);
 
     if (data.length > 0) {
+      setLineupFromDB(true);
       setLineupRows(
         data.map(entry => ({
           jugador_id: entry.jugadores.id,
@@ -68,6 +78,7 @@ const LineupModal = ({
         }))
       );
     } else if (attendingPlayerIds != null && attendingPlayerIds.length > 0) {
+      setLineupFromDB(false);
       const attending = players
         .filter(p => attendingPlayerIds.includes(p.id))
         .sort((a, b) => (a.numero || 999) - (b.numero || 999));
@@ -198,7 +209,15 @@ const LineupModal = ({
 
   const handleSave = async () => {
     const validRows = lineupRows.filter(r => r.jugador_id && r.posicion_campo);
+    if (validRows.length === 0) {
+      setSaveError('El lineup no puede estar vacío. Agrega al menos un jugador.');
+      return;
+    }
+    setSaveError(null);
+    setSaving(true);
     await onSave(game.id, game.equipo_id, validRows);
+    setSaving(false);
+    setLineupFromDB(true);
   };
 
   // Build render list: starters in order, then banco separator, then bench.
@@ -301,7 +320,29 @@ const LineupModal = ({
         {/* Content */}
         <div className='modal-content p-6'>
           {loading ? (
-            <div className='text-center text-gray-400 py-8'>Cargando lineup...</div>
+            <div className='flex flex-col items-center justify-center py-10 gap-3'>
+              <svg
+                className='animate-spin h-8 w-8 text-blue-400'
+                xmlns='http://www.w3.org/2000/svg'
+                fill='none'
+                viewBox='0 0 24 24'
+              >
+                <circle
+                  className='opacity-25'
+                  cx='12'
+                  cy='12'
+                  r='10'
+                  stroke='currentColor'
+                  strokeWidth='4'
+                />
+                <path
+                  className='opacity-75'
+                  fill='currentColor'
+                  d='M4 12a8 8 0 018-8v8z'
+                />
+              </svg>
+              <span className='text-gray-400 text-sm'>Cargando lineup...</span>
+            </div>
           ) : (
             <>
               {/* Aviso sin asistencia */}
@@ -317,6 +358,13 @@ const LineupModal = ({
               {subMsg && (
                 <div className='mb-4 p-3 bg-green-900 border border-green-600 rounded text-green-200 text-sm'>
                   {subMsg}
+                </div>
+              )}
+
+              {/* Error al guardar */}
+              {saveError && (
+                <div className='mb-4 p-3 bg-red-900 border border-red-600 rounded text-red-200 text-sm'>
+                  ⛔ {saveError}
                 </div>
               )}
 
@@ -344,7 +392,14 @@ const LineupModal = ({
                   </button>
                   {activeLineup.length > 0 && (
                     <button
-                      onClick={() => onOpenSubstitution(activeLineup)}
+                      onClick={() => {
+                        if (!lineupFromDB) {
+                          setSaveError('Guarda el lineup antes de registrar una sustitución.');
+                          return;
+                        }
+                        setSaveError(null);
+                        onOpenSubstitution(activeLineup);
+                      }}
                       className='px-3 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors text-sm'
                     >
                       ⇄ Sustitución
@@ -575,9 +630,21 @@ const LineupModal = ({
           {!gameFinalizationStatus && (
             <button
               onClick={handleSave}
-              className='px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors'
+              disabled={saving}
+              className='px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2'
             >
-              Guardar Lineup
+              {saving && (
+                <svg
+                  className='animate-spin h-4 w-4 text-white'
+                  xmlns='http://www.w3.org/2000/svg'
+                  fill='none'
+                  viewBox='0 0 24 24'
+                >
+                  <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+                  <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v8z' />
+                </svg>
+              )}
+              {saving ? 'Guardando...' : 'Guardar Lineup'}
             </button>
           )}
         </div>

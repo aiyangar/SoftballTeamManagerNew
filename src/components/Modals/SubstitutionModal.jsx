@@ -90,12 +90,17 @@ const SubstitutionModal = ({
               </label>
               <select
                 value={form.jugador_sale_id}
-                onChange={e =>
+                onChange={e => {
+                  const saleId = e.target.value;
+                  const saleEntry = activeLineup.find(
+                    r => String(r.jugador_id) === saleId
+                  );
                   setForm(prev => ({
                     ...prev,
-                    jugador_sale_id: e.target.value,
-                  }))
-                }
+                    jugador_sale_id: saleId,
+                    posicion_campo: saleEntry?.posicion_campo || prev.posicion_campo,
+                  }));
+                }}
                 className='w-full p-2 bg-gray-800 border border-gray-600 rounded text-white'
                 required
               >

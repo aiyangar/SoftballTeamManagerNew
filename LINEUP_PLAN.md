@@ -31,11 +31,11 @@
 
 ## Fase 5 — Pulido
 
-- [ ] Loading spinners en `LineupModal`
-- [ ] Validar que no se guarde un lineup vacío
-- [ ] Validar que no haya sustitución si no hay jugadores disponibles
-- [ ] Advertencia si se intenta sustituir sin lineup previo
-- [ ] Bloquear toda edición cuando `partido.finalizado = true`
+- [x] Loading spinners en `LineupModal`
+- [x] Validar que no se guarde un lineup vacío
+- [x] Validar que no haya sustitución si no hay jugadores disponibles
+- [x] Advertencia si se intenta sustituir sin lineup previo
+- [x] Bloquear toda edición cuando `partido.finalizado = true`
 
 ---
 

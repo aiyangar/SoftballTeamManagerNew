@@ -97,6 +97,30 @@ describe('ScheduleHistoryModal — acordeón de Lineup', () => {
     expect(within(juanRow).getByText('SS')).toBeInTheDocument();
   });
 
+  it('no cuenta doble a un jugador de banca que luego entró como sustituto', () => {
+    // Escenario: jugador 3 tenía fila de banca (activo=false) + nueva fila de sustitución (activo=true)
+    // Total filas: 4 — jugadores únicos: 3 → debe mostrar "3 jugadores"
+    const lineupWithBenchSub = [
+      { jugadores: { id: 1, nombre: 'Juan García', numero: '5' },
+        orden_bateo: 1, posicion_campo: 'SS', es_titular: true, activo: true },
+      { jugadores: { id: 2, nombre: 'Pedro López', numero: '10' },
+        orden_bateo: 2, posicion_campo: 'P', es_titular: true, activo: true },
+      // Fila de banca original de Carlos Ruiz (desactivada al entrar como sub)
+      { jugadores: { id: 3, nombre: 'Carlos Ruiz', numero: '23' },
+        orden_bateo: null, posicion_campo: 'P', es_titular: false, activo: false },
+      // Fila de sustitución de Carlos Ruiz (activa, hereda turno de quien salió)
+      { jugadores: { id: 3, nombre: 'Carlos Ruiz', numero: '23' },
+        orden_bateo: 1, posicion_campo: 'SS', es_titular: false, activo: true },
+    ];
+    const gameData = { ...mockGameDetailsData, lineup: lineupWithBenchSub };
+    render(<ScheduleHistoryModal {...buildProps({ gameDetailsData: gameData })} />);
+
+    // 4 filas en DB, pero sólo 3 jugadores únicos
+    expect(screen.getByText(/Lineup \(3 jugadores\)/i)).toBeInTheDocument();
+    // Carlos Ruiz está activo (1 fila activa), más Juan y Pedro = 3 activos
+    expect(screen.getByText(/3 activos/i)).toBeInTheDocument();
+  });
+
   it('muestra conteo 0 cuando el lineup está vacío', () => {
     const noLineupData = { ...mockGameDetailsData, lineup: [] };
     render(<ScheduleHistoryModal {...buildProps({ gameDetailsData: noLineupData })} />);

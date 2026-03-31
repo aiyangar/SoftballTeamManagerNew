@@ -25,6 +25,13 @@ const buildProps = overrides => ({
   ...overrides,
 });
 
+// Devuelve el select del jugador en la fila vacía añadida por "+ Agregar jugador".
+// Los selects de posición no tienen opción con value=''; el de jugador sí ("Seleccionar...").
+const findPlayerSelect = () =>
+  screen.getAllByRole('combobox').find(s =>
+    Array.from(s.options).some(o => o.value === '')
+  );
+
 // ─── suite ─────────────────────────────────────────────────────────────────
 
 describe('LineupModal — renderizado', () => {
@@ -44,10 +51,13 @@ describe('LineupModal — renderizado', () => {
     expect(screen.getByText(/2026/)).toBeInTheDocument();
   });
 
-  it('muestra estado de carga inicial mientras fetch no resuelve', () => {
-    // fetch nunca resuelve durante este test
+  it('muestra spinner de carga mientras fetch no resuelve', () => {
     const never = new Promise(() => {});
     render(<LineupModal {...buildProps({ onFetchLineup: vi.fn().mockReturnValue(never) })} />);
+    // El SVG del spinner está presente
+    const svg = document.querySelector('svg.animate-spin');
+    expect(svg).toBeInTheDocument();
+    // El texto también
     expect(screen.getByText(/Cargando lineup/i)).toBeInTheDocument();
   });
 });
@@ -82,8 +92,16 @@ describe('LineupModal — carga de datos', () => {
     expect(await screen.findByText(/#10/)).toBeInTheDocument();
   });
 
-  it('muestra "No hay lineup" cuando el fetch devuelve vacío', async () => {
-    render(<LineupModal {...buildProps({ onFetchLineup: vi.fn().mockResolvedValue([]) })} />);
+  it('muestra "No hay lineup" cuando DB vacía y sin asistencia registrada', async () => {
+    // attendingPlayerIds vacío: no hay auto-fill → lineup queda vacío
+    render(
+      <LineupModal
+        {...buildProps({
+          onFetchLineup: vi.fn().mockResolvedValue([]),
+          attendingPlayerIds: [],
+        })}
+      />
+    );
     expect(
       await screen.findByText(/No hay lineup registrado/i)
     ).toBeInTheDocument();
@@ -94,7 +112,6 @@ describe('LineupModal — carga de datos', () => {
     expect(await screen.findByText(/Juan García/)).toBeInTheDocument();
 
     rerender(<LineupModal {...buildProps({ show: false })} />);
-    // el modal desaparece completamente
     expect(screen.queryByText(/Juan García/)).not.toBeInTheDocument();
   });
 });
@@ -107,17 +124,14 @@ describe('LineupModal — modo edición (partido no finalizado)', () => {
     expect(await screen.findByRole('button', { name: /Agregar jugador/i })).toBeInTheDocument();
   });
 
-  it('agregar jugador añade una fila con selects de edición', async () => {
+  it('agregar jugador añade una fila con select de jugador', async () => {
     const user = userEvent.setup();
     render(<LineupModal {...buildProps()} />);
     await screen.findByText(/Juan García/);
 
-    const addBtn = screen.getByRole('button', { name: /Agregar jugador/i });
-    await user.click(addBtn);
+    await user.click(screen.getByRole('button', { name: /Agregar jugador/i }));
 
-    // Debe aparecer al menos un select de jugador (las filas nuevas son select, no span)
-    const selects = screen.getAllByRole('combobox');
-    expect(selects.length).toBeGreaterThan(0);
+    expect(findPlayerSelect()).toBeInTheDocument();
   });
 
   it('el select de jugador excluye jugadores ya seleccionados', async () => {
@@ -127,12 +141,8 @@ describe('LineupModal — modo edición (partido no finalizado)', () => {
 
     await user.click(screen.getByRole('button', { name: /Agregar jugador/i }));
 
-    // Cada fila tiene [player_select, pos_select].
-    // Con 3 filas cargadas + 1 nueva = 4 filas → 8 comboboxes.
-    // El player select de la nueva fila es el antepenúltimo (length - 2).
-    const selects = screen.getAllByRole('combobox');
-    const newRowPlayerSelect = selects[selects.length - 2];
-    const optionValues = Array.from(newRowPlayerSelect.options).map(o => o.value);
+    const playerSelect = findPlayerSelect();
+    const optionValues = Array.from(playerSelect.options).map(o => o.value);
 
     // Juan García (1), Pedro López (2), Carlos Ruiz (3) ya están en lineup
     expect(optionValues).not.toContain('1');
@@ -144,7 +154,6 @@ describe('LineupModal — modo edición (partido no finalizado)', () => {
 
   it('eliminar fila quita la fila del lineup', async () => {
     const user = userEvent.setup();
-    // Empezar con un solo jugador para simplificar
     const singleEntry = [mockLineupFromDB[0]];
     render(<LineupModal {...buildProps({ onFetchLineup: vi.fn().mockResolvedValue(singleEntry) })} />);
     await screen.findByText(/Juan García/);
@@ -155,12 +164,12 @@ describe('LineupModal — modo edición (partido no finalizado)', () => {
     expect(screen.queryByText(/Juan García/)).not.toBeInTheDocument();
   });
 
-  it('el botón "Sustitución" aparece cuando hay jugadores activos', async () => {
+  it('el botón "Sustitución" aparece cuando hay jugadores activos (lineup de BD)', async () => {
     render(<LineupModal {...buildProps()} />);
     expect(await screen.findByRole('button', { name: /Sustitución/i })).toBeInTheDocument();
   });
 
-  it('"Sustitución" llama a onOpenSubstitution con el lineup activo', async () => {
+  it('"Sustitución" llama a onOpenSubstitution con el lineup activo cuando viene de BD', async () => {
     const user = userEvent.setup();
     const onOpenSubstitution = vi.fn();
     render(<LineupModal {...buildProps({ onOpenSubstitution })} />);
@@ -170,12 +179,11 @@ describe('LineupModal — modo edición (partido no finalizado)', () => {
 
     expect(onOpenSubstitution).toHaveBeenCalledOnce();
     const passedLineup = onOpenSubstitution.mock.calls[0][0];
-    // Debe recibir sólo los activos
     expect(passedLineup.every(r => r.activo)).toBe(true);
     expect(passedLineup.length).toBeGreaterThan(0);
   });
 
-  it('"Guardar Lineup" llama a onSave con filas válidas (jugador + posición)', async () => {
+  it('"Guardar Lineup" llama a onSave con filas válidas', async () => {
     const user = userEvent.setup();
     const onSave = vi.fn().mockResolvedValue(undefined);
     render(<LineupModal {...buildProps({ onSave })} />);
@@ -231,7 +239,7 @@ describe('LineupModal — modo lectura (partido finalizado)', () => {
 
   it('muestra el orden de bateo como texto (no input)', async () => {
     render(<LineupModal {...finalizedProps()} />);
-    await screen.findByText('1'); // orden_bateo como <span>
+    await screen.findByText('1');
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
   });
 
@@ -246,9 +254,9 @@ describe('LineupModal — modo lectura (partido finalizado)', () => {
 describe('LineupModal — filtro de asistencia (attendingPlayerIds)', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('sólo muestra en el select a los jugadores con asistencia', async () => {
+  it('sólo muestra en el select a los jugadores con asistencia al agregar fila', async () => {
     const user = userEvent.setup();
-    // Solo jugadores 1 y 2 tienen asistencia; 3 y 4 no
+    // Jugadores 1 y 2 asisten; DB vacía → auto-fill con 1 y 2 como spans (no selects)
     render(
       <LineupModal
         {...buildProps({
@@ -257,15 +265,20 @@ describe('LineupModal — filtro de asistencia (attendingPlayerIds)', () => {
         })}
       />
     );
-    await screen.findByText(/No hay lineup registrado/i);
+    // findAllByText: Juan García puede aparecer también en el aviso de posición duplicada
+    await screen.findAllByText(/Juan García/); // auto-fill listo
 
     await user.click(screen.getByRole('button', { name: /Agregar jugador/i }));
 
-    const options = Array.from(screen.getAllByRole('combobox')[0].options).map(o => o.value);
-    expect(options).toContain('1'); // Juan García ✓
-    expect(options).toContain('2'); // Pedro López ✓
-    expect(options).not.toContain('3'); // Carlos Ruiz — sin asistencia
-    expect(options).not.toContain('4'); // Miguel Soto — sin asistencia
+    const playerSelect = findPlayerSelect();
+    const optionValues = Array.from(playerSelect.options).map(o => o.value);
+
+    // 1 y 2 ya están en lineup auto-fill → excluidos del select
+    expect(optionValues).not.toContain('1');
+    expect(optionValues).not.toContain('2');
+    // 3 y 4 no tienen asistencia → también excluidos por attendingPlayerIds
+    expect(optionValues).not.toContain('3');
+    expect(optionValues).not.toContain('4');
   });
 
   it('muestra advertencia cuando attendingPlayerIds está vacío', async () => {
@@ -282,7 +295,7 @@ describe('LineupModal — filtro de asistencia (attendingPlayerIds)', () => {
     ).toBeInTheDocument();
   });
 
-  it('no muestra advertencia cuando hay jugadores con asistencia', async () => {
+  it('no muestra advertencia de asistencia cuando hay jugadores con asistencia', async () => {
     render(
       <LineupModal
         {...buildProps({
@@ -291,7 +304,7 @@ describe('LineupModal — filtro de asistencia (attendingPlayerIds)', () => {
         })}
       />
     );
-    await screen.findByText(/No hay lineup registrado/i);
+    await screen.findAllByText(/Juan García/); // auto-fill listo (puede aparecer en aviso de posición)
     expect(
       screen.queryByText(/No hay jugadores con asistencia registrada/i)
     ).not.toBeInTheDocument();
@@ -311,23 +324,199 @@ describe('LineupModal — filtro de asistencia (attendingPlayerIds)', () => {
 
     await user.click(screen.getByRole('button', { name: /Agregar jugador/i }));
 
-    const options = Array.from(screen.getAllByRole('combobox')[0].options).map(o => o.value);
-    expect(options).toContain('1');
-    expect(options).toContain('2');
-    expect(options).toContain('3');
-    expect(options).toContain('4');
+    const playerSelect = findPlayerSelect();
+    const optionValues = Array.from(playerSelect.options).map(o => o.value);
+    expect(optionValues).toContain('1');
+    expect(optionValues).toContain('2');
+    expect(optionValues).toContain('3');
+    expect(optionValues).toContain('4');
   });
 
-  it('un jugador en el lineup pero sin asistencia sigue visible en la tabla (read-only)', async () => {
-    // Carlos Ruiz (id=3) está en el lineup cargado pero no tiene asistencia
+  it('un jugador en el lineup de BD pero sin asistencia sigue visible (read-only)', async () => {
     render(
       <LineupModal
         {...buildProps({
-          attendingPlayerIds: [1, 2], // solo 1 y 2 tienen asistencia
+          attendingPlayerIds: [1, 2], // Carlos Ruiz (3) sin asistencia
         })}
       />
     );
-    // Carlos Ruiz debe aparecer en la tabla (fue guardado antes)
+    // Carlos Ruiz estaba en BD → debe aparecer igualmente
     expect(await screen.findByText(/Carlos Ruiz/)).toBeInTheDocument();
+  });
+});
+
+// ─── FASE 5: Nuevos tests de pulido ────────────────────────────────────────
+
+describe('LineupModal — Fase 5: validación de lineup vacío', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('no llama a onSave y muestra error cuando el lineup está vacío', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    render(
+      <LineupModal
+        {...buildProps({
+          onFetchLineup: vi.fn().mockResolvedValue([]),
+          attendingPlayerIds: [],
+          onSave,
+        })}
+      />
+    );
+    await screen.findByText(/No hay lineup registrado/i);
+
+    await user.click(screen.getByRole('button', { name: /Guardar Lineup/i }));
+
+    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.getByText(/El lineup no puede estar vacío/i)).toBeInTheDocument();
+  });
+
+  it('no llama a onSave cuando todas las filas tienen jugador_id vacío', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    render(
+      <LineupModal
+        {...buildProps({
+          onFetchLineup: vi.fn().mockResolvedValue([]),
+          attendingPlayerIds: undefined,
+          onSave,
+        })}
+      />
+    );
+    await screen.findByText(/No hay lineup registrado/i);
+
+    // Agregar fila vacía (sin seleccionar jugador)
+    await user.click(screen.getByRole('button', { name: /Agregar jugador/i }));
+    await user.click(screen.getByRole('button', { name: /Guardar Lineup/i }));
+
+    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.getByText(/El lineup no puede estar vacío/i)).toBeInTheDocument();
+  });
+
+  it('el mensaje de error desaparece al cerrar y reabrir el modal', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    const { rerender } = render(
+      <LineupModal
+        {...buildProps({
+          onFetchLineup: vi.fn().mockResolvedValue([]),
+          attendingPlayerIds: [],
+          onSave,
+        })}
+      />
+    );
+    await screen.findByText(/No hay lineup registrado/i);
+
+    await user.click(screen.getByRole('button', { name: /Guardar Lineup/i }));
+    expect(screen.getByText(/El lineup no puede estar vacío/i)).toBeInTheDocument();
+
+    // Cerrar y reabrir
+    rerender(<LineupModal {...buildProps({ show: false, onSave })} />);
+    rerender(
+      <LineupModal
+        {...buildProps({
+          onFetchLineup: vi.fn().mockResolvedValue([]),
+          attendingPlayerIds: [],
+          onSave,
+        })}
+      />
+    );
+    await screen.findByText(/No hay lineup registrado/i);
+    expect(screen.queryByText(/El lineup no puede estar vacío/i)).not.toBeInTheDocument();
+  });
+
+  it('llama a onSave correctamente cuando hay filas válidas', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<LineupModal {...buildProps({ onSave })} />);
+    await screen.findByText(/Juan García/);
+
+    await user.click(screen.getByRole('button', { name: /Guardar Lineup/i }));
+
+    expect(onSave).toHaveBeenCalledOnce();
+    expect(screen.queryByText(/El lineup no puede estar vacío/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('LineupModal — Fase 5: estado de guardado (saving)', () => {
+  it('el botón muestra "Guardando..." y se deshabilita mientras onSave está pendiente', async () => {
+    const user = userEvent.setup();
+    let resolve;
+    const onSave = vi.fn().mockReturnValue(new Promise(r => { resolve = r; }));
+    render(<LineupModal {...buildProps({ onSave })} />);
+    await screen.findByText(/Juan García/);
+
+    const saveBtn = screen.getByRole('button', { name: /Guardar Lineup/i });
+    await user.click(saveBtn);
+
+    // Mientras la promesa no resuelve, el botón debe cambiar
+    expect(screen.getByRole('button', { name: /Guardando/i })).toBeDisabled();
+
+    resolve();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Guardar Lineup/i })).not.toBeDisabled()
+    );
+  });
+});
+
+describe('LineupModal — Fase 5: control de sustituciones (lineupFromDB)', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('bloquea la sustitución y muestra error cuando el lineup NO ha sido guardado', async () => {
+    const user = userEvent.setup();
+    const onOpenSubstitution = vi.fn();
+    // DB vacía pero hay asistencia → auto-fill (lineupFromDB = false)
+    render(
+      <LineupModal
+        {...buildProps({
+          onFetchLineup: vi.fn().mockResolvedValue([]),
+          attendingPlayerIds: [1, 2, 3],
+          onOpenSubstitution,
+        })}
+      />
+    );
+    await screen.findAllByText(/Juan García/); // auto-fill listo (puede aparecer en aviso de posición)
+
+    await user.click(screen.getByRole('button', { name: /Sustitución/i }));
+
+    expect(onOpenSubstitution).not.toHaveBeenCalled();
+    expect(screen.getByText(/Guarda el lineup antes de registrar una sustitución/i)).toBeInTheDocument();
+  });
+
+  it('permite la sustitución cuando el lineup viene de BD (lineupFromDB = true)', async () => {
+    const user = userEvent.setup();
+    const onOpenSubstitution = vi.fn();
+    // DB devuelve datos → lineupFromDB = true
+    render(<LineupModal {...buildProps({ onOpenSubstitution })} />);
+    await screen.findByText(/Juan García/);
+
+    await user.click(screen.getByRole('button', { name: /Sustitución/i }));
+
+    expect(onOpenSubstitution).toHaveBeenCalledOnce();
+  });
+
+  it('permite la sustitución después de guardar el lineup por primera vez', async () => {
+    const user = userEvent.setup();
+    const onOpenSubstitution = vi.fn();
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    // DB vacía, asistencia → auto-fill, lineupFromDB = false
+    render(
+      <LineupModal
+        {...buildProps({
+          onFetchLineup: vi.fn().mockResolvedValue([]),
+          attendingPlayerIds: [1, 2, 3],
+          onOpenSubstitution,
+          onSave,
+        })}
+      />
+    );
+    await screen.findAllByText(/Juan García/); // puede aparecer en aviso de posición duplicada
+
+    // Guardar el lineup (lo marca como lineupFromDB = true)
+    await user.click(screen.getByRole('button', { name: /Guardar Lineup/i }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+
+    // Ahora la sustitución debe funcionar
+    await user.click(screen.getByRole('button', { name: /Sustitución/i }));
+    expect(onOpenSubstitution).toHaveBeenCalledOnce();
   });
 });

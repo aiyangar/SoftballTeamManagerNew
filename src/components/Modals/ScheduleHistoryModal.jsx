@@ -502,11 +502,11 @@ const ScheduleHistoryModal = ({
             >
               <div className='flex items-center space-x-3'>
                 <h3 className='text-lg font-semibold text-white'>
-                  Lineup ({gameDetailsData.lineup.length} jugadores)
+                  Lineup ({new Set(gameDetailsData.lineup.map(e => e.jugadores?.id)).size} jugadores)
                 </h3>
                 {gameDetailsData.lineup.length > 0 && (
                   <span className='text-sm text-gray-400'>
-                    {gameDetailsData.lineup.filter(e => e.activo).length} activos
+                    {new Set(gameDetailsData.lineup.filter(e => e.activo).map(e => e.jugadores?.id)).size} activos
                   </span>
                 )}
               </div>
@@ -540,65 +540,128 @@ const ScheduleHistoryModal = ({
               </div>
             </div>
 
-            {expandedSections.lineup && (
-              <div className='mt-3 p-4 bg-gray-700 rounded-lg'>
-                {gameDetailsData.lineup.length === 0 ? (
-                  <div className='text-center p-4'>
+            {expandedSections.lineup && (() => {
+              const lineup = gameDetailsData.lineup;
+              if (lineup.length === 0) {
+                return (
+                  <div className='mt-3 p-4 bg-gray-700 rounded-lg text-center'>
                     <p className='text-gray-400'>No hay lineup registrado</p>
                   </div>
-                ) : (
-                  <div className='overflow-x-auto'>
-                    <table className='w-full text-sm text-left'>
-                      <thead>
-                        <tr className='text-gray-400 border-b border-gray-600'>
-                          <th className='pb-2 pr-3'>Turno</th>
-                          <th className='pb-2 pr-3'>Jugador</th>
-                          <th className='pb-2 pr-3'>Posición</th>
-                          <th className='pb-2'>Estado</th>
+                );
+              }
+
+              const isBD = e => e.posicion_campo === 'BD' && e.batea_por_id;
+              const starters = lineup
+                .filter(e => e.es_titular)
+                .sort((a, b) => (a.orden_bateo || 0) - (b.orden_bateo || 0));
+              const inGameSubs = lineup.filter(e => !e.es_titular && e.orden_bateo != null && !isBD(e));
+              const bench = lineup.filter(e => !e.es_titular && e.orden_bateo == null && !isBD(e) && e.activo);
+              const bdPlayers = lineup.filter(e => isBD(e));
+
+              // Build ordered render list
+              const rows = [];
+              const usedIdx = new Set();
+              starters.forEach(starter => {
+                rows.push({ ...starter, indent: false, section: 'titular' });
+                if (!starter.activo) {
+                  inGameSubs
+                    .filter(s => s.orden_bateo === starter.orden_bateo)
+                    .forEach((sub, si) => {
+                      rows.push({ ...sub, indent: true, section: 'sub' });
+                      usedIdx.add(sub);
+                    });
+                }
+              });
+              inGameSubs.filter(s => !usedIdx.has(s)).forEach(s => bench.push(s));
+
+              const allBench = [...bench, ...bdPlayers];
+
+              const playerName = e =>
+                `${e.jugadores?.numero ? `#${e.jugadores.numero} ` : ''}${e.jugadores?.nombre || ''}`;
+
+              return (
+                <div className='mt-3 bg-gray-700 rounded-lg overflow-hidden'>
+                  <table className='w-full text-sm text-left'>
+                    <thead>
+                      <tr className='text-gray-400 border-b border-gray-600'>
+                        <th className='pb-2 pt-3 px-3'>Turno</th>
+                        <th className='pb-2 pt-3 pr-3'>Jugador</th>
+                        <th className='pb-2 pt-3 pr-3'>Posición</th>
+                        <th className='pb-2 pt-3 pr-3'>Estado</th>
+                      </tr>
+                      <tr className='bg-green-900/30'>
+                        <td colSpan={4} className='px-3 py-1'>
+                          <span className='text-xs font-semibold text-green-400 uppercase tracking-wide'>Titulares</span>
+                        </td>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((entry, i) => (
+                        <tr
+                          key={i}
+                          className={[
+                            'border-b border-gray-600 transition-colors',
+                            !entry.activo ? 'opacity-40' : '',
+                            entry.section === 'sub' ? 'bg-yellow-900/15' : '',
+                          ].join(' ')}
+                        >
+                          <td className={`py-2 pr-3 font-mono text-white ${entry.indent ? 'pl-6' : 'pl-3'}`}>
+                            {entry.orden_bateo ?? '—'}
+                          </td>
+                          <td className='py-2 pr-3 text-white'>
+                            {entry.indent && <span className='text-gray-500 mr-1'>↳</span>}
+                            <span className={!entry.activo ? 'line-through text-gray-500' : ''}>
+                              {playerName(entry)}
+                            </span>
+                          </td>
+                          <td className='py-2 pr-3 text-white font-mono'>{entry.posicion_campo}</td>
+                          <td className='py-2 pr-3'>
+                            {entry.es_titular ? (
+                              <span className='text-green-400 text-xs'>Titular</span>
+                            ) : (
+                              <span className='text-yellow-400 text-xs'>Sustituto</span>
+                            )}
+                            {!entry.activo && (
+                              <span className='ml-1 text-red-400 text-xs'>(relevado)</span>
+                            )}
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {gameDetailsData.lineup.map((entry, i) => (
-                          <tr
-                            key={i}
-                            className={`border-b border-gray-600 ${!entry.activo ? 'opacity-40' : ''}`}
-                          >
-                            <td className='py-2 pr-3 text-white font-mono'>
-                              {entry.orden_bateo}
-                            </td>
-                            <td className='py-2 pr-3 text-white'>
-                              {entry.jugadores?.numero
-                                ? `#${entry.jugadores.numero} `
-                                : ''}
-                              {entry.jugadores?.nombre}
-                            </td>
-                            <td className='py-2 pr-3 text-white font-mono'>
-                              {entry.posicion_campo}
-                            </td>
-                            <td className='py-2'>
-                              {entry.es_titular ? (
-                                <span className='text-green-400 text-xs'>
-                                  Titular
-                                </span>
-                              ) : (
-                                <span className='text-yellow-400 text-xs'>
-                                  Sustituto
-                                </span>
-                              )}
-                              {!entry.activo && (
-                                <span className='ml-1 text-red-400 text-xs'>
-                                  (relevado)
-                                </span>
-                              )}
+                      ))}
+
+                      {allBench.length > 0 && (
+                        <>
+                          <tr className='bg-gray-800/60'>
+                            <td colSpan={4} className='px-3 py-1'>
+                              <span className='text-xs font-semibold text-gray-400 uppercase tracking-wide'>Banca</span>
                             </td>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            )}
+                          {allBench.map((entry, i) => (
+                            <tr
+                              key={`bench-${i}`}
+                              className={[
+                                'border-b border-gray-600',
+                                isBD(entry) ? 'bg-purple-900/20' : '',
+                              ].join(' ')}
+                            >
+                              <td className='py-2 pl-3 pr-3 font-mono text-gray-400'>—</td>
+                              <td className='py-2 pr-3 text-white'>{playerName(entry)}</td>
+                              <td className='py-2 pr-3 text-white font-mono'>{entry.posicion_campo}</td>
+                              <td className='py-2 pr-3'>
+                                {isBD(entry) ? (
+                                  <span className='text-purple-400 text-xs'>BD</span>
+                                ) : (
+                                  <span className='text-gray-400 text-xs'>Banca</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Acordeón de Pagos Registrados */}

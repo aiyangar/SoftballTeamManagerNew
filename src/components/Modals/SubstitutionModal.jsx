@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 
-const POSITIONS = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
+const FIELD_POSITIONS = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CLF', 'CRF', 'RF'];
+const DESIGNATED_POSITIONS = ['DH', 'BD', 'CD'];
 
 const SubstitutionModal = ({
   show,
   game,
   players,
+  attendingPlayerIds,
   activeLineup,
   onClose,
   onSave,
@@ -14,7 +16,7 @@ const SubstitutionModal = ({
     jugador_sale_id: '',
     jugador_entra_id: '',
     inning: 1,
-    posicion_campo: 'P',
+    posicion_campo: '',
     notas: '',
   });
 
@@ -24,32 +26,24 @@ const SubstitutionModal = ({
         jugador_sale_id: '',
         jugador_entra_id: '',
         inning: 1,
-        posicion_campo: 'P',
+        posicion_campo: '',
         notas: '',
       });
     }
   }, [show]);
 
-  // Heredar posición del jugador que sale
-  useEffect(() => {
-    if (form.jugador_sale_id) {
-      const entry = activeLineup.find(
-        r => String(r.jugador_id) === String(form.jugador_sale_id)
-      );
-      if (entry) {
-        setForm(prev => ({ ...prev, posicion_campo: entry.posicion_campo }));
-      }
-    }
-  }, [form.jugador_sale_id, activeLineup]);
-
   if (!show || !game) return null;
 
   const activeIds = new Set(activeLineup.map(r => String(r.jugador_id)));
-  const availableToEnter = players.filter(p => !activeIds.has(String(p.id)));
+  const availableToEnter = players.filter(p => {
+    if (activeIds.has(String(p.id))) return false;
+    if (attendingPlayerIds != null && !attendingPlayerIds.includes(p.id)) return false;
+    return true;
+  });
 
   const handleSubmit = async e => {
     e.preventDefault();
-    if (!form.jugador_sale_id || !form.jugador_entra_id) return;
+    if (!form.jugador_sale_id || !form.jugador_entra_id || !form.posicion_campo) return;
 
     const saleEntry = activeLineup.find(
       r => String(r.jugador_id) === String(form.jugador_sale_id)
@@ -96,12 +90,17 @@ const SubstitutionModal = ({
               </label>
               <select
                 value={form.jugador_sale_id}
-                onChange={e =>
+                onChange={e => {
+                  const saleId = e.target.value;
+                  const saleEntry = activeLineup.find(
+                    r => String(r.jugador_id) === saleId
+                  );
                   setForm(prev => ({
                     ...prev,
-                    jugador_sale_id: e.target.value,
-                  }))
-                }
+                    jugador_sale_id: saleId,
+                    posicion_campo: saleEntry?.posicion_campo || prev.posicion_campo,
+                  }));
+                }}
                 className='w-full p-2 bg-gray-800 border border-gray-600 rounded text-white'
                 required
               >
@@ -182,12 +181,19 @@ const SubstitutionModal = ({
                     }))
                   }
                   className='w-full p-2 bg-gray-800 border border-gray-600 rounded text-white'
+                  required
                 >
-                  {POSITIONS.map(pos => (
-                    <option key={pos} value={pos}>
-                      {pos}
-                    </option>
-                  ))}
+                  <option value=''>Seleccionar...</option>
+                  <optgroup label='Campo'>
+                    {FIELD_POSITIONS.map(pos => (
+                      <option key={pos} value={pos}>{pos}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label='Designados'>
+                    {DESIGNATED_POSITIONS.map(pos => (
+                      <option key={pos} value={pos}>{pos}</option>
+                    ))}
+                  </optgroup>
                 </select>
               </div>
             </div>

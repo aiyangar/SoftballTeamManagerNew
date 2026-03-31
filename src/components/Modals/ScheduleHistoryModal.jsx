@@ -502,11 +502,11 @@ const ScheduleHistoryModal = ({
             >
               <div className='flex items-center space-x-3'>
                 <h3 className='text-lg font-semibold text-white'>
-                  Lineup ({gameDetailsData.lineup.length} jugadores)
+                  Lineup ({new Set(gameDetailsData.lineup.map(e => e.jugadores?.id)).size} jugadores)
                 </h3>
                 {gameDetailsData.lineup.length > 0 && (
                   <span className='text-sm text-gray-400'>
-                    {gameDetailsData.lineup.filter(e => e.activo).length} activos
+                    {new Set(gameDetailsData.lineup.filter(e => e.activo).map(e => e.jugadores?.id)).size} activos
                   </span>
                 )}
               </div>

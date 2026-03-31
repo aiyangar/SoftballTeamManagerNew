@@ -20,6 +20,7 @@ import PaymentStatusWidget from '../Widgets/PaymentStatusWidget';
  * @param {Function} onLoadExistingAttendance - Función para cargar asistencia existente
  * @param {Function} onReloadDetails - Función para recargar detalles del modal
  * @param {Function} onOpenScoreForm - Función para abrir formulario de resultado
+ * @param {Function} onOpenLineup - Función para abrir el modal de lineup
  */
 const ScheduleHistoryModal = ({
   showModal,
@@ -39,6 +40,7 @@ const ScheduleHistoryModal = ({
   onReloadDetails,
   onViewPlayerHistory,
   onOpenScoreForm,
+  onOpenLineup,
 }) => {
   const [isEditingAttendance, setIsEditingAttendance] = useState(false);
   const [localAttendance, setLocalAttendance] = useState([]);
@@ -47,6 +49,7 @@ const ScheduleHistoryModal = ({
   const [expandedSections, setExpandedSections] = useState({
     attendance: false,
     payments: false,
+    lineup: false,
   });
 
   // Cargar asistencia existente cuando se abre el modal
@@ -141,6 +144,14 @@ const ScheduleHistoryModal = ({
               >
                 <span>💰</span>
                 <span>Pagos</span>
+              </button>
+              <button
+                onClick={() => onOpenLineup(selectedGame)}
+                className='px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors flex items-center space-x-2'
+                title='Gestionar lineup'
+              >
+                <span>⚾</span>
+                <span>Lineup</span>
               </button>
               <button
                 onClick={() => {
@@ -472,6 +483,118 @@ const ScheduleHistoryModal = ({
                     <p className='text-gray-400'>
                       No hay registros de asistencia
                     </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Acordeón de Lineup */}
+          <div className='mb-6'>
+            <div
+              className='flex justify-between items-center p-4 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors'
+              onClick={() =>
+                setExpandedSections(prev => ({
+                  ...prev,
+                  lineup: !prev.lineup,
+                }))
+              }
+            >
+              <div className='flex items-center space-x-3'>
+                <h3 className='text-lg font-semibold text-white'>
+                  Lineup ({gameDetailsData.lineup.length} jugadores)
+                </h3>
+                {gameDetailsData.lineup.length > 0 && (
+                  <span className='text-sm text-gray-400'>
+                    {gameDetailsData.lineup.filter(e => e.activo).length} activos
+                  </span>
+                )}
+              </div>
+              <div className='flex items-center space-x-2'>
+                {!gameFinalizationStatus && onOpenLineup && (
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      onOpenLineup(selectedGame);
+                    }}
+                    className='px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700'
+                  >
+                    Editar
+                  </button>
+                )}
+                <svg
+                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                    expandedSections.lineup ? 'rotate-180' : ''
+                  }`}
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M19 9l-7 7-7-7'
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {expandedSections.lineup && (
+              <div className='mt-3 p-4 bg-gray-700 rounded-lg'>
+                {gameDetailsData.lineup.length === 0 ? (
+                  <div className='text-center p-4'>
+                    <p className='text-gray-400'>No hay lineup registrado</p>
+                  </div>
+                ) : (
+                  <div className='overflow-x-auto'>
+                    <table className='w-full text-sm text-left'>
+                      <thead>
+                        <tr className='text-gray-400 border-b border-gray-600'>
+                          <th className='pb-2 pr-3'>Turno</th>
+                          <th className='pb-2 pr-3'>Jugador</th>
+                          <th className='pb-2 pr-3'>Posición</th>
+                          <th className='pb-2'>Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {gameDetailsData.lineup.map((entry, i) => (
+                          <tr
+                            key={i}
+                            className={`border-b border-gray-600 ${!entry.activo ? 'opacity-40' : ''}`}
+                          >
+                            <td className='py-2 pr-3 text-white font-mono'>
+                              {entry.orden_bateo}
+                            </td>
+                            <td className='py-2 pr-3 text-white'>
+                              {entry.jugadores?.numero
+                                ? `#${entry.jugadores.numero} `
+                                : ''}
+                              {entry.jugadores?.nombre}
+                            </td>
+                            <td className='py-2 pr-3 text-white font-mono'>
+                              {entry.posicion_campo}
+                            </td>
+                            <td className='py-2'>
+                              {entry.es_titular ? (
+                                <span className='text-green-400 text-xs'>
+                                  Titular
+                                </span>
+                              ) : (
+                                <span className='text-yellow-400 text-xs'>
+                                  Sustituto
+                                </span>
+                              )}
+                              {!entry.activo && (
+                                <span className='ml-1 text-red-400 text-xs'>
+                                  (relevado)
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>

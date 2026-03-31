@@ -9,6 +9,8 @@ import ScheduleCardsGrid from '../components/CardGrids/ScheduleCardsGrid';
 import ScheduleForm from '../components/Forms/ScheduleForm';
 import ScheduleHistoryModal from '../components/Modals/ScheduleHistoryModal';
 import PlayerHistoryModal from '../components/Modals/PlayerHistoryModal';
+import LineupModal from '../components/Modals/LineupModal';
+import SubstitutionModal from '../components/Modals/SubstitutionModal';
 
 const Schedule = () => {
   const { teams, selectedTeam } = useTeam();
@@ -49,6 +51,7 @@ const Schedule = () => {
   const [gameDetailsData, setGameDetailsData] = useState({
     attendance: [],
     payments: [],
+    lineup: [],
   });
 
   // Estados para el modal de historial del jugador
@@ -72,8 +75,20 @@ const Schedule = () => {
   const [inscripcionTarget, setInscripcionTarget] = useState(450);
   const [playerInscripcionTarget, setPlayerInscripcionTarget] = useState(450);
 
+  // Estados para lineup y sustituciones
+  const [showLineupModal, setShowLineupModal] = useState(false);
+  const [selectedGameForLineup, setSelectedGameForLineup] = useState(null);
+  const [showSubstitutionModal, setShowSubstitutionModal] = useState(false);
+  const [activeLineupForSubstitution, setActiveLineupForSubstitution] = useState([]);
+
   // Usar el hook para manejar los modales
-  useModal(showGameDetailsModal || showScoreForm || showPlayerHistoryModal);
+  useModal(
+    showGameDetailsModal ||
+      showScoreForm ||
+      showPlayerHistoryModal ||
+      showLineupModal ||
+      showSubstitutionModal
+  );
 
   // Calcular la meta de inscripción dinámicamente
   const calculateInscripcionTarget = async () => {
@@ -372,8 +387,9 @@ const Schedule = () => {
   const fetchPlayers = async teamId => {
     const { data, error } = await supabase
       .from('jugadores')
-      .select('id, nombre')
-      .eq('equipo_id', teamId);
+      .select('id, nombre, numero')
+      .eq('equipo_id', teamId)
+      .order('numero', { ascending: true });
     if (error) {
       setError('Error al cargar jugadores: ' + error.message);
     } else {
@@ -889,9 +905,21 @@ const Schedule = () => {
         // Error fetching payment details
       }
 
+      // Obtener lineup del partido
+      const { data: lineupData, error: lineupError } = await supabase
+        .from('lineup_partidos')
+        .select('orden_bateo, posicion_campo, es_titular, activo, jugadores!inner(nombre, numero)')
+        .eq('partido_id', gameId)
+        .order('orden_bateo');
+
+      if (lineupError) {
+        // Error fetching lineup details
+      }
+
       setGameDetailsData({
         attendance: attendanceData || [],
         payments: paymentsData || [],
+        lineup: lineupData || [],
       });
     } catch (err) {
       // Error loading game details
@@ -901,7 +929,127 @@ const Schedule = () => {
   const closeGameDetailsModal = () => {
     setShowGameDetailsModal(false);
     setSelectedGameForDetails(null);
-    setGameDetailsData({ attendance: [], payments: [] });
+    setGameDetailsData({ attendance: [], payments: [], lineup: [] });
+  };
+
+  // ---- Lineup ----
+
+  const fetchLineup = async partidoId => {
+    const { data, error } = await supabase
+      .from('lineup_partidos')
+      .select(
+        `id, orden_bateo, posicion_campo, es_titular, activo,
+         jugadores!inner(id, nombre, numero)`
+      )
+      .eq('partido_id', partidoId)
+      .order('orden_bateo');
+    if (error) {
+      setError('Error al cargar lineup: ' + error.message);
+      return [];
+    }
+    return data || [];
+  };
+
+  const saveLineup = async (partidoId, equipoId, lineupRows) => {
+    setLoading(true);
+    try {
+      const { error: deleteError } = await supabase
+        .from('lineup_partidos')
+        .delete()
+        .eq('partido_id', parseInt(partidoId));
+      if (deleteError) throw deleteError;
+
+      if (lineupRows.length > 0) {
+        const { error: insertError } = await supabase
+          .from('lineup_partidos')
+          .insert(
+            lineupRows.map(row => ({
+              partido_id: parseInt(partidoId),
+              equipo_id: parseInt(equipoId),
+              jugador_id: parseInt(row.jugador_id),
+              orden_bateo: row.orden_bateo,
+              posicion_campo: row.posicion_campo,
+              es_titular: true,
+              activo: true,
+            }))
+          );
+        if (insertError) throw insertError;
+      }
+      setSuccess('✅ Lineup guardado exitosamente');
+    } catch (err) {
+      setError('Error al guardar lineup: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveSubstitution = async (partidoId, equipoId, sub) => {
+    setLoading(true);
+    try {
+      const { error: sustError } = await supabase
+        .from('sustituciones_partidos')
+        .insert([
+          {
+            partido_id: parseInt(partidoId),
+            equipo_id: parseInt(equipoId),
+            jugador_sale_id: parseInt(sub.jugador_sale_id),
+            jugador_entra_id: parseInt(sub.jugador_entra_id),
+            inning: sub.inning,
+            orden_bateo: sub.orden_bateo,
+            posicion_campo: sub.posicion_campo,
+            notas: sub.notas || null,
+          },
+        ]);
+      if (sustError) throw sustError;
+
+      const { error: updateError } = await supabase
+        .from('lineup_partidos')
+        .update({ activo: false })
+        .eq('partido_id', parseInt(partidoId))
+        .eq('jugador_id', parseInt(sub.jugador_sale_id));
+      if (updateError) throw updateError;
+
+      const { error: insertError } = await supabase
+        .from('lineup_partidos')
+        .insert([
+          {
+            partido_id: parseInt(partidoId),
+            equipo_id: parseInt(equipoId),
+            jugador_id: parseInt(sub.jugador_entra_id),
+            orden_bateo: sub.orden_bateo,
+            posicion_campo: sub.posicion_campo,
+            es_titular: false,
+            activo: true,
+          },
+        ]);
+      if (insertError) throw insertError;
+
+      setSuccess('✅ Sustitución registrada');
+    } catch (err) {
+      setError('Error al registrar sustitución: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openLineupModal = game => {
+    setSelectedGameForLineup(game);
+    setShowLineupModal(true);
+  };
+
+  const closeLineupModal = () => {
+    setShowLineupModal(false);
+    setSelectedGameForLineup(null);
+  };
+
+  const openSubstitutionModal = activeLineup => {
+    setActiveLineupForSubstitution(activeLineup);
+    setShowSubstitutionModal(true);
+  };
+
+  const closeSubstitutionModal = () => {
+    setShowSubstitutionModal(false);
+    setActiveLineupForSubstitution([]);
   };
 
   // Función para eliminar partido
@@ -1090,6 +1238,34 @@ const Schedule = () => {
           onReloadDetails={reloadGameDetails}
           onViewPlayerHistory={openPlayerHistoryModal}
           onOpenScoreForm={openScoreForm}
+          onOpenLineup={openLineupModal}
+        />
+
+        {/* Lineup Modal */}
+        <LineupModal
+          show={showLineupModal}
+          game={selectedGameForLineup}
+          players={players}
+          attendingPlayerIds={gameDetailsData.attendance.map(a => a.jugadores.id)}
+          onClose={closeLineupModal}
+          onFetchLineup={fetchLineup}
+          onSave={saveLineup}
+          onOpenSubstitution={openSubstitutionModal}
+          gameFinalizationStatus={
+            selectedGameForLineup
+              ? gameFinalizationStatus[selectedGameForLineup.id]
+              : false
+          }
+        />
+
+        {/* Substitution Modal */}
+        <SubstitutionModal
+          show={showSubstitutionModal}
+          game={selectedGameForLineup}
+          players={players}
+          activeLineup={activeLineupForSubstitution}
+          onClose={closeSubstitutionModal}
+          onSave={saveSubstitution}
         />
 
         {/* Score Form Modal */}

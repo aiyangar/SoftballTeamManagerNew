@@ -11,6 +11,8 @@ export const TeamProvider = ({ children }) => {
   const [selectedTeam, setSelectedTeam] = useState('');
   const [loadingTeams, setLoadingTeams] = useState(false);
 
+  const storageKey = session?.user?.id ? `softball_team_${session.user.id}` : null;
+
   const fetchTeams = async () => {
     if (!session?.user?.id) return;
 
@@ -81,9 +83,15 @@ export const TeamProvider = ({ children }) => {
 
       setTeams(teamsWithInfo || []);
 
-      // Si solo hay un equipo, seleccionarlo automáticamente
-      if (teamsWithInfo && teamsWithInfo.length === 1) {
-        setSelectedTeam(String(teamsWithInfo[0].id));
+      // Restaurar selección persistida, o auto-seleccionar si solo hay un equipo
+      const saved = storageKey ? localStorage.getItem(storageKey) : null;
+      const savedIsValid = saved && teamsWithInfo?.some(t => String(t.id) === saved);
+      if (savedIsValid) {
+        setSelectedTeam(saved);
+      } else if (teamsWithInfo && teamsWithInfo.length === 1) {
+        const autoId = String(teamsWithInfo[0].id);
+        setSelectedTeam(autoId);
+        if (storageKey) localStorage.setItem(storageKey, autoId);
       }
     } catch (error) {
       console.error('Error in fetchTeams:', error);
@@ -93,13 +101,20 @@ export const TeamProvider = ({ children }) => {
   };
 
   const handleTeamChange = teamId => {
-    // Normalizar a string para mantener consistencia con el selector HTML
-    setSelectedTeam(teamId === '' || teamId === null || teamId === undefined ? '' : String(teamId));
+    const normalized = teamId === '' || teamId === null || teamId === undefined ? '' : String(teamId);
+    setSelectedTeam(normalized);
+    if (storageKey) {
+      if (normalized) localStorage.setItem(storageKey, normalized);
+      else localStorage.removeItem(storageKey);
+    }
   };
 
   useEffect(() => {
     if (session?.user?.id) {
       fetchTeams();
+    } else {
+      setTeams([]);
+      setSelectedTeam('');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id]);

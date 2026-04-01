@@ -13,6 +13,8 @@ import PlayerFilters from '../components/PlayerFilters';
 import PlayerHistoryModal from '../components/Modals/PlayerHistoryModal';
 import PaymentModal from '../components/Modals/PaymentModal';
 import ImportPlayersModal from '../components/Modals/ImportPlayersModal';
+import ConfirmModal from '../components/Modals/ConfirmModal';
+import { useConfirm } from '../hooks/useConfirm';
 
 /**
  * Componente para la gestión de jugadores
@@ -23,6 +25,8 @@ import ImportPlayersModal from '../components/Modals/ImportPlayersModal';
  * Permite que los jugadores elijan hasta 3 posiciones
  */
 const Players = () => {
+  const { confirmProps, confirm } = useConfirm();
+
   // Estados para manejar el formulario
   const [name, setName] = useState('');
   const [numero, setNumero] = useState('');
@@ -508,7 +512,7 @@ const Players = () => {
    */
   const registerPlayer = async playerData => {
     try {
-      setLoading(true);
+      setLoading(true);
       // Verificar que hay sesión
       if (!session?.user?.id) {
         throw new Error('No hay sesión activa');
@@ -748,9 +752,13 @@ const Players = () => {
    * @param {number} playerId - ID del jugador a eliminar
    */
   const deletePlayer = async playerId => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este jugador?')) {
-      return;
-    }
+    const ok = await confirm({
+      title: 'Eliminar jugador',
+      message: '¿Estás seguro de que quieres eliminar este jugador? Esta acción no se puede deshacer.',
+      confirmLabel: 'Sí, eliminar',
+      variant: 'danger',
+    });
+    if (!ok) return;
 
     try {
       setLoading(true);
@@ -1953,6 +1961,8 @@ const Players = () => {
             }
           }}
         />
+
+        <ConfirmModal {...confirmProps} />
       </div>
     </>
   );

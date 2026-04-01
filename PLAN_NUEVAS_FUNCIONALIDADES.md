@@ -21,7 +21,7 @@ Al terminar cada fase, marcar esa fase como terminada, haz un resumen de los cam
 
 ---
 
-## Fase A — Toast Notifications
+## Fase A — Toast Notifications ✅ COMPLETADA
 
 **Objetivo:** Reemplazar todos los `<div>` de error/éxito inline con un sistema de toasts centralizado.
 **Impacto:** Alta — limpia código de 9 archivos, mejora UX inmediatamente.
@@ -97,12 +97,12 @@ En cada archivo:
 
 ---
 
-## Fase B — Confirm Dialog
+## Fase B — Confirm Dialog ✅ COMPLETADA
 
 **Objetivo:** Reemplazar `window.confirm()` y `alert()` nativos con un modal de confirmación reutilizable.
 **Impacto:** Media — elimina diálogos del browser que rompen la experiencia visual.
 
-### B1 · Crear componente `src/components/Modals/ConfirmModal.jsx`
+### B1 · Crear componente `src/components/Modals/ConfirmModal.jsx` ✅
 
 Props:
 - `isOpen` — boolean
@@ -125,7 +125,7 @@ Estructura visual:
 
 Usar las clases `.modal-overlay` y `.modal-container` existentes en `index.css`.
 
-### B2 · Crear hook `src/hooks/useConfirm.js`
+### B2 · Crear hook `src/hooks/useConfirm.js` ✅
 
 El hook devuelve `{ confirmProps, confirm }` donde `confirm(options)` retorna una `Promise<boolean>`.
 Esto permite el patrón `const ok = await confirm({ ... })` en los handlers:
@@ -149,14 +149,14 @@ const deletePlayer = async (player) => {
 <ConfirmModal {...confirmProps} />
 ```
 
-### B3 · Migrar usos actuales
+### B3 · Migrar usos actuales ✅
 
 | Archivo | Línea aprox. | Acción actual | Reemplazar con |
 |---------|-------------|---------------|----------------|
 | `src/pages/Players.jsx` | ~769 | `if (!confirm('¿Estás seguro...'))` en `deletePlayer` | `useConfirm` + `ConfirmModal` |
 | `src/pages/Teams.jsx` | ~146 | `alert('próximamente')` en `handleDeleteTeam` | Eliminar el alert; el botón delete sigue pendiente de implementación real |
 
-### B4 · Verificación
+### B4 · Verificación ✅
 
 - Eliminar jugador → aparece modal de confirmación (no diálogo del browser)
 - Cancelar → jugador NO se elimina

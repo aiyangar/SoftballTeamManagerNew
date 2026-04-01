@@ -5,14 +5,14 @@ import MySoftballClubLogo from '../assets/MySoftballClubLogoV2.png';
 
 const Layout = ({ children }) => {
   return (
-    <div className='min-h-screen bg-gray-900'>
-      <div className='max-w-6xl mx-auto p-6'>
-        <div className='flex justify-between items-center mb-8'>
+    <div className='min-h-screen bg-surface-900'>
+      <div className='max-w-7xl 3xl:max-w-[1680px] mx-auto p-3 fold:p-4 sm:p-6'>
+        <div className='flex justify-between items-center pb-4 mb-6 border-b border-surface-border'>
           <Link to="/dashboard" className="hover:opacity-80 transition-opacity">
-            <img 
-              src={MySoftballClubLogo} 
-              alt="My Softball Club Logo" 
-              className='h-14 sm:h-16 md:h-18 lg:h-20 w-auto'
+            <img
+              src={MySoftballClubLogo}
+              alt="My Softball Club Logo"
+              className='h-12 sm:h-14 md:h-16 lg:h-18 w-auto'
             />
           </Link>
           <Menu />

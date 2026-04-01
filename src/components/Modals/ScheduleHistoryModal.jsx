@@ -105,7 +105,7 @@ const ScheduleHistoryModal = ({
                   onEditGame(selectedGame);
                   onClose();
                 }}
-                className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-2'
+                className='btn btn-primary'
                 title='Editar partido'
               >
                 <span>✏️</span>
@@ -128,7 +128,7 @@ const ScheduleHistoryModal = ({
                     setLocalAttendance(currentAttendance);
                   }
                 }}
-                className='px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center space-x-2'
+                className='btn bg-green-600 text-white hover:bg-green-700'
                 title='Gestionar asistencia'
               >
                 <span>{isEditingAttendance ? '✕' : '📋'}</span>
@@ -139,7 +139,7 @@ const ScheduleHistoryModal = ({
                   onOpenPaymentForm(selectedGame.id);
                   onClose();
                 }}
-                className='px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors flex items-center space-x-2'
+                className='btn bg-yellow-600 text-white hover:bg-yellow-700'
                 title='Registrar pagos'
               >
                 <span>💰</span>
@@ -147,7 +147,7 @@ const ScheduleHistoryModal = ({
               </button>
               <button
                 onClick={() => onOpenLineup(selectedGame)}
-                className='px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors flex items-center space-x-2'
+                className='btn bg-purple-600 text-white hover:bg-purple-700'
                 title='Gestionar lineup'
               >
                 <span>⚾</span>
@@ -158,7 +158,7 @@ const ScheduleHistoryModal = ({
                   onOpenScoreForm(selectedGame);
                   onClose();
                 }}
-                className='px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors flex items-center space-x-2'
+                className='btn bg-orange-600 text-white hover:bg-orange-700'
                 title='Terminar partido'
               >
                 <span>🏁</span>
@@ -166,7 +166,7 @@ const ScheduleHistoryModal = ({
               </button>
               <button
                 onClick={() => setShowDeleteWarning(true)}
-                className='px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center space-x-2'
+                className='btn btn-danger'
                 title='Eliminar partido'
               >
                 <span>🗑️</span>
@@ -288,7 +288,7 @@ const ScheduleHistoryModal = ({
                         setIsEditingAttendance(false);
                       }
                     }}
-                    className='px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700'
+                    className='btn-sm btn-primary'
                   >
                     {isEditingAttendance ? 'Cancelar' : 'Editar'}
                   </button>
@@ -323,7 +323,7 @@ const ScheduleHistoryModal = ({
 
                         console.log('========================');
                       }}
-                      className='px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700'
+                      className='btn-sm btn-secondary'
                     >
                       Limpiar
                     </button>
@@ -343,7 +343,7 @@ const ScheduleHistoryModal = ({
                         }
                       }}
                       disabled={loading}
-                      className='px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50'
+                      className='btn-sm btn-primary'
                     >
                       {loading ? 'Guardando...' : 'Guardar'}
                     </button>
@@ -517,7 +517,7 @@ const ScheduleHistoryModal = ({
                       e.stopPropagation();
                       onOpenLineup(selectedGame);
                     }}
-                    className='px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700'
+                    className='btn-sm bg-purple-600 text-white hover:bg-purple-700'
                   >
                     Editar
                   </button>
@@ -882,7 +882,7 @@ const ScheduleHistoryModal = ({
             <div className='flex space-x-3'>
               <button
                 onClick={() => setShowDeleteWarning(false)}
-                className='flex-1 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors'
+                className='btn btn-secondary flex-1'
               >
                 Cancelar
               </button>
@@ -892,7 +892,7 @@ const ScheduleHistoryModal = ({
                   setShowDeleteWarning(false);
                   onClose();
                 }}
-                className='flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors'
+                className='btn btn-danger flex-1'
               >
                 Sí, Eliminar Partido
               </button>

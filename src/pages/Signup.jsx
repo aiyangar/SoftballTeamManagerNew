@@ -58,7 +58,7 @@ const Signup = () => {
                   </p>
                   <Link
                     to='/signin'
-                    className='inline-block bg-black text-white px-4 py-2 rounded-md hover:bg-gray-900 transition-colors text-sm'
+                    className='btn btn-secondary'
                   >
                     Iniciar Sesión
                   </Link>

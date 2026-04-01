@@ -16,9 +16,9 @@ const DashboardCard = ({ cardData }) => {
 
   return (
     <Link to={linkTo} className='block'>
-      <div className='bg-neutral-900 shadow rounded-lg pt-4 pb-6 px-6 hover:bg-neutral-800 transition-all duration-300 cursor-pointer h-80 flex flex-col dashboard-card border border-gray-700 hover:border-gray-500'>
+      <div className='bg-surface-800/50 backdrop-blur-sm rounded-lg pt-4 pb-6 px-6 hover:bg-surface-700/50 transition-all duration-200 cursor-pointer min-h-[18rem] flex flex-col dashboard-card border border-surface-border hover:border-accent-600/50'>
         <div className='flex items-center justify-between mb-3 h-16'>
-          <h3 className='text-lg font-semibold text-white leading-tight'>
+          <h3 className='text-xs font-semibold text-slate-300 uppercase tracking-wider leading-tight'>
             {title}
           </h3>
           <div
@@ -27,9 +27,9 @@ const DashboardCard = ({ cardData }) => {
             {icon}
           </div>
         </div>
-        <div className='w-[95%] mx-auto mb-3 border-t border-gray-600'></div>
+        <div className='w-[95%] mx-auto mb-3 border-t border-surface-border'></div>
         <div className='flex-1 flex items-center justify-start overflow-hidden dashboard-card-content'>
-          {loading ? <p className='text-gray-400'>Cargando...</p> : content}
+          {loading ? <p className='text-slate-400'>Cargando...</p> : content}
         </div>
       </div>
     </Link>

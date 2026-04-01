@@ -5,6 +5,13 @@ import React from 'react';
  * @param {Object} team - Datos del equipo
  * @param {Function} onViewHistory - Función para ver el historial del equipo
  */
+const getProgressColor = (paid, target) => {
+  if (paid >= target) return 'bg-emerald-500';
+  if (paid >= target * 0.8) return 'bg-amber-500';
+  if (paid >= target * 0.5) return 'bg-orange-500';
+  return 'bg-red-500';
+};
+
 const TeamCard = ({ team, onViewHistory }) => {
   return (
     <div
@@ -53,20 +60,8 @@ const TeamCard = ({ team, onViewHistory }) => {
           {/* Barra de progreso */}
           <div className='w-full bg-gray-600 rounded-full h-2 mb-2'>
             <div
-              className='h-2 rounded-full transition-all duration-300'
-              style={{
-                width: `${Math.min(((team.totalRegistrationPaid || 0) / team.inscripcion) * 100, 100)}%`,
-                backgroundColor:
-                  (team.totalRegistrationPaid || 0) >= team.inscripcion
-                    ? '#10B981'
-                    : (team.totalRegistrationPaid || 0) >=
-                        team.inscripcion * 0.8
-                      ? '#F59E0B'
-                      : (team.totalRegistrationPaid || 0) >=
-                          team.inscripcion * 0.5
-                        ? '#F97316'
-                        : '#DC2626',
-              }}
+              className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(team.totalRegistrationPaid || 0, team.inscripcion)}`}
+              style={{ width: `${Math.min(((team.totalRegistrationPaid || 0) / team.inscripcion) * 100, 100)}%` }}
             ></div>
           </div>
 

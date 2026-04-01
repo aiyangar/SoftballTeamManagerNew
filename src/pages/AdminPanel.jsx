@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 import { UserAuth } from '../context/AuthContext';
 import Menu from '../components/Menu';
@@ -10,28 +11,15 @@ const AdminPanel = () => {
   const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [newUser, setNewUser] = useState({
     email: '',
     password: '',
   });
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  // Limpiar mensaje de éxito después de 5 segundos
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => {
-        setSuccess(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [success]);
-
   const createUser = async e => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     try {
       // Guardar la sesión actual del administrador
@@ -47,22 +35,20 @@ const AdminPanel = () => {
       });
 
       if (error) {
-        setError('Error al crear usuario: ' + error.message);
+        toast.error('Error al crear usuario: ' + error.message);
       } else {
         // Restaurar la sesión del administrador inmediatamente
         if (currentSession) {
           await supabase.auth.setSession(currentSession);
         }
 
-        setSuccess(
-          'Usuario creado exitosamente. Se ha enviado un email de confirmación.'
-        );
+        toast.success('Usuario creado exitosamente. Se ha enviado un email de confirmación.');
         setNewUser({ email: '', password: '' });
         setShowCreateForm(false);
       }
     } catch (error) {
       console.error('Error inesperado al crear usuario:', error);
-      setError('Error inesperado al crear usuario');
+      toast.error('Error inesperado al crear usuario');
 
       // Intentar restaurar la sesión del administrador en caso de error
       if (session) {
@@ -116,23 +102,11 @@ const AdminPanel = () => {
           </h1>
         </div>
 
-        {/* Mensajes de error y éxito */}
-        {error && (
-          <div className='bg-red-900 border border-red-600 text-red-200 px-4 py-3 rounded mb-6'>
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className='bg-green-900 border border-green-600 text-green-200 px-4 py-3 rounded mb-6'>
-            {success}
-          </div>
-        )}
-
         {/* Botón para crear usuario */}
         <div className='mb-8'>
           <button
             onClick={() => setShowCreateForm(!showCreateForm)}
-            className='px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center space-x-2'
+            className='btn bg-green-600 text-white hover:bg-green-700'
           >
             <svg
               className='w-5 h-5'
@@ -200,14 +174,14 @@ const AdminPanel = () => {
                     setShowCreateForm(false);
                     setNewUser({ email: '', password: '' });
                   }}
-                  className='flex-1 px-4 py-3 border border-gray-600 text-gray-300 rounded hover:bg-gray-800 transition-colors'
+                  className='btn btn-secondary flex-1'
                 >
                   Cancelar
                 </button>
                 <button
                   type='submit'
                   disabled={loading}
-                  className='flex-1 px-4 py-3 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
+                  className='btn bg-green-600 text-white hover:bg-green-700 flex-1'
                 >
                   {loading ? 'Creando...' : 'Crear Usuario'}
                 </button>

@@ -220,14 +220,14 @@ const SubstitutionModal = ({
             <button
               type='button'
               onClick={onClose}
-              className='px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors'
+              className='btn btn-secondary'
             >
               Cancelar
             </button>
             <button
               type='submit'
               disabled={availableToEnter.length === 0}
-              className='px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+              className='btn bg-yellow-600 text-white hover:bg-yellow-700'
             >
               Registrar
             </button>

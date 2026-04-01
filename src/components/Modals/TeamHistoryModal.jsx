@@ -17,6 +17,13 @@ const TeamHistoryModal = ({
 }) => {
   if (!showModal || !selectedTeam) return null;
 
+  const getProgressColor = (paid, target) => {
+    if (paid >= target) return 'bg-emerald-500';
+    if (paid >= target * 0.8) return 'bg-amber-500';
+    if (paid >= target * 0.5) return 'bg-orange-500';
+    return 'bg-red-500';
+  };
+
   return (
     <div className='fixed inset-0 modal-overlay flex items-center justify-center z-50'>
       <div className='bg-neutral-900 border border-gray-600 rounded-lg w-full max-w-2xl mx-4 modal-container'>
@@ -110,21 +117,8 @@ const TeamHistoryModal = ({
                 {/* Barra de progreso */}
                 <div className='w-full bg-gray-600 rounded-full h-2'>
                   <div
-                    className='h-2 rounded-full transition-all duration-300'
-                    style={{
-                      width: `${Math.min(((selectedTeam.totalRegistrationPaid || 0) / selectedTeam.inscripcion) * 100, 100)}%`,
-                      backgroundColor:
-                        (selectedTeam.totalRegistrationPaid || 0) >=
-                        selectedTeam.inscripcion
-                          ? '#10B981'
-                          : (selectedTeam.totalRegistrationPaid || 0) >=
-                              selectedTeam.inscripcion * 0.8
-                            ? '#F59E0B'
-                            : (selectedTeam.totalRegistrationPaid || 0) >=
-                                selectedTeam.inscripcion * 0.5
-                              ? '#F97316'
-                              : '#DC2626',
-                    }}
+                    className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(selectedTeam.totalRegistrationPaid || 0, selectedTeam.inscripcion)}`}
+                    style={{ width: `${Math.min(((selectedTeam.totalRegistrationPaid || 0) / selectedTeam.inscripcion) * 100, 100)}%` }}
                   ></div>
                 </div>
               </div>
@@ -197,7 +191,7 @@ const TeamHistoryModal = ({
                 onEdit(selectedTeam);
                 onClose();
               }}
-              className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-2'
+              className='btn btn-primary'
             >
               <span>✏️</span>
               <span>Editar Equipo</span>
@@ -207,7 +201,7 @@ const TeamHistoryModal = ({
                 onDelete(selectedTeam);
                 onClose();
               }}
-              className='px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center space-x-2'
+              className='btn btn-danger'
             >
               <span>🗑️</span>
               <span>Eliminar Equipo</span>

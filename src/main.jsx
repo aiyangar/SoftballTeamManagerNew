@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 
 import { RouterProvider } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { router } from './router.jsx';
 import { AuthContextProvider } from './context/AuthContext.jsx';
 import { TeamProvider } from './context/TeamContext.jsx';
@@ -54,6 +55,18 @@ createRoot(document.getElementById('root')).render(
     <AuthContextProvider>
       <TeamProvider>
         <RouterProvider router={router} />
+        <Toaster
+          position='top-right'
+          toastOptions={{
+            style: {
+              background: '#1e1e2e',
+              color: '#e2e8f0',
+              border: '1px solid #313147',
+            },
+            success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },
+            error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
+          }}
+        />
       </TeamProvider>
     </AuthContextProvider>
   </StrictMode>

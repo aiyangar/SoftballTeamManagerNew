@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { UserAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
@@ -30,8 +31,6 @@ const Players = () => {
   const [equipoId, setEquipoId] = useState('');
   const [selectedPositions, setSelectedPositions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [players, setPlayers] = useState([]);
   const [loadingPlayers, setLoadingPlayers] = useState(true);
   const { teams, selectedTeam } = useTeam();
@@ -87,16 +86,6 @@ const Players = () => {
   const authContext = UserAuth();
   const session = authContext?.session;
 
-  // Limpiar mensaje de éxito después de 5 segundos
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => {
-        setSuccess(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [success]);
-
   /**
    * Obtiene la información histórica completa de un jugador
    * @param {number} playerId - ID del jugador
@@ -120,8 +109,7 @@ const Players = () => {
           // Si no hay equipos, usar un array vacío
           teamIds = [];
         }
-      } else {
-      }
+      } else { /* intentional */ }
 
       // Obtener asistencia a partidos (de todos los equipos si no hay equipo específico)
 
@@ -153,8 +141,7 @@ const Players = () => {
 
       if (attendanceError) {
         // Error al obtener asistencia
-      } else {
-      }
+      } else { /* intentional */ }
 
       // Obtener pagos realizados (de todos los equipos si no hay equipo específico)
 
@@ -185,8 +172,7 @@ const Players = () => {
 
       if (paymentsError) {
         // Error al obtener pagos
-      } else {
-      }
+      } else { /* intentional */ }
 
       // Obtener todos los partidos de los equipos para calcular estadísticas
 
@@ -203,8 +189,7 @@ const Players = () => {
 
       if (gamesError) {
         // Error al obtener partidos
-      } else {
-      }
+      } else { /* intentional */ }
 
       // Calcular estadísticas
       let attendance = attendanceData || [];
@@ -242,8 +227,8 @@ const Players = () => {
         gamesAttended,
         attendanceRate,
       });
-    } catch (error) {
-      setError('Error al cargar el historial del jugador');
+    } catch (_error) {
+      toast.error('Error al cargar el historial del jugador');
     } finally {
       setLoadingHistory(false);
     }
@@ -362,7 +347,7 @@ const Players = () => {
       const finalTarget = Math.max(200, Math.min(800, calculatedTarget));
 
       return finalTarget;
-    } catch (error) {
+    } catch (_error) {
       return 450;
     }
   };
@@ -397,7 +382,7 @@ const Players = () => {
       });
 
       return totals;
-    } catch (error) {
+    } catch (_error) {
       return {};
     }
   };
@@ -523,9 +508,7 @@ const Players = () => {
    */
   const registerPlayer = async playerData => {
     try {
-      setLoading(true);
-      setError(null);
-
+      setLoading(true);
       // Verificar que hay sesión
       if (!session?.user?.id) {
         throw new Error('No hay sesión activa');
@@ -631,8 +614,7 @@ const Players = () => {
 
         if (positionError) {
           // Error al registrar posiciones - no lanzamos error aquí porque el jugador ya se registró/actualizó
-        } else {
-        }
+        } else { /* intentional */ }
       }
 
       const mensaje = editingPlayer
@@ -641,7 +623,7 @@ const Players = () => {
       const equipoNombre =
         teams.find(team => Number(team.id) === Number(playerData.equipo_id))?.nombre_equipo ||
         'Sin equipo';
-      setSuccess(`${mensaje} en el equipo: ${equipoNombre}`);
+      toast.success(`${mensaje} en el equipo: ${equipoNombre}`);
       resetForm();
 
       // Recargar lista de jugadores y totales de inscripción
@@ -649,7 +631,7 @@ const Players = () => {
 
       return { success: true, data: playerResult };
     } catch (error) {
-      setError(error.message);
+      toast.error(error.message);
       return { success: false, error: error.message };
     } finally {
       setLoading(false);
@@ -705,11 +687,9 @@ const Players = () => {
         return newPositions;
       } else {
         if (prev.length >= 3) {
-          setError('Un jugador puede tener máximo 3 posiciones');
+          toast.error('Un jugador puede tener máximo 3 posiciones');
           return prev;
-        }
-        setError(null);
-        const newPositions = [...prev, positionId];
+        }        const newPositions = [...prev, positionId];
 
         return newPositions;
       }
@@ -726,10 +706,7 @@ const Players = () => {
     setEmail('');
     // Mantener el equipo seleccionado actualmente
     setEquipoId(selectedTeam || '');
-    setSelectedPositions([]);
-    setError(null);
-    setSuccess(null);
-    setEditingPlayer(null);
+    setSelectedPositions([]);    setEditingPlayer(null);
     setShowForm(false);
   };
 
@@ -786,8 +763,7 @@ const Players = () => {
 
       if (positionError) {
         // Error al eliminar posiciones
-      } else {
-      }
+      } else { /* intentional */ }
 
       // Luego eliminar el jugador
       const { error: playerError } = await supabase
@@ -799,10 +775,10 @@ const Players = () => {
         throw new Error(`Error al eliminar jugador: ${playerError.message}`);
       }
 
-      setSuccess('Jugador eliminado exitosamente');
+      toast.success('Jugador eliminado exitosamente');
       await fetchPlayers(session.user.id, selectedTeam); // Recargar lista, totales y meta
     } catch (error) {
-      setError(error.message);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -813,8 +789,8 @@ const Players = () => {
     if (session?.user?.id) {
       fetchPlayers(session.user.id, selectedTeam);
       fetchPositions();
-    } else {
-    }
+    } else { /* intentional */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   // Establecer el equipo seleccionado por defecto cuando cambie
@@ -837,6 +813,7 @@ const Players = () => {
       setPlayerInscripcionTotals({});
       setInscripcionTarget(450);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTeam]);
 
   // Función para ordenar los jugadores
@@ -1000,7 +977,7 @@ const Players = () => {
       });
 
       return totals;
-    } catch (error) {
+    } catch (_error) {
       return {};
     }
   };
@@ -1015,7 +992,7 @@ const Players = () => {
     const remainingAmount = inscripcionTarget - currentInscripcionPaid;
     
     if (remainingAmount <= 0) {
-      setError('Este jugador ya ha completado su pago de inscripción');
+      toast.error('Este jugador ya ha completado su pago de inscripción');
       return;
     }
 
@@ -1040,13 +1017,13 @@ const Players = () => {
    */
   const processInscripcionPayment = async () => {
     if (!selectedPlayerForPayment || !paymentAmount) {
-      setError('Por favor, ingresa una cantidad válida');
+      toast.error('Por favor, ingresa una cantidad válida');
       return;
     }
 
     const amount = parseFloat(paymentAmount);
     if (isNaN(amount) || amount <= 0) {
-      setError('Por favor, ingresa una cantidad válida mayor a 0');
+      toast.error('Por favor, ingresa una cantidad válida mayor a 0');
       return;
     }
 
@@ -1054,7 +1031,7 @@ const Players = () => {
       setLoading(true);
       
       // Crear un pago de inscripción
-      const { data: paymentData, error: paymentError } = await supabase
+      const { data: _paymentData, error: paymentError } = await supabase
         .from('pagos')
         .insert([
           {
@@ -1069,11 +1046,11 @@ const Players = () => {
         .select();
 
       if (paymentError) {
-        setError('Error al registrar el pago: ' + paymentError.message);
+        toast.error('Error al registrar el pago: ' + paymentError.message);
         return;
       }
 
-      setSuccess(`✅ Pago de inscripción registrado exitosamente: $${amount.toLocaleString()} para ${selectedPlayerForPayment.nombre}`);
+      toast.success(`✅ Pago de inscripción registrado exitosamente: $${amount.toLocaleString()} para ${selectedPlayerForPayment.nombre}`);
       
       // Cerrar modal
       closePaymentModal();
@@ -1087,7 +1064,7 @@ const Players = () => {
       }
       
     } catch (error) {
-      setError('Error inesperado al registrar el pago: ' + error.message);
+      toast.error('Error inesperado al registrar el pago: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -1114,12 +1091,12 @@ const Players = () => {
         .order('numero', { ascending: true });
 
       if (playersError) {
-        setError('Error al obtener datos de jugadores: ' + playersError.message);
+        toast.error('Error al obtener datos de jugadores: ' + playersError.message);
         return;
       }
 
       if (!allPlayers || allPlayers.length === 0) {
-        setError('No hay jugadores para exportar');
+        toast.error('No hay jugadores para exportar');
         return;
       }
 
@@ -1192,9 +1169,9 @@ const Players = () => {
       link.click();
       document.body.removeChild(link);
 
-      setSuccess(`✅ Datos exportados exitosamente: ${allPlayers.length} jugadores. Para importar a Google Sheets: 1) Ve a sheets.google.com, 2) Crea una nueva hoja, 3) Archivo > Importar > Subir archivo, 4) Selecciona el archivo CSV descargado`);
+      toast.success(`✅ Datos exportados exitosamente: ${allPlayers.length} jugadores. Para importar a Google Sheets: 1) Ve a sheets.google.com, 2) Crea una nueva hoja, 3) Archivo > Importar > Subir archivo, 4) Selecciona el archivo CSV descargado`);
     } catch (error) {
-      setError('Error al exportar datos: ' + error.message);
+      toast.error('Error al exportar datos: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -1383,7 +1360,7 @@ const Players = () => {
                   } else if (retryPlayer && retryPlayer.length > 0) {
                     newPlayers.push(retryPlayer[0]);
                   }
-                } catch (retryError) {
+                } catch (_retryError) {
                   failedImports.push({
                     nombre: player.nombre,
                     numero: player.numero,
@@ -1477,7 +1454,7 @@ const Players = () => {
         }
       }
 
-      setSuccess(successMessage);
+      toast.success(successMessage);
       setShowImportModal(false);
       setSelectedTeamToImport('');
 
@@ -1495,7 +1472,7 @@ const Players = () => {
    */
   const openImportModal = () => {
     if (!selectedTeam) {
-      setError('Debes seleccionar un equipo primero');
+      toast.error('Debes seleccionar un equipo primero');
       return;
     }
     setShowImportModal(true);
@@ -1509,9 +1486,7 @@ const Players = () => {
   const closeImportModal = () => {
     setShowImportModal(false);
     setSelectedTeamToImport('');
-    setImportError(null);
-    setError(null);
-  };
+    setImportError(null);  };
 
   // Obtener jugadores filtrados y ordenados
   const filteredPlayers = filterPlayers(players, filters);
@@ -1522,7 +1497,7 @@ const Players = () => {
   // Función para manejar el menú de acciones
 
   // Función para editar jugador (mantener para compatibilidad)
-  const editPlayer = playerId => {
+  const _editPlayer = playerId => {
     openEditForm(playerId);
   };
 
@@ -1540,18 +1515,6 @@ const Players = () => {
             Gestión de Jugadores
           </h1>
         </div>
-
-        {/* Mensajes de error y éxito */}
-        {error && (
-          <div className='bg-red-900 border border-red-600 text-red-200 px-4 py-3 rounded mb-6'>
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className='bg-green-900 border border-green-600 text-green-200 px-4 py-3 rounded mb-6'>
-            {success}
-          </div>
-        )}
 
         {/* Formulario de registro */}
         {showForm && (
@@ -1609,7 +1572,7 @@ const Players = () => {
                 setShowForm(true);
               }
             }}
-            className='w-full sm:w-auto px-4 sm:px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center justify-center sm:justify-start space-x-2'
+            className='btn btn-primary w-full sm:w-auto justify-center sm:justify-start'
           >
             <svg
               className='w-5 h-5'
@@ -1630,7 +1593,7 @@ const Players = () => {
           <button
             onClick={exportPlayersToCSV}
             disabled={loading || players.length === 0}
-            className='w-full sm:w-auto px-4 sm:px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center sm:justify-start space-x-2'
+            className='btn bg-green-600 text-white hover:bg-green-700 w-full sm:w-auto justify-center sm:justify-start'
             title='Exportar datos de jugadores a hoja de cálculo'
           >
             <svg
@@ -1652,7 +1615,7 @@ const Players = () => {
           <button
             onClick={openImportModal}
             disabled={!selectedTeam || loading}
-            className='w-full sm:w-auto px-4 sm:px-6 py-3 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center sm:justify-start space-x-2'
+            className='btn bg-purple-600 text-white hover:bg-purple-700 w-full sm:w-auto justify-center sm:justify-start'
             title='Importar jugadores de otro equipo'
           >
             <svg

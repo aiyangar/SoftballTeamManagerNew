@@ -661,7 +661,7 @@ const Dashboard = () => {
                 </p>
                 <Link
                   to='/teams'
-                  className='inline-block px-6 py-3 bg-gray-800 text-white rounded hover:bg-gray-900 transition-colors'
+                  className='btn btn-secondary'
                 >
                   Crear Equipo
                 </Link>
@@ -676,7 +676,7 @@ const Dashboard = () => {
                     <button
                       key={team.id}
                       onClick={() => handleTeamChange(team.id)}
-                      className='block w-full px-6 py-3 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors'
+                      className='btn btn-secondary w-full justify-start'
                     >
                       {team.nombre_equipo}
                     </button>

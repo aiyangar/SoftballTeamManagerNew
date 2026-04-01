@@ -81,7 +81,7 @@ const ScheduleHistoryModal = ({
   return (
     <div className='fixed inset-0 modal-overlay flex items-center justify-center z-50'>
       <div className='bg-neutral-900 border border-gray-600 rounded-lg w-full max-w-4xl mx-4 modal-container'>
-        <div className='modal-header p-6 border-b border-gray-600'>
+        <div className='modal-header p-4 sm:p-6 border-b border-gray-600'>
           <div className='flex justify-between items-center'>
             <h2 className='text-2xl font-semibold text-white'>
               Detalles del Partido
@@ -96,7 +96,7 @@ const ScheduleHistoryModal = ({
           </div>
         </div>
 
-        <div className='modal-content p-6'>
+        <div className='modal-content p-4 sm:p-6'>
           {/* Botones de acción en la parte superior */}
           {!gameFinalizationStatus && (
             <div className='mb-6 flex flex-wrap gap-3'>
@@ -246,11 +246,11 @@ const ScheduleHistoryModal = ({
                 }))
               }
             >
-              <div className='flex items-center space-x-3'>
+              <div className='flex flex-col gap-0.5 min-w-0'>
                 <h3 className='text-lg font-semibold text-white'>
                   Asistencia ({gameDetailsData.attendance.length} jugadores)
                 </h3>
-                <div className='flex items-center space-x-2 text-sm'>
+                <div className='flex items-center flex-wrap gap-x-2 text-sm'>
                   <span className='text-gray-400'>Con pago:</span>
                   <span className='text-green-400 font-semibold'>
                     {
@@ -500,7 +500,7 @@ const ScheduleHistoryModal = ({
                 }))
               }
             >
-              <div className='flex items-center space-x-3'>
+              <div className='flex flex-col gap-0.5 min-w-0'>
                 <h3 className='text-lg font-semibold text-white'>
                   Lineup ({new Set(gameDetailsData.lineup.map(e => e.jugadores?.id)).size} jugadores)
                 </h3>
@@ -694,12 +694,12 @@ const ScheduleHistoryModal = ({
                 }))
               }
             >
-              <div className='flex items-center space-x-3'>
+              <div className='flex flex-col gap-0.5 min-w-0'>
                 <h3 className='text-lg font-semibold text-white'>
                   Pagos Registrados ({gameDetailsData.payments.length} pagos)
                 </h3>
                 {gameDetailsData.payments.length > 0 && (
-                  <div className='flex items-center space-x-2 text-sm'>
+                  <div className='flex items-center gap-1 text-sm'>
                     <span className='text-gray-400'>Total:</span>
                     <span className='text-green-400 font-semibold'>
                       $

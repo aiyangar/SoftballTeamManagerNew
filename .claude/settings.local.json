@@ -9,11 +9,20 @@
       "Bash(wc -l /c/Proyectos/SoftballTeamManagerNew/src/components/**/*.jsx /c/Proyectos/SoftballTeamManagerNew/src/pages/*.jsx)",
       "Bash(git add:*)",
       "Bash(git commit -m ':*)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_evaluate",
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(identify public/pwa-192x192.png)"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "playwright"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

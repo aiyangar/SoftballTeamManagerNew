@@ -99,7 +99,7 @@ const ScheduleHistoryModal = ({
         <div className='modal-content p-4 sm:p-6'>
           {/* Botones de acción en la parte superior */}
           {!gameFinalizationStatus && (
-            <div className='mb-6 flex flex-wrap gap-3'>
+            <div className='mb-6 grid grid-cols-2 gap-2 *:justify-center sm:flex sm:flex-wrap sm:gap-3 sm:*:justify-start'>
               <button
                 onClick={() => {
                   onEditGame(selectedGame);
@@ -162,7 +162,8 @@ const ScheduleHistoryModal = ({
                 title='Terminar partido'
               >
                 <span>🏁</span>
-                <span>Terminar Partido</span>
+                <span className='sm:hidden'>Terminar</span>
+                <span className='hidden sm:inline'>Terminar Partido</span>
               </button>
               <button
                 onClick={() => setShowDeleteWarning(true)}
@@ -247,7 +248,7 @@ const ScheduleHistoryModal = ({
               }
             >
               <div className='flex flex-col gap-0.5 min-w-0'>
-                <h3 className='text-lg font-semibold text-white'>
+                <h3 className='text-sm sm:text-lg font-semibold text-white'>
                   Asistencia ({gameDetailsData.attendance.length} jugadores)
                 </h3>
                 <div className='flex items-center flex-wrap gap-x-2 text-sm'>
@@ -288,7 +289,7 @@ const ScheduleHistoryModal = ({
                         setIsEditingAttendance(false);
                       }
                     }}
-                    className='btn-sm btn-primary'
+                    className='hidden sm:inline-flex btn-sm btn-primary'
                   >
                     {isEditingAttendance ? 'Cancelar' : 'Editar'}
                   </button>
@@ -501,7 +502,7 @@ const ScheduleHistoryModal = ({
               }
             >
               <div className='flex flex-col gap-0.5 min-w-0'>
-                <h3 className='text-lg font-semibold text-white'>
+                <h3 className='text-sm sm:text-lg font-semibold text-white'>
                   Lineup ({new Set(gameDetailsData.lineup.map(e => e.jugadores?.id)).size} jugadores)
                 </h3>
                 {gameDetailsData.lineup.length > 0 && (
@@ -517,7 +518,7 @@ const ScheduleHistoryModal = ({
                       e.stopPropagation();
                       onOpenLineup(selectedGame);
                     }}
-                    className='btn-sm bg-purple-600 text-white hover:bg-purple-700'
+                    className='hidden sm:inline-flex btn-sm bg-purple-600 text-white hover:bg-purple-700'
                   >
                     Editar
                   </button>
@@ -592,8 +593,8 @@ const ScheduleHistoryModal = ({
                       <tr className='text-gray-400 border-b border-gray-600'>
                         <th className='pb-2 pt-3 px-3'>Turno</th>
                         <th className='pb-2 pt-3 pr-3'>Jugador</th>
-                        <th className='pb-2 pt-3 pr-3'>Posición</th>
-                        <th className='pb-2 pt-3 pr-3'>Estado</th>
+                        <th className='pb-2 pt-3 pr-3'><span className='sm:hidden'>Pos.</span><span className='hidden sm:inline'>Posición</span></th>
+                        <th className='pb-2 pt-3 pr-3 hidden sm:table-cell'>Estado</th>
                       </tr>
                       <tr className='bg-green-900/30'>
                         <td colSpan={4} className='px-3 py-1'>
@@ -632,7 +633,7 @@ const ScheduleHistoryModal = ({
                           <td className={`py-2 pr-3 font-mono ${entry.section === 'bd' ? 'text-purple-300' : 'text-white'}`}>
                             {entry.posicion_campo}
                           </td>
-                          <td className='py-2 pr-3'>
+                          <td className='py-2 pr-3 hidden sm:table-cell'>
                             {entry.section === 'bd' ? (
                               <span className='text-purple-400 text-xs'>BD</span>
                             ) : entry.es_titular ? (
@@ -665,7 +666,7 @@ const ScheduleHistoryModal = ({
                               <td className='py-2 pl-3 pr-3 font-mono text-gray-400'>—</td>
                               <td className='py-2 pr-3 text-white'>{playerName(entry)}</td>
                               <td className='py-2 pr-3 text-white font-mono'>{entry.posicion_campo}</td>
-                              <td className='py-2 pr-3'>
+                              <td className='py-2 pr-3 hidden sm:table-cell'>
                                 {isBD(entry) ? (
                                   <span className='text-purple-400 text-xs'>BD</span>
                                 ) : (
@@ -695,7 +696,7 @@ const ScheduleHistoryModal = ({
               }
             >
               <div className='flex flex-col gap-0.5 min-w-0'>
-                <h3 className='text-lg font-semibold text-white'>
+                <h3 className='text-sm sm:text-lg font-semibold text-white'>
                   Pagos Registrados ({gameDetailsData.payments.length} pagos)
                 </h3>
                 {gameDetailsData.payments.length > 0 && (

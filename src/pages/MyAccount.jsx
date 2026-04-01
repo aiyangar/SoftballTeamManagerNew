@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { UserAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import Menu from '../components/Menu';
@@ -16,18 +17,6 @@ const MyAccount = () => {
     confirmPassword: '',
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-
-  // Limpiar mensaje de éxito después de 5 segundos
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => {
-        setSuccess(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [success]);
 
   // Si no hay sesión, redirigir al login
   if (!session) {
@@ -41,8 +30,7 @@ const MyAccount = () => {
       ...prev,
       [name]: value,
     }));
-    // Limpiar errores cuando el usuario empiece a escribir
-    if (error) setError(null);
+    // noop — toast manages its own lifecycle
   };
 
   const validatePassword = password => {
@@ -56,19 +44,18 @@ const MyAccount = () => {
   const handlePasswordSubmit = async e => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     try {
       // Validar que las contraseñas coincidan
       if (passwordData.newPassword !== passwordData.confirmPassword) {
-        setError('Las contraseñas nuevas no coinciden');
+        toast.error('Las contraseñas nuevas no coinciden');
         return;
       }
 
       // Validar la nueva contraseña
       const passwordError = validatePassword(passwordData.newPassword);
       if (passwordError) {
-        setError(passwordError);
+        toast.error(passwordError);
         return;
       }
 
@@ -78,9 +65,9 @@ const MyAccount = () => {
       });
 
       if (error) {
-        setError('Error al cambiar la contraseña: ' + error.message);
+        toast.error('Error al cambiar la contraseña: ' + error.message);
       } else {
-        setSuccess('✅ Contraseña cambiada exitosamente');
+        toast.success('Contraseña cambiada exitosamente');
         // Limpiar el formulario
         setPasswordData({
           currentPassword: '',
@@ -89,7 +76,7 @@ const MyAccount = () => {
         });
       }
     } catch (_error) {
-      setError('Error inesperado al cambiar la contraseña');
+      toast.error('Error inesperado al cambiar la contraseña');
     } finally {
       setLoading(false);
     }
@@ -112,18 +99,6 @@ const MyAccount = () => {
         <div className='flex justify-between items-center mb-8'>
           <h1 className='text-2xl font-bold text-white'>Mi Cuenta</h1>
         </div>
-
-        {/* Mensajes de error y éxito */}
-        {error && (
-          <div className='bg-red-900 border border-red-600 text-red-200 px-4 py-3 rounded mb-6'>
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className='bg-green-900 border border-green-600 text-green-200 px-4 py-3 rounded mb-6'>
-            {success}
-          </div>
-        )}
 
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
           {/* Información Personal */}

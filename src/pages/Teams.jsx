@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 // import { useNavigate } from 'react-router-dom'
 import { UserAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
@@ -18,8 +19,6 @@ const Teams = () => {
   const [name, setName] = useState('');
   const [inscripcion, setInscripcion] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [showTeamHistoryModal, setShowTeamHistoryModal] = useState(false);
   const [selectedTeamForHistory, setSelectedTeamForHistory] = useState(null);
@@ -32,16 +31,6 @@ const Teams = () => {
   // Obtener estado de sesión del contexto
   const authContext = UserAuth();
   const session = authContext?.session;
-
-  // Limpiar mensaje de éxito después de 5 segundos
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => {
-        setSuccess(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [success]);
 
   /**
    * Crea un nuevo equipo en la base de datos
@@ -111,8 +100,6 @@ const Teams = () => {
   const resetForm = () => {
     setName('');
     setInscripcion('');
-    setError(null);
-    setSuccess(null);
     setShowForm(false);
     setEditingTeam(null); // Limpiar también el equipo en edición
   };
@@ -161,11 +148,10 @@ const Teams = () => {
   const handleSubmitTeam = async e => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     // Verificar que el usuario esté autenticado
     if (!session?.user?.id) {
-      setError('Debes estar autenticado para gestionar equipos');
+      toast.error('Debes estar autenticado para gestionar equipos');
       setLoading(false);
       return;
     }
@@ -179,9 +165,9 @@ const Teams = () => {
         if (result.success) {
           resetForm();
           await fetchTeams();
-          setSuccess('Equipo actualizado exitosamente');
+          toast.success('Equipo actualizado exitosamente');
         } else {
-          setError(result.error || 'Error al actualizar el equipo');
+          toast.error(result.error || 'Error al actualizar el equipo');
         }
       } else {
         // Crear nuevo equipo
@@ -189,14 +175,14 @@ const Teams = () => {
         if (result.success) {
           resetForm();
           await fetchTeams();
-          setSuccess('Equipo creado exitosamente');
+          toast.success('Equipo creado exitosamente');
         } else {
-          setError(result.error || 'Error al crear el equipo');
+          toast.error(result.error || 'Error al crear el equipo');
         }
       }
     } catch (error) {
       console.error('Error inesperado en handleSubmitTeam:', error);
-      setError(error.message || 'Error inesperado');
+      toast.error(error.message || 'Error inesperado');
     } finally {
       setLoading(false);
     }
@@ -208,18 +194,6 @@ const Teams = () => {
         <div className='flex justify-between items-center mb-8'>
           <h1 className='text-2xl font-bold text-white'>Gestión de Equipos</h1>
         </div>
-
-        {/* Mensajes de error y éxito */}
-        {error && (
-          <div className='bg-red-900 border border-red-600 text-red-200 px-4 py-3 rounded mb-6'>
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className='bg-green-900 border border-green-600 text-green-200 px-4 py-3 rounded mb-6'>
-            {success}
-          </div>
-        )}
 
         {/* Botón para mostrar/ocultar formulario */}
         <div className='mb-8'>
@@ -260,7 +234,6 @@ const Teams = () => {
           onSubmit={handleSubmitTeam}
           loading={loading}
           editingTeam={editingTeam}
-          error={error}
         />
 
         {/* Lista de equipos existentes */}

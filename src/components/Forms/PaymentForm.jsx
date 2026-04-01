@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { supabase } from '../../supabaseClient';
 import { Link } from 'react-router-dom';
 import { useModal } from '../../hooks/useModal';
@@ -11,7 +12,6 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
   const [montoRegistro, setMontoRegistro] = useState('');
   const [metodoPago, setMetodoPago] = useState('Efectivo');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [gameInfo, setGameInfo] = useState(null);
   const [existingPayments, setExistingPayments] = useState({});
   const [showUpdateWarning, setShowUpdateWarning] = useState(false);
@@ -21,8 +21,6 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
     totalInscripcion: 0,
     umpireTarget: 0,
   });
-  const [successMessage, setSuccessMessage] = useState('');
-
   // Usar el hook para manejar el modal
   useModal(true); // Siempre true porque este componente es un modal
 
@@ -54,7 +52,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
 
     if (error) {
       console.error('Error fetching players:', error);
-      setError('Error al cargar jugadores: ' + error.message);
+      toast.error('Error al cargar jugadores: ' + error.message);
     } else {
       // Transform the data to match the expected format
       const playersData = data.map(item => ({
@@ -69,7 +67,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
     setSelectedPlayer(playerId);
     setShowUpdateWarning(false);
     setShowCancelWarning(false);
-    setSuccessMessage(''); // Limpiar mensaje de éxito al cambiar jugador
+    toast.success(''); // Limpiar mensaje de éxito al cambiar jugador
 
     if (playerId && existingPayments[playerId]) {
       const payment = existingPayments[playerId];
@@ -216,7 +214,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
     e.preventDefault();
 
     if (!selectedPlayer) {
-      setError('Por favor, selecciona un jugador.');
+      toast.error('Por favor, selecciona un jugador.');
       return;
     }
 
@@ -227,7 +225,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
 
     // Permitir pago en 0 solo si es una actualización de un pago existente
     if (totalPayment === 0 && !existingPayments[selectedPlayer]) {
-      setError(
+      toast.error(
         'Por favor, ingresa al menos un monto mayor a 0. No se pueden registrar pagos nuevos con monto total de $0.'
       );
       return;
@@ -239,7 +237,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
       montoUmpire &&
       parseFloat(montoUmpire) > 0
     ) {
-      setError(
+      toast.error(
         'El objetivo del umpire ya ha sido alcanzado. Solo puedes registrar inscripción.'
       );
       return;
@@ -266,8 +264,6 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
     }
 
     setLoading(true);
-    setError(null);
-
     // Calcular montos con lógica de transferencia automática
     let montoUmpireFinal = 0;
     let montoInscripcionFinal = parseFloat(montoRegistro) || 0;
@@ -319,7 +315,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
     }
 
     if (result.error) {
-      setError('Error al registrar el pago: ' + result.error.message);
+      toast.error('Error al registrar el pago: ' + result.error.message);
     } else {
       // Verificar si el pago quedó en 0 (se canceló el pago)
       const totalPayment =
@@ -338,7 +334,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
         if (deleteError) {
           console.error('Error al eliminar pago en 0:', deleteError);
         } else {
-          setSuccessMessage(
+          toast.success(
             'Pago borrado exitosamente. El jugador ha sido desmarcado y puede registrar un nuevo pago.'
           );
           // Ocultar la advertencia de cancelación después del borrado exitoso
@@ -365,7 +361,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
 
         successMessage +=
           ' El formulario se ha limpiado para el siguiente jugador.';
-        setSuccessMessage(successMessage);
+        toast.success(successMessage);
       }
 
       // Actualizar inmediatamente el estado local de pagos
@@ -373,8 +369,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
 
       // Limpiar mensaje de éxito después de 3 segundos
       setTimeout(() => {
-        setSuccessMessage('');
-      }, 3000);
+              }, 3000);
 
       // Reset form para el siguiente jugador (pero mantener el modal abierto)
       setSelectedPlayer('');
@@ -572,17 +567,6 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                 </button>
                 <div className='text-xs text-gray-400 mt-1 text-center'>
                   Establece ambos montos en $0 para cancelar el pago
-                </div>
-              </div>
-            )}
-
-            {error && <div className='text-red-500 text-sm'>{error}</div>}
-
-            {successMessage && (
-              <div className='bg-green-900 border border-green-600 text-green-200 px-4 py-3 rounded-md text-sm'>
-                <div className='flex items-center space-x-2'>
-                  <span className='text-green-300'>✅</span>
-                  <span>{successMessage}</span>
                 </div>
               </div>
             )}

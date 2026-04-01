@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 import { UserAuth } from '../context/AuthContext';
 import PaymentForm from '../components/Forms/PaymentForm';
@@ -30,8 +31,6 @@ const Schedule = () => {
     umpire: 550,
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [lineupRefreshKey, setLineupRefreshKey] = useState(0);
   const [attendance, setAttendance] = useState({}); // { [gameId]: [playerId1, playerId2] }
   const [showPaymentForm, setShowPaymentForm] = useState(false);
@@ -128,16 +127,6 @@ const Schedule = () => {
       setInscripcionTarget(450); // Valor por defecto
     }
   };
-
-  // Limpiar mensaje de éxito después de 5 segundos
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => {
-        setSuccess(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [success]);
 
   // Calcular meta de inscripción cuando cambie el equipo
   useEffect(() => {
@@ -393,7 +382,7 @@ const Schedule = () => {
       .eq('equipo_id', teamId)
       .order('numero', { ascending: true });
     if (error) {
-      setError('Error al cargar jugadores: ' + error.message);
+      toast.error('Error al cargar jugadores: ' + error.message);
     } else {
       setPlayers(data || []);
     }
@@ -477,16 +466,16 @@ const Schedule = () => {
   //             .eq('id', editingGame.id);
 
   //         if (error) {
-  //             setError('Error al actualizar partido: ' + error.message);
+  //             toast.error('Error al actualizar partido: ' + error.message);
   //         } else {
-  //             setSuccess('Partido actualizado exitosamente');
+  //             toast.success('Partido actualizado exitosamente');
   //             setEditingGame(null);
   //             setShowGameForm(false);
   //             setNewGame({ equipo_contrario: '', fecha_partido: '', lugar: '', umpire: 550 });
   //             await fetchGames(selectedTeam);
   //         }
   //     } catch (error) {
-  //         setError('Error inesperado al actualizar partido');
+  //         toast.error('Error inesperado al actualizar partido');
   //     } finally {
   //         setLoading(false);
   //     }
@@ -495,12 +484,10 @@ const Schedule = () => {
   const handleCreateGame = async e => {
     e.preventDefault();
     if (!selectedTeam) {
-      setError('Por favor, selecciona un equipo.');
+      toast.error('Por favor, selecciona un equipo.');
       return;
     }
     setLoading(true);
-    setError(null);
-
     try {
       if (editingGame) {
         // Actualizar partido existente
@@ -515,9 +502,9 @@ const Schedule = () => {
           .eq('id', editingGame.id);
 
         if (error) {
-          setError('Error al actualizar partido: ' + error.message);
+          toast.error('Error al actualizar partido: ' + error.message);
         } else {
-          setSuccess('Partido actualizado exitosamente');
+          toast.success('Partido actualizado exitosamente');
           setEditingGame(null);
           setShowGameForm(false);
           setNewGame({
@@ -536,7 +523,7 @@ const Schedule = () => {
           .select();
 
         if (error) {
-          setError(error.message);
+          toast.error(error.message);
         } else {
           // Recargar la lista completa para mantener el orden correcto
           await fetchGames(selectedTeam);
@@ -550,7 +537,7 @@ const Schedule = () => {
         }
       }
     } catch {
-      setError('Error inesperado al registrar partido');
+      toast.error('Error inesperado al registrar partido');
     } finally {
       setLoading(false);
     }
@@ -577,7 +564,7 @@ const Schedule = () => {
     // Solo mostrar mensaje y abrir modal si se registró un pago
     if (paymentRegistered) {
       // Mostrar mensaje de éxito temporal
-      setSuccess(
+      toast.success(
         '✅ Pago registrado exitosamente. Abriendo detalles del partido...'
       );
 
@@ -645,9 +632,9 @@ const Schedule = () => {
         .eq('id', selectedGameForScore.id);
 
       if (error) {
-        setError('Error al finalizar el partido: ' + error.message);
+        toast.error('Error al finalizar el partido: ' + error.message);
       } else {
-        setSuccess(`Partido finalizado con éxito. Resultado: ${resultado}`);
+        toast.success(`Partido finalizado con éxito. Resultado: ${resultado}`);
         setGameFinalizationStatus(prev => ({
           ...prev,
           [selectedGameForScore.id]: true,
@@ -656,7 +643,7 @@ const Schedule = () => {
         await fetchGames(selectedTeam);
       }
     } catch {
-      setError('Error inesperado al finalizar el partido');
+      toast.error('Error inesperado al finalizar el partido');
     } finally {
       setLoading(false);
     }
@@ -690,7 +677,7 @@ const Schedule = () => {
         .eq('partido_id', gameId);
 
       if (deleteError) {
-        setError(
+        toast.error(
           'Error al limpiar asistencia anterior: ' + deleteError.message
         );
         return false;
@@ -707,7 +694,7 @@ const Schedule = () => {
         });
 
         if (validPlayerIds.length !== playerIds.length) {
-          setError('Error: Algunos IDs de jugadores no son válidos');
+          toast.error('Error: Algunos IDs de jugadores no son válidos');
           return false;
         }
 
@@ -723,12 +710,12 @@ const Schedule = () => {
           .select();
 
         if (insertError) {
-          setError('Error al guardar asistencia: ' + insertError.message);
+          toast.error('Error al guardar asistencia: ' + insertError.message);
           return false;
         }
       }
 
-      setSuccess(`✅ Asistencia guardada: ${playerIds.length} jugadores`);
+      toast.success(`✅ Asistencia guardada: ${playerIds.length} jugadores`);
 
       // Update local state instead of refetching everything
       const updatedGames = games.map(game => {
@@ -744,7 +731,7 @@ const Schedule = () => {
 
       return true;
     } catch (error) {
-      setError('Error inesperado al guardar asistencia: ' + error.message);
+      toast.error('Error inesperado al guardar asistencia: ' + error.message);
       return false;
     }
   };
@@ -757,7 +744,7 @@ const Schedule = () => {
         .eq('partido_id', gameId);
 
       if (error) {
-        setError('Error al cargar asistencia existente: ' + error.message);
+        toast.error('Error al cargar asistencia existente: ' + error.message);
         return false;
       }
 
@@ -769,16 +756,16 @@ const Schedule = () => {
 
       // Mostrar feedback visual
       if (playerIds.length > 0) {
-        setSuccess(
+        toast.success(
           `📋 Cargada asistencia existente: ${playerIds.length} jugadores`
         );
       } else {
-        setSuccess('📋 No hay asistencia previa registrada');
+        toast.success('📋 No hay asistencia previa registrada');
       }
 
       return true;
     } catch (error) {
-      setError('Error inesperado al cargar asistencia: ' + error.message);
+      toast.error('Error inesperado al cargar asistencia: ' + error.message);
       return false;
     }
   };
@@ -946,7 +933,7 @@ const Schedule = () => {
       .eq('partido_id', partidoId)
       .order('orden_bateo');
     if (error) {
-      setError('Error al cargar lineup: ' + error.message);
+      toast.error('Error al cargar lineup: ' + error.message);
       return [];
     }
     return data || [];
@@ -978,9 +965,9 @@ const Schedule = () => {
           );
         if (insertError) throw insertError;
       }
-      setSuccess('✅ Lineup guardado exitosamente');
+      toast.success('✅ Lineup guardado exitosamente');
     } catch (err) {
-      setError('Error al guardar lineup: ' + err.message);
+      toast.error('Error al guardar lineup: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -1037,7 +1024,7 @@ const Schedule = () => {
 
       setLineupRefreshKey(prev => prev + 1);
     } catch (err) {
-      setError('Error al registrar sustitución: ' + err.message);
+      toast.error('Error al registrar sustitución: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -1093,13 +1080,13 @@ const Schedule = () => {
         .eq('id', gameId);
 
       if (error) {
-        setError('Error al eliminar partido: ' + error.message);
+        toast.error('Error al eliminar partido: ' + error.message);
       } else {
-        setSuccess('Partido eliminado exitosamente');
+        toast.success('Partido eliminado exitosamente');
         await fetchGames(selectedTeam);
       }
     } catch (_err) {
-      setError('Error inesperado al eliminar partido');
+      toast.error('Error inesperado al eliminar partido');
     } finally {
       setLoading(false);
     }
@@ -1167,7 +1154,6 @@ const Schedule = () => {
               }}
               loading={loading}
               editingGame={editingGame}
-              error={error}
             />
 
             {/* Games List */}
@@ -1175,18 +1161,6 @@ const Schedule = () => {
               <h2 className='text-xl font-semibold mb-6 text-white'>
                 Partidos Registrados
               </h2>
-
-              {/* Mensajes de error y éxito */}
-              {error && (
-                <div className='bg-red-900 border border-red-600 text-red-200 px-4 py-3 rounded mb-6'>
-                  {error}
-                </div>
-              )}
-              {success && (
-                <div className='bg-green-900 border border-green-600 text-green-200 px-4 py-3 rounded mb-6'>
-                  {success}
-                </div>
-              )}
 
               <ScheduleCardsGrid
                 games={games}

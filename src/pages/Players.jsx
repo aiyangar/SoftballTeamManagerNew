@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { UserAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
@@ -30,8 +31,6 @@ const Players = () => {
   const [equipoId, setEquipoId] = useState('');
   const [selectedPositions, setSelectedPositions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [players, setPlayers] = useState([]);
   const [loadingPlayers, setLoadingPlayers] = useState(true);
   const { teams, selectedTeam } = useTeam();
@@ -86,16 +85,6 @@ const Players = () => {
   // Obtener estado de sesión del contexto
   const authContext = UserAuth();
   const session = authContext?.session;
-
-  // Limpiar mensaje de éxito después de 5 segundos
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => {
-        setSuccess(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [success]);
 
   /**
    * Obtiene la información histórica completa de un jugador
@@ -239,7 +228,7 @@ const Players = () => {
         attendanceRate,
       });
     } catch (_error) {
-      setError('Error al cargar el historial del jugador');
+      toast.error('Error al cargar el historial del jugador');
     } finally {
       setLoadingHistory(false);
     }
@@ -519,9 +508,7 @@ const Players = () => {
    */
   const registerPlayer = async playerData => {
     try {
-      setLoading(true);
-      setError(null);
-
+      setLoading(true);
       // Verificar que hay sesión
       if (!session?.user?.id) {
         throw new Error('No hay sesión activa');
@@ -636,7 +623,7 @@ const Players = () => {
       const equipoNombre =
         teams.find(team => Number(team.id) === Number(playerData.equipo_id))?.nombre_equipo ||
         'Sin equipo';
-      setSuccess(`${mensaje} en el equipo: ${equipoNombre}`);
+      toast.success(`${mensaje} en el equipo: ${equipoNombre}`);
       resetForm();
 
       // Recargar lista de jugadores y totales de inscripción
@@ -644,7 +631,7 @@ const Players = () => {
 
       return { success: true, data: playerResult };
     } catch (error) {
-      setError(error.message);
+      toast.error(error.message);
       return { success: false, error: error.message };
     } finally {
       setLoading(false);
@@ -700,11 +687,9 @@ const Players = () => {
         return newPositions;
       } else {
         if (prev.length >= 3) {
-          setError('Un jugador puede tener máximo 3 posiciones');
+          toast.error('Un jugador puede tener máximo 3 posiciones');
           return prev;
-        }
-        setError(null);
-        const newPositions = [...prev, positionId];
+        }        const newPositions = [...prev, positionId];
 
         return newPositions;
       }
@@ -721,10 +706,7 @@ const Players = () => {
     setEmail('');
     // Mantener el equipo seleccionado actualmente
     setEquipoId(selectedTeam || '');
-    setSelectedPositions([]);
-    setError(null);
-    setSuccess(null);
-    setEditingPlayer(null);
+    setSelectedPositions([]);    setEditingPlayer(null);
     setShowForm(false);
   };
 
@@ -793,10 +775,10 @@ const Players = () => {
         throw new Error(`Error al eliminar jugador: ${playerError.message}`);
       }
 
-      setSuccess('Jugador eliminado exitosamente');
+      toast.success('Jugador eliminado exitosamente');
       await fetchPlayers(session.user.id, selectedTeam); // Recargar lista, totales y meta
     } catch (error) {
-      setError(error.message);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -1010,7 +992,7 @@ const Players = () => {
     const remainingAmount = inscripcionTarget - currentInscripcionPaid;
     
     if (remainingAmount <= 0) {
-      setError('Este jugador ya ha completado su pago de inscripción');
+      toast.error('Este jugador ya ha completado su pago de inscripción');
       return;
     }
 
@@ -1035,13 +1017,13 @@ const Players = () => {
    */
   const processInscripcionPayment = async () => {
     if (!selectedPlayerForPayment || !paymentAmount) {
-      setError('Por favor, ingresa una cantidad válida');
+      toast.error('Por favor, ingresa una cantidad válida');
       return;
     }
 
     const amount = parseFloat(paymentAmount);
     if (isNaN(amount) || amount <= 0) {
-      setError('Por favor, ingresa una cantidad válida mayor a 0');
+      toast.error('Por favor, ingresa una cantidad válida mayor a 0');
       return;
     }
 
@@ -1064,11 +1046,11 @@ const Players = () => {
         .select();
 
       if (paymentError) {
-        setError('Error al registrar el pago: ' + paymentError.message);
+        toast.error('Error al registrar el pago: ' + paymentError.message);
         return;
       }
 
-      setSuccess(`✅ Pago de inscripción registrado exitosamente: $${amount.toLocaleString()} para ${selectedPlayerForPayment.nombre}`);
+      toast.success(`✅ Pago de inscripción registrado exitosamente: $${amount.toLocaleString()} para ${selectedPlayerForPayment.nombre}`);
       
       // Cerrar modal
       closePaymentModal();
@@ -1082,7 +1064,7 @@ const Players = () => {
       }
       
     } catch (error) {
-      setError('Error inesperado al registrar el pago: ' + error.message);
+      toast.error('Error inesperado al registrar el pago: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -1109,12 +1091,12 @@ const Players = () => {
         .order('numero', { ascending: true });
 
       if (playersError) {
-        setError('Error al obtener datos de jugadores: ' + playersError.message);
+        toast.error('Error al obtener datos de jugadores: ' + playersError.message);
         return;
       }
 
       if (!allPlayers || allPlayers.length === 0) {
-        setError('No hay jugadores para exportar');
+        toast.error('No hay jugadores para exportar');
         return;
       }
 
@@ -1187,9 +1169,9 @@ const Players = () => {
       link.click();
       document.body.removeChild(link);
 
-      setSuccess(`✅ Datos exportados exitosamente: ${allPlayers.length} jugadores. Para importar a Google Sheets: 1) Ve a sheets.google.com, 2) Crea una nueva hoja, 3) Archivo > Importar > Subir archivo, 4) Selecciona el archivo CSV descargado`);
+      toast.success(`✅ Datos exportados exitosamente: ${allPlayers.length} jugadores. Para importar a Google Sheets: 1) Ve a sheets.google.com, 2) Crea una nueva hoja, 3) Archivo > Importar > Subir archivo, 4) Selecciona el archivo CSV descargado`);
     } catch (error) {
-      setError('Error al exportar datos: ' + error.message);
+      toast.error('Error al exportar datos: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -1472,7 +1454,7 @@ const Players = () => {
         }
       }
 
-      setSuccess(successMessage);
+      toast.success(successMessage);
       setShowImportModal(false);
       setSelectedTeamToImport('');
 
@@ -1490,7 +1472,7 @@ const Players = () => {
    */
   const openImportModal = () => {
     if (!selectedTeam) {
-      setError('Debes seleccionar un equipo primero');
+      toast.error('Debes seleccionar un equipo primero');
       return;
     }
     setShowImportModal(true);
@@ -1504,9 +1486,7 @@ const Players = () => {
   const closeImportModal = () => {
     setShowImportModal(false);
     setSelectedTeamToImport('');
-    setImportError(null);
-    setError(null);
-  };
+    setImportError(null);  };
 
   // Obtener jugadores filtrados y ordenados
   const filteredPlayers = filterPlayers(players, filters);
@@ -1535,18 +1515,6 @@ const Players = () => {
             Gestión de Jugadores
           </h1>
         </div>
-
-        {/* Mensajes de error y éxito */}
-        {error && (
-          <div className='bg-red-900 border border-red-600 text-red-200 px-4 py-3 rounded mb-6'>
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className='bg-green-900 border border-green-600 text-green-200 px-4 py-3 rounded mb-6'>
-            {success}
-          </div>
-        )}
 
         {/* Formulario de registro */}
         {showForm && (

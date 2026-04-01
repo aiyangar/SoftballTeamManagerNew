@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Menu from './Menu.jsx';
 import MySoftballClubLogo from '../assets/MySoftballClubLogoV2.png';
+import InstallPWABanner from './InstallPWABanner.jsx';
 
 const Layout = ({ children }) => {
   return (
@@ -21,6 +22,7 @@ const Layout = ({ children }) => {
       <div className='max-w-7xl 3xl:max-w-[1680px] mx-auto p-3 fold:p-4 sm:p-6'>
         {children}
       </div>
+      <InstallPWABanner />
     </div>
   );
 };

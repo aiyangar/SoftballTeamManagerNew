@@ -281,9 +281,10 @@ const Dashboard = () => {
         </div>
 
         {/* Mensaje de Bienvenida */}
-        <div className='bg-neutral-900 shadow rounded-lg p-6 mb-8 border border-gray-700'>
+        <div className='bg-neutral-900 shadow rounded-lg p-6 mb-8 border border-gray-700 overflow-hidden'>
           <h2 className='text-xl font-semibold text-white'>
-            Bienvenido, {session?.user?.email}
+            Bienvenido,{' '}
+            <span className='break-all'>{session?.user?.email}</span>
           </h2>
           {selectedTeam && (
             <p className='text-gray-300 mt-2'>

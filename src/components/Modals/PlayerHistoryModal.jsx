@@ -382,7 +382,7 @@ const PlayerHistoryModal = ({
             {inscripcionRemaining > 0 && onAcceptPayment && (
               <button
                 onClick={() => onAcceptPayment(player)}
-                className='px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center space-x-2'
+                className='btn bg-green-600 text-white hover:bg-green-700'
                 title='Registrar pago de inscripción para este jugador'
               >
                 <svg
@@ -409,7 +409,7 @@ const PlayerHistoryModal = ({
                   onEdit(player.id);
                   // El modal se cierra desde el componente padre
                 }}
-                className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-2'
+                className='btn btn-primary'
               >
                 <span>✏️</span>
                 <span>Editar Jugador</span>
@@ -419,7 +419,7 @@ const PlayerHistoryModal = ({
                   onDelete(player.id);
                   onClose();
                 }}
-                className='px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center space-x-2'
+                className='btn btn-danger'
               >
                 <span>🗑️</span>
                 <span>Eliminar Jugador</span>

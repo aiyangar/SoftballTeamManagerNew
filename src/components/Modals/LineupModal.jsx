@@ -395,7 +395,7 @@ const LineupModal = ({
                 <div className='flex gap-3 mb-4'>
                   <button
                     onClick={addRow}
-                    className='px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm'
+                    className='btn-sm btn-primary'
                   >
                     + Agregar jugador
                   </button>
@@ -409,7 +409,7 @@ const LineupModal = ({
                         setSaveError(null);
                         onOpenSubstitution(activeLineup);
                       }}
-                      className='px-3 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors text-sm'
+                      className='btn-sm bg-yellow-600 text-white hover:bg-yellow-700'
                     >
                       ⇄ Sustitución
                     </button>
@@ -632,7 +632,7 @@ const LineupModal = ({
         <div className='p-6 border-t border-gray-600 flex justify-end gap-3'>
           <button
             onClick={onClose}
-            className='px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors'
+            className='btn btn-secondary'
           >
             {gameFinalizationStatus ? 'Cerrar' : 'Cancelar'}
           </button>
@@ -640,7 +640,7 @@ const LineupModal = ({
             <button
               onClick={handleSave}
               disabled={saving}
-              className='px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2'
+              className='btn bg-green-600 text-white hover:bg-green-700'
             >
               {saving && (
                 <svg

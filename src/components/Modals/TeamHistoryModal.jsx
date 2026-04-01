@@ -191,7 +191,7 @@ const TeamHistoryModal = ({
                 onEdit(selectedTeam);
                 onClose();
               }}
-              className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-2'
+              className='btn btn-primary'
             >
               <span>✏️</span>
               <span>Editar Equipo</span>
@@ -201,7 +201,7 @@ const TeamHistoryModal = ({
                 onDelete(selectedTeam);
                 onClose();
               }}
-              className='px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center space-x-2'
+              className='btn btn-danger'
             >
               <span>🗑️</span>
               <span>Eliminar Equipo</span>

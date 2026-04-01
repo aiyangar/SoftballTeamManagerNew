@@ -129,7 +129,7 @@ const ScheduleCard = ({
               <br />
               <button
                 onClick={() => onFetchPlayers(selectedTeam)}
-                className='mt-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700'
+                className='btn-sm btn-primary mt-2'
               >
                 Recargar Jugadores
               </button>
@@ -161,14 +161,14 @@ const ScheduleCard = ({
             <button
               onClick={() => onLoadExistingAttendance(game.id)}
               disabled={gameFinalizationStatus[game.id]}
-              className='px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50'
+              className='btn btn-secondary'
             >
               Cargar Asistencia Existente
             </button>
             <button
               onClick={() => onRecordAttendance(game.id)}
               disabled={gameFinalizationStatus[game.id]}
-              className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50'
+              className='btn btn-primary'
             >
               Guardar Asistencia
             </button>

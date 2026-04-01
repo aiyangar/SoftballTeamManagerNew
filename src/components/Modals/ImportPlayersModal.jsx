@@ -116,14 +116,14 @@ const ImportPlayersModal = ({
             <button
               onClick={onClose}
               disabled={importingPlayers}
-              className='flex-1 px-4 py-3 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
+              className='btn btn-secondary flex-1'
             >
               Cancelar
             </button>
             <button
               onClick={onImport}
               disabled={importingPlayers || !selectedTeamToImport}
-              className='flex-1 px-4 py-3 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
+              className='btn bg-purple-600 text-white hover:bg-purple-700 flex-1'
             >
               {importingPlayers ? 'Importando...' : 'Importar Jugadores'}
             </button>

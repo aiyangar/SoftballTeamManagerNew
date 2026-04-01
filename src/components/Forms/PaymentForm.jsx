@@ -672,7 +672,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                 showUpdateWarning ||
                 showCancelWarning
               }
-              className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center space-x-2'
+              className='btn btn-primary'
             >
               <span>💰</span>
               <span>{loading ? 'Registrando...' : 'Registrar Pago'}</span>
@@ -686,7 +686,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                 }
                 onClose();
               }}
-              className='px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center space-x-2'
+              className='btn bg-green-600 text-white hover:bg-green-700'
             >
               <span>✅</span>
               <span>Terminar</span>

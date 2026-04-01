@@ -123,14 +123,14 @@ const PaymentModal = ({
           <div className='flex space-x-3 mt-6'>
             <button
               onClick={onClose}
-              className='flex-1 px-4 py-3 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors'
+              className='btn btn-secondary flex-1'
             >
               Cancelar
             </button>
             <button
               onClick={onProcessPayment}
               disabled={loading || !paymentAmount}
-              className='flex-1 px-4 py-3 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
+              className='btn bg-green-600 text-white hover:bg-green-700 flex-1'
             >
               {loading ? 'Procesando...' : 'Aceptar Pago'}
             </button>

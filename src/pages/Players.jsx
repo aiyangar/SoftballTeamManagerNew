@@ -15,6 +15,7 @@ import PaymentModal from '../components/Modals/PaymentModal';
 import ImportPlayersModal from '../components/Modals/ImportPlayersModal';
 import ConfirmModal from '../components/Modals/ConfirmModal';
 import { useConfirm } from '../hooks/useConfirm';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 /**
  * Componente para la gestión de jugadores
@@ -43,14 +44,14 @@ const Players = () => {
   const [showForm, setShowForm] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
-  // Estados para filtros
-  const [filters, setFilters] = useState({
+  // Estados para filtros (persistidos en localStorage)
+  const [filters, setFilters] = useLocalStorage('players_filters', {
     nombre: '',
     numero: '',
     posiciones: [],
     posicionMatchType: 'any', // 'any' = al menos una, 'all' = todas
   });
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useLocalStorage('players_show_filters', false);
   const [editingPlayer, setEditingPlayer] = useState(null);
   const [showPlayerHistoryModal, setShowPlayerHistoryModal] = useState(false);
   const [selectedPlayerForHistory, setSelectedPlayerForHistory] =

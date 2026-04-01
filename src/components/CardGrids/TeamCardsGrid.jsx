@@ -1,5 +1,6 @@
 import React from 'react';
 import TeamCard from '../Cards/TeamCard';
+import DashboardCardSkeleton from '../Cards/DashboardCardSkeleton';
 
 /**
  * Componente para la cuadrícula de tarjetas de equipos
@@ -10,9 +11,10 @@ import TeamCard from '../Cards/TeamCard';
 const TeamCardsGrid = ({ teams, loadingTeams, onViewHistory }) => {
   if (loadingTeams) {
     return (
-      <div className='text-center py-8'>
-        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500 mx-auto'></div>
-        <p className='mt-2 text-gray-300'>Cargando equipos...</p>
+      <div className='grid grid-cols-1 fold:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <DashboardCardSkeleton key={i} />
+        ))}
       </div>
     );
   }

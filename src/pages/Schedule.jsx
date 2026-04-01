@@ -31,6 +31,7 @@ const Schedule = () => {
     umpire: 550,
   });
   const [loading, setLoading] = useState(false);
+  const [loadingGames, setLoadingGames] = useState(false);
   const [lineupRefreshKey, setLineupRefreshKey] = useState(0);
   const [attendance, setAttendance] = useState({}); // { [gameId]: [playerId1, playerId2] }
   const [showPaymentForm, setShowPaymentForm] = useState(false);
@@ -389,6 +390,7 @@ const Schedule = () => {
   };
 
   const fetchGames = async teamId => {
+    setLoadingGames(true);
     const { data, error } = await supabase
       .from('partidos')
       .select('*, asistencia_partidos(jugador_id)')
@@ -418,6 +420,7 @@ const Schedule = () => {
       // Fetch payment totals for each game
       await fetchPaymentTotals(data);
     }
+    setLoadingGames(false);
   };
 
   const handleInputChange = e => {
@@ -1164,6 +1167,7 @@ const Schedule = () => {
 
               <ScheduleCardsGrid
                 games={games}
+                loading={loadingGames}
                 paymentTotals={paymentTotals}
                 gameFinalizationStatus={gameFinalizationStatus}
                 onCardClick={openGameDetailsModal}

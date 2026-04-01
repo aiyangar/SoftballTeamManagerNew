@@ -23,6 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# Screenshot captures
+*.png
+
 # Environment variables
 .env
 .env.local

@@ -1,7 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx supabase:*)"
+      "Bash(npx supabase:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(wc -l /c/Proyectos/SoftballTeamManagerNew/src/components/**/*.jsx /c/Proyectos/SoftballTeamManagerNew/src/pages/*.jsx)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(npm test:*)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "playwright"
+  ],
+  "enableAllProjectMcpServers": true
 }

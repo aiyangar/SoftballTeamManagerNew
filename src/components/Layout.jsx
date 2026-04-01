@@ -6,8 +6,8 @@ import MySoftballClubLogo from '../assets/MySoftballClubLogoV2.png';
 const Layout = ({ children }) => {
   return (
     <div className='min-h-screen bg-surface-900'>
-      <div className='max-w-7xl 3xl:max-w-[1680px] mx-auto p-3 fold:p-4 sm:p-6'>
-        <div className='flex justify-between items-center pb-4 mb-6 border-b border-surface-border'>
+      <header className='sticky top-0 z-40 bg-surface-900/95 backdrop-blur-sm border-b border-surface-border'>
+        <div className='max-w-7xl 3xl:max-w-[1680px] mx-auto px-3 fold:px-4 sm:px-6 py-3 flex justify-between items-center'>
           <Link to="/dashboard" className="hover:opacity-80 transition-opacity">
             <img
               src={MySoftballClubLogo}
@@ -17,6 +17,8 @@ const Layout = ({ children }) => {
           </Link>
           <Menu />
         </div>
+      </header>
+      <div className='max-w-7xl 3xl:max-w-[1680px] mx-auto p-3 fold:p-4 sm:p-6'>
         {children}
       </div>
     </div>

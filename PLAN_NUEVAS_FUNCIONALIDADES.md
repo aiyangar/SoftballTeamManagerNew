@@ -21,18 +21,18 @@ Al terminar cada fase, marcar esa fase como terminada, haz un resumen de los cam
 
 ---
 
-## Fase A — Toast Notifications
+## Fase A — Toast Notifications ✅ COMPLETADA
 
 **Objetivo:** Reemplazar todos los `<div>` de error/éxito inline con un sistema de toasts centralizado.
 **Impacto:** Alta — limpia código de 9 archivos, mejora UX inmediatamente.
 
-### A1 · Instalar dependencia
+### A1 · Instalar dependencia ✅
 
 ```bash
 npm install react-hot-toast
 ```
 
-### A2 · Configurar provider en `src/main.jsx`
+### A2 · Configurar provider en `src/main.jsx` ✅
 
 Agregar `<Toaster>` junto al `RouterProvider`:
 
@@ -54,7 +54,7 @@ import { Toaster } from 'react-hot-toast';
 />
 ```
 
-### A3 · Crear hook `src/hooks/useToast.js`
+### A3 · Crear hook `src/hooks/useToast.js` ✅
 
 Thin wrapper para no acoplar la librería directamente en cada componente:
 
@@ -68,7 +68,7 @@ export const useToast = () => ({
 });
 ```
 
-### A4 · Migrar páginas
+### A4 · Migrar páginas ✅
 
 En cada archivo:
 1. Eliminar `const [error, setError] = useState(null)` y `const [success, setSuccess] = useState(null)`
@@ -88,7 +88,7 @@ En cada archivo:
 | `src/components/Forms/PlayerForm.jsx` | `error` |
 | `src/components/Forms/ScheduleForm.jsx` | `error` |
 
-### A5 · Verificación
+### A5 · Verificación ✅
 
 - `npm run lint` — sin errores
 - `npm run build` — build exitoso
@@ -97,12 +97,12 @@ En cada archivo:
 
 ---
 
-## Fase B — Confirm Dialog
+## Fase B — Confirm Dialog ✅ COMPLETADA
 
 **Objetivo:** Reemplazar `window.confirm()` y `alert()` nativos con un modal de confirmación reutilizable.
 **Impacto:** Media — elimina diálogos del browser que rompen la experiencia visual.
 
-### B1 · Crear componente `src/components/Modals/ConfirmModal.jsx`
+### B1 · Crear componente `src/components/Modals/ConfirmModal.jsx` ✅
 
 Props:
 - `isOpen` — boolean
@@ -125,7 +125,7 @@ Estructura visual:
 
 Usar las clases `.modal-overlay` y `.modal-container` existentes en `index.css`.
 
-### B2 · Crear hook `src/hooks/useConfirm.js`
+### B2 · Crear hook `src/hooks/useConfirm.js` ✅
 
 El hook devuelve `{ confirmProps, confirm }` donde `confirm(options)` retorna una `Promise<boolean>`.
 Esto permite el patrón `const ok = await confirm({ ... })` en los handlers:
@@ -149,14 +149,14 @@ const deletePlayer = async (player) => {
 <ConfirmModal {...confirmProps} />
 ```
 
-### B3 · Migrar usos actuales
+### B3 · Migrar usos actuales ✅
 
 | Archivo | Línea aprox. | Acción actual | Reemplazar con |
 |---------|-------------|---------------|----------------|
 | `src/pages/Players.jsx` | ~769 | `if (!confirm('¿Estás seguro...'))` en `deletePlayer` | `useConfirm` + `ConfirmModal` |
 | `src/pages/Teams.jsx` | ~146 | `alert('próximamente')` en `handleDeleteTeam` | Eliminar el alert; el botón delete sigue pendiente de implementación real |
 
-### B4 · Verificación
+### B4 · Verificación ✅
 
 - Eliminar jugador → aparece modal de confirmación (no diálogo del browser)
 - Cancelar → jugador NO se elimina
@@ -164,12 +164,12 @@ const deletePlayer = async (player) => {
 
 ---
 
-## Fase C — Filtros Persistentes
+## Fase C — Filtros Persistentes ✅ COMPLETADA
 
 **Objetivo:** Los filtros de jugadores no se pierden al navegar o recargar.
 **Impacto:** Media — mejora QoL para usuarios que filtran frecuentemente.
 
-### C1 · Crear hook `src/hooks/useLocalStorage.js`
+### C1 · Crear hook `src/hooks/useLocalStorage.js` ✅
 
 ```js
 import { useState } from 'react';
@@ -196,7 +196,7 @@ export function useLocalStorage(key, defaultValue) {
 }
 ```
 
-### C2 · Migrar `src/pages/Players.jsx`
+### C2 · Migrar `src/pages/Players.jsx` ✅
 
 Reemplazar:
 ```js
@@ -214,7 +214,7 @@ const [filters, setFilters] = useLocalStorage('players_filters', {
 const [showFilters, setShowFilters] = useLocalStorage('players_show_filters', false);
 ```
 
-### C3 · Botón "Limpiar filtros"
+### C3 · Botón "Limpiar filtros" ✅
 
 Verificar si ya existe. Si no existe, agregar un botón que resetee al valor por defecto:
 ```jsx
@@ -226,7 +226,7 @@ Verificar si ya existe. Si no existe, agregar un botón que resetee al valor por
 </button>
 ```
 
-### C4 · Verificación
+### C4 · Verificación ✅
 
 - Aplicar filtros → navegar a Dashboard → volver a Players → filtros siguen aplicados
 - Recargar página → filtros siguen aplicados
@@ -234,12 +234,12 @@ Verificar si ya existe. Si no existe, agregar un botón que resetee al valor por
 
 ---
 
-## Fase D — Skeleton Loading
+## Fase D — Skeleton Loading ✅ COMPLETADA
 
 **Objetivo:** Mostrar esqueletos animados mientras cargan los datos.
 **Impacto:** Media — percepción de velocidad más profesional.
 
-### D1 · Crear componente base `src/components/UI/Skeleton.jsx`
+### D1 · Crear componente base `src/components/UI/Skeleton.jsx` ✅
 
 ```jsx
 const Skeleton = ({ className = '' }) => (
@@ -248,7 +248,7 @@ const Skeleton = ({ className = '' }) => (
 export default Skeleton;
 ```
 
-### D2 · Crear skeletons de cards
+### D2 · Crear skeletons de cards ✅
 
 Cada skeleton replica la forma y proporciones de su card real, usando `Skeleton` como bloque de construcción.
 
@@ -264,7 +264,7 @@ Cada skeleton replica la forma y proporciones de su card real, usando `Skeleton`
 - Mismas dimensiones que `ScheduleCard`
 - Líneas de fecha, equipos, estado
 
-### D3 · Migrar páginas
+### D3 · Migrar páginas ✅
 
 Reemplazar el estado de carga vacío actual con grids de skeletons.
 
@@ -284,7 +284,7 @@ if (loading) return (
 );
 ```
 
-### D4 · Verificación
+### D4 · Verificación ✅
 
 - Recargar cualquier página con datos → ver animación de skeleton antes de los datos
 - Skeleton desaparece correctamente cuando llegan los datos
@@ -292,7 +292,7 @@ if (loading) return (
 
 ---
 
-## Fase E — Sticky Header
+## Fase E — Sticky Header ✅ COMPLETADA
 
 **Objetivo:** El header (logo + menú) se queda fijo al hacer scroll.
 **Impacto:** Baja — mejora navegación en páginas con mucho contenido (Schedule, Players).

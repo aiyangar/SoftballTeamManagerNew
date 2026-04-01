@@ -130,7 +130,7 @@ const Teams = () => {
    * @param {Object} team - Equipo a eliminar
    */
   const handleDeleteTeam = _team => {
-    alert('Función de eliminar equipo - próximamente');
+    // Pendiente de implementación
   };
 
   /**

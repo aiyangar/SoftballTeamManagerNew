@@ -1,5 +1,6 @@
 import React from 'react';
 import ScheduleCard from '../Cards/ScheduleCard';
+import ScheduleCardSkeleton from '../Cards/ScheduleCardSkeleton';
 
 /**
  * Componente para la cuadrícula de tarjetas de partidos
@@ -22,6 +23,7 @@ import ScheduleCard from '../Cards/ScheduleCard';
  */
 const ScheduleCardsGrid = ({
   games,
+  loading = false,
   paymentTotals,
   gameFinalizationStatus,
   onCardClick,
@@ -38,6 +40,16 @@ const ScheduleCardsGrid = ({
   selectedTeam,
   showAttendanceForm,
 }) => {
+  if (loading) {
+    return (
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <ScheduleCardSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+
   if (games.length === 0) {
     return (
       <div className='text-center py-8'>

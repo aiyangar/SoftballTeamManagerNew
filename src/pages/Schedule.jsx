@@ -1130,7 +1130,7 @@ const Schedule = () => {
             <div className='mb-8'>
               <button
                 onClick={() => setShowGameForm(!showGameForm)}
-                className='px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center space-x-2'
+                className='btn btn-primary'
               >
                 <svg
                   className='w-5 h-5'
@@ -1385,14 +1385,14 @@ const Schedule = () => {
                     <button
                       type='button'
                       onClick={closeScoreForm}
-                      className='flex-1 px-4 py-3 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors'
+                      className='btn btn-secondary flex-1'
                     >
                       Cancelar
                     </button>
                     <button
                       type='submit'
                       disabled={loading}
-                      className='flex-1 px-4 py-3 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
+                      className='btn btn-danger flex-1'
                     >
                       {loading ? 'Finalizando...' : 'Finalizar Partido'}
                     </button>

@@ -132,7 +132,7 @@ const AdminPanel = () => {
         <div className='mb-8'>
           <button
             onClick={() => setShowCreateForm(!showCreateForm)}
-            className='px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center space-x-2'
+            className='btn bg-green-600 text-white hover:bg-green-700'
           >
             <svg
               className='w-5 h-5'
@@ -200,14 +200,14 @@ const AdminPanel = () => {
                     setShowCreateForm(false);
                     setNewUser({ email: '', password: '' });
                   }}
-                  className='flex-1 px-4 py-3 border border-gray-600 text-gray-300 rounded hover:bg-gray-800 transition-colors'
+                  className='btn btn-secondary flex-1'
                 >
                   Cancelar
                 </button>
                 <button
                   type='submit'
                   disabled={loading}
-                  className='flex-1 px-4 py-3 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
+                  className='btn bg-green-600 text-white hover:bg-green-700 flex-1'
                 >
                   {loading ? 'Creando...' : 'Crear Usuario'}
                 </button>

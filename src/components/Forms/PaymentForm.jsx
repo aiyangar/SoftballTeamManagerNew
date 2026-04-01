@@ -564,7 +564,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                     setMontoRegistro('0');
                     setShowCancelWarning(true);
                   }}
-                  className='w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center justify-center space-x-2'
+                  className='btn btn-danger w-full justify-center'
                   title='Borrar el pago de este jugador'
                 >
                   <span>🗑️</span>
@@ -600,13 +600,13 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                   <button
                     type='button'
                     onClick={() => setShowUpdateWarning(false)}
-                    className='px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700'
+                    className='btn-sm bg-yellow-600 text-white hover:bg-yellow-700'
                   >
                     Cancelar
                   </button>
                   <button
                     type='submit'
-                    className='px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700'
+                    className='btn-sm btn-primary'
                   >
                     Actualizar Pago
                   </button>
@@ -633,13 +633,13 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                   <button
                     type='button'
                     onClick={() => setShowCancelWarning(false)}
-                    className='px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700'
+                    className='btn-sm btn-danger'
                   >
                     Cancelar
                   </button>
                   <button
                     type='submit'
-                    className='px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600'
+                    className='btn-sm bg-red-500 text-white hover:bg-red-600'
                   >
                     Sí, Borrar Pago
                   </button>
@@ -658,7 +658,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
                 // Solo cerrar sin actualizar datos
                 onClose();
               }}
-              className='px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors flex items-center space-x-2'
+              className='btn btn-secondary'
             >
               <span>✕</span>
               <span>Cancelar</span>

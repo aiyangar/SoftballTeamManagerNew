@@ -289,7 +289,7 @@ const Dashboard = () => {
             <p className='text-gray-300 mt-2'>
               Trabajando con:{' '}
               <span className='font-semibold text-blue-400'>
-                {teams.find(team => team.id === selectedTeam)?.nombre_equipo}
+                {teams.find(team => String(team.id) === selectedTeam)?.nombre_equipo}
               </span>
             </p>
           )}

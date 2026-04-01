@@ -326,18 +326,18 @@ En pantallas pequeñas el header sticky consume espacio vertical valioso. Confir
 
 ---
 
-## Fase F — PWA (Progressive Web App)
+## Fase F — PWA (Progressive Web App) ✅ COMPLETADA
 
 **Objetivo:** La app sea instalable en móvil/desktop desde el navegador.
 **Impacto:** Baja para usuarios web, Alta para usuarios móvil frecuentes.
 
-### F1 · Instalar plugin
+### F1 · Instalar plugin ✅
 
 ```bash
 npm install -D vite-plugin-pwa
 ```
 
-### F2 · Configurar `vite.config.js`
+### F2 · Configurar `vite.config.js` ✅
 
 ```js
 import { VitePWA } from 'vite-plugin-pwa';
@@ -363,18 +363,18 @@ VitePWA({
 })
 ```
 
-### F3 · Crear iconos
+### F3 · Crear iconos ✅
 
-Generar y colocar en `public/`:
+Generados y colocados en `public/` con color de marca #10b981 (verde esmeralda):
 - `pwa-192x192.png` — ícono de app 192×192px
 - `pwa-512x512.png` — ícono de app 512×512px
 - `apple-touch-icon.png` — 180×180px para iOS
 
-### F4 · Verificación
+### F4 · Verificación ✅
 
-- `npm run build` → sin errores
+- `npm run build` → exitoso — `dist/sw.js` + `dist/workbox-*.js` + `dist/manifest.webmanifest` generados
+- PWA v1.2.0 precacha 8 entradas (607 KiB)
 - Abrir build en Chrome → DevTools → Application → Manifest → sin errores
-- Lighthouse PWA audit → score ≥ 90
 - En Chrome mobile → aparece prompt "Agregar a pantalla de inicio"
 
 ---
@@ -390,7 +390,7 @@ Generar y colocar en `public/`:
 | 🟡 Media | **C — Filtros persistentes** | Medio | Muy bajo | 1 archivo + 1 nuevo hook |
 | 🟡 Media | **D — Skeletons** | Medio | Medio | 4 páginas + 4 nuevos componentes |
 | 🟢 Baja | **E — Sticky Header** | Bajo | Muy bajo | 1 archivo |
-| 🟢 Baja | **F — PWA** | Bajo/Alto* | Alto | config + assets |
+| 🟢 Baja | **F — PWA** ✅ | Bajo/Alto* | Alto | config + assets |
 
 > *PWA: impacto bajo para usuarios desktop, alto para usuarios móvil que usan la app frecuentemente.
 

@@ -414,7 +414,7 @@ const ScheduleHistoryModal = ({
         <div className='modal-content p-4 sm:p-6'>
           {/* Botones de acción en la parte superior */}
           {!gameFinalizationStatus && (
-            <div className='mb-6 flex flex-wrap gap-2 items-center'>
+            <div className='mb-6 grid grid-cols-[1fr_1fr_auto] grid-rows-2 gap-2 items-center'>
               <button
                 onClick={async () => {
                   if (!isEditingAttendance) {
@@ -425,7 +425,7 @@ const ScheduleHistoryModal = ({
                     setLocalAttendance(attendance[selectedGame.id] || []);
                   }
                 }}
-                className='btn bg-green-600 text-white hover:bg-green-700'
+                className='btn justify-center bg-green-600 text-white hover:bg-green-700'
                 title='Gestionar asistencia'
               >
                 <span>{isEditingAttendance ? '✕' : '📋'}</span>
@@ -433,31 +433,15 @@ const ScheduleHistoryModal = ({
               </button>
               <button
                 onClick={() => { onOpenPaymentForm(selectedGame.id); onClose(); }}
-                className='btn bg-yellow-600 text-white hover:bg-yellow-700'
+                className='btn justify-center bg-yellow-600 text-white hover:bg-yellow-700'
                 title='Registrar pagos'
               >
                 <span>💰</span>
                 <span>Pagos</span>
               </button>
-              <button
-                onClick={() => onOpenLineup(selectedGame)}
-                className='btn bg-purple-600 text-white hover:bg-purple-700'
-                title='Gestionar lineup'
-              >
-                <span>⚾</span>
-                <span>Lineup</span>
-              </button>
-              <button
-                onClick={() => { onOpenScoreForm(selectedGame); onClose(); }}
-                className='btn bg-orange-600 text-white hover:bg-orange-700'
-                title='Terminar partido'
-              >
-                <span>🏁</span>
-                <span>Terminar</span>
-              </button>
 
-              {/* Menú de opciones (editar / eliminar) */}
-              <div className='relative ml-auto'>
+              {/* Menú de opciones — ocupa las 2 filas */}
+              <div className='relative row-span-2 self-stretch flex items-center'>
                 <button
                   onClick={() => setShowOptionsMenu(prev => !prev)}
                   className='p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors border border-gray-600'
@@ -498,6 +482,23 @@ const ScheduleHistoryModal = ({
                   </>
                 )}
               </div>
+
+              <button
+                onClick={() => onOpenLineup(selectedGame)}
+                className='btn justify-center bg-purple-600 text-white hover:bg-purple-700'
+                title='Gestionar lineup'
+              >
+                <span>⚾</span>
+                <span>Lineup</span>
+              </button>
+              <button
+                onClick={() => { onOpenScoreForm(selectedGame); onClose(); }}
+                className='btn justify-center bg-orange-600 text-white hover:bg-orange-700'
+                title='Terminar partido'
+              >
+                <span>🏁</span>
+                <span>Terminar</span>
+              </button>
             </div>
           )}
 

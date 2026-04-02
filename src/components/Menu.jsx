@@ -81,41 +81,9 @@ const Menu = () => {
                 </div>
               )}
 
-              {/* Enlaces de navegación */}
-              <div className='space-y-2'>
-                <button
-                  onClick={() => {
-                    navigate('/dashboard');
-                    setShowMenu(false);
-                  }}
-                  className='block w-full text-left px-3 py-2 text-white hover:bg-gray-800 rounded transition-colors'
-                >
-                  🏠 Dashboard
-                </button>
-                <Link
-                  to='/teams'
-                  className='block w-full text-left px-3 py-2 text-white hover:bg-gray-800 rounded transition-colors'
-                  onClick={() => setShowMenu(false)}
-                >
-                  🏟️ Gestionar Equipos
-                </Link>
-                <Link
-                  to='/players'
-                  className='block w-full text-left px-3 py-2 text-white hover:bg-gray-800 rounded transition-colors'
-                  onClick={() => setShowMenu(false)}
-                >
-                  👥 Gestionar Jugadores
-                </Link>
-                <Link
-                  to='/schedule'
-                  className='block w-full text-left px-3 py-2 text-white hover:bg-gray-800 rounded transition-colors'
-                  onClick={() => setShowMenu(false)}
-                >
-                  ⚾ Gestionar Partidos
-                </Link>
-
-                {/* Enlace de administración (solo para administradores) */}
-                {session?.user?.email === import.meta.env.VITE_ADMIN_EMAIL && (
+              {/* Enlace de administración (solo para administradores) */}
+              {session?.user?.email === import.meta.env.VITE_ADMIN_EMAIL && (
+                <div className='space-y-2'>
                   <Link
                     to='/admin'
                     className='block w-full text-left px-3 py-2 text-yellow-400 hover:bg-yellow-900 rounded transition-colors'
@@ -123,8 +91,8 @@ const Menu = () => {
                   >
                     ⚙️ Administración
                   </Link>
-                )}
-              </div>
+                </div>
+              )}
 
               <div className='border-t border-gray-600 mt-4 pt-4'>
                 <Link

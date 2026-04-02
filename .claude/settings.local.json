@@ -18,7 +18,9 @@
       "Bash(git push:*)",
       "Bash(git checkout:*)",
       "Bash(git merge:*)",
-      "Bash(identify public/pwa-192x192.png)"
+      "Bash(identify public/pwa-192x192.png)",
+      "mcp__playwright__browser_press_key",
+      "mcp__playwright__browser_resize"
     ]
   },
   "enableAllProjectMcpServers": true,

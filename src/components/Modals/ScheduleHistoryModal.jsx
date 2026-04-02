@@ -47,6 +47,7 @@ const ScheduleHistoryModal = ({
   const [loading, setLoading] = useState(false);
   const [showDeleteWarning, setShowDeleteWarning] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+  const [sharingLineup, setSharingLineup] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     attendance: false,
     payments: false,
@@ -78,6 +79,198 @@ const ScheduleHistoryModal = ({
   }, [attendance, selectedGame, showModal, isEditingAttendance]);
 
   if (!showModal || !selectedGame) return null;
+
+  const handleShareLineup = async (lineup, game) => {
+    setSharingLineup(true);
+    try {
+      const titulares = lineup
+        .filter(e => e.es_titular && e.activo)
+        .sort((a, b) => (a.orden_bateo || 99) - (b.orden_bateo || 99));
+      const suplentes = lineup.filter(e => !e.es_titular || !e.activo);
+
+      const fecha = new Date(game.fecha_partido).toLocaleDateString('es-MX', {
+        day: '2-digit', month: 'long', year: 'numeric',
+      });
+
+      const SCALE = 2;
+      const W = 480;
+      const PAD = 20;
+      const ROW_H = 38;
+      const SEC_H = 30;
+      const HEADER_H = 90;
+      const FOOTER_H = 36;
+      const numRows = titulares.length + (suplentes.length > 0 ? suplentes.length : 0);
+      const numSections = suplentes.length > 0 ? 2 : 1;
+      const H = HEADER_H + numSections * SEC_H + numRows * ROW_H + FOOTER_H + PAD;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = W * SCALE;
+      canvas.height = H * SCALE;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(SCALE, SCALE);
+
+      const roundRect = (x, y, w, h, r) => {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+      };
+
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#16a34a';
+      ctx.fillRect(0, 0, W, 5);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 22px system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText('⚾  LINEUP', PAD, 14);
+
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '13px system-ui, sans-serif';
+      ctx.fillText(`vs ${game.equipo_contrario}  ·  ${fecha}`, PAD, 46);
+
+      ctx.strokeStyle = '#374151';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(PAD, HEADER_H - 10);
+      ctx.lineTo(W - PAD, HEADER_H - 10);
+      ctx.stroke();
+
+      let y = HEADER_H;
+
+      const drawSectionHeader = (label, bgColor, textColor) => {
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, y, W, SEC_H);
+        ctx.fillStyle = textColor;
+        ctx.font = 'bold 11px system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label.toUpperCase(), PAD, y + SEC_H / 2);
+        y += SEC_H;
+      };
+
+      const drawRow = (idx, entry, isBench) => {
+        ctx.fillStyle = idx % 2 === 0 ? '#1f2937' : '#111827';
+        ctx.fillRect(0, y, W, ROW_H);
+        const midY = y + ROW_H / 2;
+        ctx.textBaseline = 'middle';
+
+        if (!isBench) {
+          ctx.fillStyle = '#6b7280';
+          ctx.font = '13px system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText(String(entry.orden_bateo ?? ''), PAD, midY);
+
+          const num = entry.jugadores?.numero;
+          if (num != null) {
+            const bx = PAD + 28;
+            ctx.fillStyle = '#78350f';
+            roundRect(bx, y + 9, 28, ROW_H - 18, 4);
+            ctx.fill();
+            ctx.fillStyle = '#fde68a';
+            ctx.font = 'bold 11px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`#${num}`, bx + 14, midY);
+          }
+
+          ctx.fillStyle = '#f3f4f6';
+          ctx.font = '14px system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText(entry.jugadores?.nombre || '—', PAD + 64, midY);
+
+          if (entry.posicion_campo) {
+            const posX = W - PAD - 36;
+            ctx.fillStyle = '#881337';
+            roundRect(posX, y + 10, 34, ROW_H - 20, 4);
+            ctx.fill();
+            ctx.fillStyle = '#fecdd3';
+            ctx.font = 'bold 11px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(entry.posicion_campo, posX + 17, midY);
+          }
+        } else {
+          ctx.fillStyle = '#6b7280';
+          ctx.font = '14px system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText('•', PAD + 4, midY);
+          const num = entry.jugadores?.numero;
+          ctx.fillStyle = '#9ca3af';
+          ctx.font = '12px system-ui, sans-serif';
+          ctx.fillText(num != null ? `#${num}` : '', PAD + 20, midY);
+          ctx.fillStyle = '#d1d5db';
+          ctx.font = '14px system-ui, sans-serif';
+          ctx.fillText(entry.jugadores?.nombre || '—', PAD + 52, midY);
+          if (!entry.activo) {
+            ctx.fillStyle = '#ef4444';
+            ctx.font = 'italic 11px system-ui, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('relevado', W - PAD, midY);
+          }
+        }
+
+        ctx.strokeStyle = '#1f2937';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(PAD, y + ROW_H);
+        ctx.lineTo(W - PAD, y + ROW_H);
+        ctx.stroke();
+        y += ROW_H;
+      };
+
+      drawSectionHeader('Titulares', '#052e16', '#4ade80');
+      titulares.forEach((e, i) => drawRow(i, e, false));
+      if (suplentes.length > 0) {
+        drawSectionHeader('Banca', '#1f2937', '#9ca3af');
+        suplentes.forEach((e, i) => drawRow(i, e, true));
+      }
+
+      y = H - FOOTER_H;
+      ctx.fillStyle = '#1f2937';
+      ctx.fillRect(0, y, W, FOOTER_H);
+      ctx.strokeStyle = '#374151';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '11px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('My Softball Club', W / 2, y + FOOTER_H / 2);
+
+      canvas.toBlob(async blob => {
+        const fileName = `lineup-${game.equipo_contrario.replace(/\s+/g, '_')}.png`;
+        const file = new File([blob], fileName, { type: 'image/png' });
+        const canShareFiles = navigator.canShare?.({ files: [file] });
+        if (navigator.share && canShareFiles) {
+          try {
+            await navigator.share({ files: [file], title: `Lineup vs ${game.equipo_contrario}` });
+          } catch (_) { /* cancelled */ }
+        } else {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+      }, 'image/png');
+    } catch (err) {
+      console.error('Error generando imagen:', err);
+    } finally {
+      setSharingLineup(false);
+    }
+  };
 
   return (
     <div className='fixed inset-0 modal-overlay flex items-center justify-center z-50'>
@@ -690,6 +883,27 @@ const ScheduleHistoryModal = ({
                       )}
                     </tbody>
                   </table>
+                  <div className='p-3 flex justify-end border-t border-gray-600'>
+                    <button
+                      onClick={() => handleShareLineup(gameDetailsData.lineup, selectedGame)}
+                      disabled={sharingLineup}
+                      className='btn-sm bg-sky-600 text-white hover:bg-sky-700 flex items-center gap-1'
+                      title='Compartir lineup como imagen'
+                    >
+                      {sharingLineup ? (
+                        <svg className='animate-spin h-4 w-4' fill='none' viewBox='0 0 24 24'>
+                          <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+                          <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v8z' />
+                        </svg>
+                      ) : (
+                        <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2}
+                            d='M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z' />
+                        </svg>
+                      )}
+                      <span>{sharingLineup ? 'Generando...' : 'Compartir'}</span>
+                    </button>
+                  </div>
                 </div>
               );
             })()}

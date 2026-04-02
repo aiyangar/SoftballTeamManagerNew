@@ -914,97 +914,79 @@ const ScheduleHistoryModal = ({
 
               return (
                 <div className='mt-3 bg-gray-700 rounded-lg overflow-hidden'>
-                  <table className='w-full text-sm text-left'>
-                    <thead>
-                      <tr className='text-gray-400 border-b border-gray-600'>
-                        <th className='pb-2 pt-3 px-3'>Turno</th>
-                        <th className='pb-2 pt-3 pr-3'>Jugador</th>
-                        <th className='pb-2 pt-3 pr-3'><span className='sm:hidden'>Pos.</span><span className='hidden sm:inline'>Posición</span></th>
-                        <th className='pb-2 pt-3 pr-3 hidden sm:table-cell'>Estado</th>
-                      </tr>
-                      <tr className='bg-green-900/30'>
-                        <td colSpan={4} className='px-3 py-1'>
-                          <span className='text-xs font-semibold text-green-400 uppercase tracking-wide'>Titulares</span>
-                        </td>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map((entry, i) => (
-                        <tr
-                          key={i}
-                          className={[
-                            'border-b border-gray-600 transition-colors',
-                            !entry.activo ? 'opacity-40' : '',
-                            entry.section === 'bd' ? 'bg-purple-900/20' : '',
-                            entry.section === 'sub' ? 'bg-yellow-900/15' : '',
-                          ].join(' ')}
-                        >
-                          <td className={`py-2 pr-3 font-mono ${entry.section === 'bd' ? 'text-purple-300' : 'text-white'} ${entry.indent ? 'pl-6' : 'pl-3'}`}>
-                            {entry.orden_bateo ?? '—'}
-                          </td>
-                          <td className='py-2 pr-3'>
-                            {entry.indent && (
-                              <span className={`mr-1 ${entry.section === 'bd' ? 'text-purple-400' : 'text-gray-500'}`}>↳</span>
-                            )}
-                            <span className={
-                              entry.section === 'bd'
-                                ? 'text-purple-200'
-                                : !entry.activo
-                                  ? 'line-through text-gray-500'
-                                  : 'text-white'
-                            }>
-                              {playerName(entry)}
+                  <div className='p-3 space-y-1'>
+                    <div className='bg-green-900/30 rounded px-2 py-1 mb-1'>
+                      <span className='text-xs font-semibold text-green-400 uppercase tracking-wide'>Titulares</span>
+                    </div>
+                    {rows.map((entry, i) => (
+                      <div
+                        key={i}
+                        className={[
+                          'rounded-lg px-3 py-2 flex items-center gap-2 transition-colors',
+                          !entry.activo ? 'opacity-40' : '',
+                          entry.section === 'bd' ? 'bg-purple-900/20' : '',
+                          entry.section === 'sub' ? 'bg-yellow-900/15' : '',
+                        ].join(' ')}
+                      >
+                        <span className={`font-mono text-sm w-5 shrink-0 text-center ${entry.section === 'bd' ? 'text-purple-300' : 'text-white'}`}>
+                          {entry.orden_bateo ?? '—'}
+                        </span>
+                        <span className='flex-1 text-sm min-w-0'>
+                          {entry.indent && (
+                            <span className={`mr-1 ${entry.section === 'bd' ? 'text-purple-400' : 'text-gray-500'}`}>↳</span>
+                          )}
+                          <span className={
+                            entry.section === 'bd'
+                              ? 'text-purple-200'
+                              : !entry.activo
+                                ? 'line-through text-gray-500'
+                                : 'text-white'
+                          }>
+                            {playerName(entry)}
+                          </span>
+                        </span>
+                        <span className={`font-mono text-sm shrink-0 ${entry.section === 'bd' ? 'text-purple-300' : 'text-white'}`}>
+                          {entry.posicion_campo}
+                        </span>
+                        <span className='text-xs shrink-0 min-w-[3.5rem] text-right'>
+                          {entry.section === 'bd' ? (
+                            <span className='text-purple-400'>BD</span>
+                          ) : entry.es_titular ? (
+                            <span className='text-green-400'>Titular</span>
+                          ) : (
+                            <span className='text-yellow-400'>Sub</span>
+                          )}
+                          {!entry.activo && (
+                            <span className='ml-1 text-red-400'>(rel)</span>
+                          )}
+                        </span>
+                      </div>
+                    ))}
+                    {allBench.length > 0 && (
+                      <>
+                        <div className='bg-gray-800/60 rounded px-2 py-1 mt-2 mb-1'>
+                          <span className='text-xs font-semibold text-gray-400 uppercase tracking-wide'>Banca</span>
+                        </div>
+                        {allBench.map((entry, i) => (
+                          <div
+                            key={`bench-${i}`}
+                            className={['rounded-lg px-3 py-2 flex items-center gap-2', isBD(entry) ? 'bg-purple-900/20' : ''].join(' ')}
+                          >
+                            <span className='font-mono text-sm w-5 shrink-0 text-center text-gray-400'>—</span>
+                            <span className='flex-1 text-white text-sm min-w-0'>{playerName(entry)}</span>
+                            <span className='font-mono text-sm text-white shrink-0'>{entry.posicion_campo}</span>
+                            <span className='text-xs shrink-0 min-w-[3.5rem] text-right'>
+                              {isBD(entry) ? (
+                                <span className='text-purple-400'>BD</span>
+                              ) : (
+                                <span className='text-gray-400'>Banca</span>
+                              )}
                             </span>
-                          </td>
-                          <td className={`py-2 pr-3 font-mono ${entry.section === 'bd' ? 'text-purple-300' : 'text-white'}`}>
-                            {entry.posicion_campo}
-                          </td>
-                          <td className='py-2 pr-3 hidden sm:table-cell'>
-                            {entry.section === 'bd' ? (
-                              <span className='text-purple-400 text-xs'>BD</span>
-                            ) : entry.es_titular ? (
-                              <span className='text-green-400 text-xs'>Titular</span>
-                            ) : (
-                              <span className='text-yellow-400 text-xs'>Sustituto</span>
-                            )}
-                            {!entry.activo && (
-                              <span className='ml-1 text-red-400 text-xs'>(relevado)</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-
-                      {allBench.length > 0 && (
-                        <>
-                          <tr className='bg-gray-800/60'>
-                            <td colSpan={4} className='px-3 py-1'>
-                              <span className='text-xs font-semibold text-gray-400 uppercase tracking-wide'>Banca</span>
-                            </td>
-                          </tr>
-                          {allBench.map((entry, i) => (
-                            <tr
-                              key={`bench-${i}`}
-                              className={[
-                                'border-b border-gray-600',
-                                isBD(entry) ? 'bg-purple-900/20' : '',
-                              ].join(' ')}
-                            >
-                              <td className='py-2 pl-3 pr-3 font-mono text-gray-400'>—</td>
-                              <td className='py-2 pr-3 text-white'>{playerName(entry)}</td>
-                              <td className='py-2 pr-3 text-white font-mono'>{entry.posicion_campo}</td>
-                              <td className='py-2 pr-3 hidden sm:table-cell'>
-                                {isBD(entry) ? (
-                                  <span className='text-purple-400 text-xs'>BD</span>
-                                ) : (
-                                  <span className='text-gray-400 text-xs'>Banca</span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </>
-                      )}
-                    </tbody>
-                  </table>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
                   <div className='p-3 flex justify-end border-t border-gray-600'>
                     <button
                       onClick={() => handleShareLineup(gameDetailsData.lineup, selectedGame)}

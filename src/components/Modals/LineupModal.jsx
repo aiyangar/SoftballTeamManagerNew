@@ -628,61 +628,6 @@ const LineupModal = ({
                 </div>
               )}
 
-              {/* Acciones */}
-              <div className='flex flex-wrap gap-2 mb-4 items-center'>
-                {!gameFinalizationStatus && (
-                  <>
-                    <button onClick={addRow} className='btn-sm btn-primary'>
-                      + Agregar jugador
-                    </button>
-                    {activeLineup.length > 0 && (
-                      <button
-                        onClick={() => {
-                          if (!lineupFromDB) {
-                            setSaveError('Guarda el lineup antes de registrar una sustitución.');
-                            return;
-                          }
-                          setSaveError(null);
-                          onOpenSubstitution(activeLineup);
-                        }}
-                        className='btn-sm bg-yellow-600 text-white hover:bg-yellow-700'
-                      >
-                        ⇄ Sustitución
-                      </button>
-                    )}
-                    {hasSubs && (
-                      <button
-                        onClick={() => setEditMode(prev => !prev)}
-                        className={`px-3 py-2 rounded transition-colors text-sm ${editMode ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}
-                      >
-                        {editMode ? '✓ Terminar edición' : '✎ Editar orden'}
-                      </button>
-                    )}
-                  </>
-                )}
-                {lineupFromDB && lineupRows.length > 0 && (
-                  <button
-                    onClick={handleShareImage}
-                    disabled={sharing}
-                    className='btn-sm bg-sky-600 text-white hover:bg-sky-700 ml-auto flex items-center gap-1'
-                    title='Compartir lineup como imagen'
-                  >
-                    {sharing ? (
-                      <svg className='animate-spin h-4 w-4' fill='none' viewBox='0 0 24 24'>
-                        <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
-                        <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v8z' />
-                      </svg>
-                    ) : (
-                      <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2}
-                          d='M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z' />
-                      </svg>
-                    )}
-                    <span>{sharing ? 'Generando...' : 'Compartir'}</span>
-                  </button>
-                )}
-              </div>
-
               {/* Tabla */}
               {renderRows.length === 0 ? (
                 <div className='text-center text-gray-500 py-8'>
@@ -695,190 +640,154 @@ const LineupModal = ({
                       Arrastra las filas para cambiar el orden al bat o mover jugadores al banco.
                     </p>
                   )}
-                  <div className='overflow-x-auto'>
-                    <table className='w-full text-sm text-left'>
-                      <thead>
-                        <tr className='text-gray-400 border-b border-gray-700'>
-                          {!gameFinalizationStatus && <th className='pb-2 pr-2 w-6' />}
-                          <th className='pb-2 pr-3'>Turno</th>
-                          <th className='pb-2 pr-3'>Jugador</th>
-                          <th className='pb-2 pr-3'>Posición</th>
-                          <th className='pb-2 pr-3'>Estado</th>
-                          {!gameFinalizationStatus && <th className='pb-2' />}
-                        </tr>
-                        {/* Encabezado sección Titulares */}
-                        <tr className='bg-green-900/20'>
-                          <td colSpan={colSpan} className='px-1 py-1'>
-                            <span className='text-xs font-semibold text-green-400 uppercase tracking-wide'>
-                              Titulares
+                  <div className='space-y-1'>
+                    {/* Encabezado sección Titulares */}
+                    <div className='bg-green-900/20 rounded px-2 py-1'>
+                      <span className='text-xs font-semibold text-green-400 uppercase tracking-wide'>
+                        Titulares
+                      </span>
+                    </div>
+                    {renderRows.map((row, renderIdx) => (
+                      <React.Fragment key={row.originalIndex}>
+                        {row.showBancoSep && (
+                          <div className='bg-gray-800/60 rounded px-2 py-1 mt-1'>
+                            <span className='text-xs font-semibold text-gray-400 uppercase tracking-wide'>
+                              Banca
                             </span>
-                          </td>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {renderRows.map((row, renderIdx) => (
-                          <React.Fragment key={row.originalIndex}>
-                            {row.showBancoSep && (
-                              <tr className='bg-gray-800/60'>
-                                <td colSpan={colSpan} className='px-1 py-1'>
-                                  <span className='text-xs font-semibold text-gray-400 uppercase tracking-wide'>
-                                    Banca
+                          </div>
+                        )}
+                        <div
+                          draggable={(!hasSubs || editMode) && canDrag(row)}
+                          onDragStart={(!hasSubs || editMode) && canDrag(row) ? e => handleDragStart(e, row.originalIndex) : undefined}
+                          onDragOver={(!hasSubs || editMode) && canDrag(row) ? e => handleDragOver(e, renderIdx) : undefined}
+                          onDrop={(!hasSubs || editMode) && canDrag(row) ? e => handleDrop(e, row.originalIndex) : undefined}
+                          onDragEnd={handleDragEnd}
+                          className={[
+                            'rounded-lg border border-gray-700 p-2 transition-colors',
+                            !row.activo ? 'opacity-50' : '',
+                            dragOverIndex === renderIdx
+                              ? 'bg-blue-900/40'
+                              : row.isBD
+                                ? 'bg-purple-900/20'
+                                : 'bg-gray-800/40',
+                          ].join(' ')}
+                        >
+                          {/* Fila: handle + turno + jugador + posición + eliminar */}
+                          <div className='flex items-center gap-2'>
+                            {!gameFinalizationStatus && (
+                              <span className='w-5 shrink-0 text-center'>
+                                {(!hasSubs || editMode) && canDrag(row) && (
+                                  <span
+                                    className='text-gray-600 hover:text-gray-400 cursor-grab active:cursor-grabbing select-none text-base'
+                                    title='Arrastrar para reordenar'
+                                  >
+                                    ⠿
                                   </span>
-                                </td>
-                              </tr>
+                                )}
+                              </span>
                             )}
-                            <tr
-                              draggable={(!hasSubs || editMode) && canDrag(row)}
-                              onDragStart={(!hasSubs || editMode) && canDrag(row) ? e => handleDragStart(e, row.originalIndex) : undefined}
-                              onDragOver={(!hasSubs || editMode) && canDrag(row) ? e => handleDragOver(e, renderIdx) : undefined}
-                              onDrop={(!hasSubs || editMode) && canDrag(row) ? e => handleDrop(e, row.originalIndex) : undefined}
-                              onDragEnd={handleDragEnd}
-                              className={[
-                                'border-b border-gray-800 transition-colors',
-                                !row.activo ? 'opacity-50' : '',
-                                dragOverIndex === renderIdx
-                                  ? 'bg-blue-900/40'
-                                  : row.isBD
-                                    ? 'bg-purple-900/20'
-                                    : '',
-                              ].join(' ')}
-                            >
-                              {/* Handle arrastre */}
-                              {!gameFinalizationStatus && (
-                                <td className='py-2 pr-2'>
-                                  {(!hasSubs || editMode) && canDrag(row) && (
-                                    <span
-                                      className='text-gray-600 hover:text-gray-400 cursor-grab active:cursor-grabbing select-none text-base'
-                                      title='Arrastrar para reordenar'
-                                    >
-                                      ⠿
-                                    </span>
-                                  )}
-                                </td>
+                            <span className='font-mono text-white text-sm w-5 shrink-0 text-center'>
+                              {row.orden_bateo ?? '—'}
+                            </span>
+                            <div className='flex-1 min-w-0'>
+                              {row.indent && (
+                                <span className='text-gray-500 mr-1'>↳</span>
                               )}
-
-                              {/* Turno */}
-                              <td className={`py-2 pr-3 ${row.indent ? 'pl-6' : ''}`}>
-                                <span className='text-white font-mono'>
-                                  {row.orden_bateo ?? '—'}
+                              {row.jugador_id ? (
+                                <span className={`text-sm ${!row.activo ? 'line-through text-gray-500' : 'text-white'}`}>
+                                  {row.numero ? `#${row.numero} ` : ''}
+                                  {row.nombre}
                                 </span>
-                              </td>
-
-                              {/* Jugador */}
-                              <td className={`py-2 pr-3 ${row.indent ? 'pl-4' : ''}`}>
-                                {row.indent && (
-                                  <span className='text-gray-500 mr-1'>↳</span>
-                                )}
-                                {row.jugador_id ? (
-                                  <span className={`${!row.activo ? 'line-through text-gray-500' : 'text-white'}`}>
-                                    {row.numero ? `#${row.numero} ` : ''}
-                                    {row.nombre}
-                                  </span>
-                                ) : (
-                                  <select
-                                    value={row.jugador_id}
-                                    onChange={e => updateRow(row.originalIndex, 'jugador_id', e.target.value)}
-                                    className='p-1 bg-gray-800 border border-gray-600 rounded text-white text-sm min-w-36'
-                                  >
-                                    <option value=''>Seleccionar...</option>
-                                    {players
-                                      .filter(p => {
-                                        const pid = String(p.id);
-                                        const hasAttendance = selectablePlayers.some(sp => String(sp.id) === pid);
-                                        return hasAttendance && !usedPlayerIds.has(pid);
-                                      })
-                                      .map(p => (
-                                        <option key={p.id} value={p.id}>
-                                          {p.numero ? `#${p.numero} ` : ''}
-                                          {p.nombre}
-                                        </option>
-                                      ))}
-                                  </select>
-                                )}
-                              </td>
-
-                              {/* Posición */}
-                              <td className='py-2 pr-3'>
-                                {gameFinalizationStatus ? (
-                                  <span className='text-white font-mono'>
-                                    {POSITION_LABELS[row.posicion_campo] ?? row.posicion_campo}
-                                  </span>
-                                ) : (
-                                  <select
-                                    value={row.posicion_campo}
-                                    onChange={e => updateRow(row.originalIndex, 'posicion_campo', e.target.value)}
-                                    className='p-1 bg-gray-800 border border-gray-600 rounded text-white text-sm'
-                                  >
-                                    <optgroup label='Campo'>
-                                      {['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CLF', 'CRF', 'RF'].map(pos => (
-                                        <option key={pos} value={pos}>{pos}</option>
-                                      ))}
-                                    </optgroup>
-                                    <optgroup label='Designados'>
-                                      <option value='DH'>DH</option>
-                                      <option value='BD'>BD – Bateador Designado</option>
-                                      <option value='CD'>CD – Corredor Designado</option>
-                                    </optgroup>
-                                  </select>
-                                )}
-                              </td>
-
-                              {/* Estado / Batea por */}
-                              <td className='py-2 pr-3'>
-                                {row.posicion_campo === 'BD' && !gameFinalizationStatus ? (
-                                  <select
-                                    value={row.batea_por_id || ''}
-                                    onChange={e => updateRow(row.originalIndex, 'batea_por_id', e.target.value)}
-                                    className='p-1 bg-purple-900 border border-purple-600 rounded text-purple-200 text-xs min-w-28'
-                                  >
-                                    <option value=''>Batea por...</option>
-                                    {lineupRows
-                                      .filter(r =>
-                                        r.jugador_id &&
-                                        r.es_titular &&
-                                        String(r.jugador_id) !== String(row.jugador_id)
-                                      )
-                                      .map(r => (
-                                        <option key={r.jugador_id} value={r.jugador_id}>
-                                          {r.numero ? `#${r.numero} ` : ''}{r.nombre}
-                                        </option>
-                                      ))}
-                                  </select>
-                                ) : row.posicion_campo === 'BD' && row.batea_por_id ? (
-                                  <span className='text-purple-400 text-xs'>
-                                    por: {row.batea_por_nombre || `#${row.batea_por_id}`}
-                                  </span>
-                                ) : (
-                                  <>
-                                    {row.es_titular ? (
-                                      <span className='text-green-400 text-xs'>Titular</span>
-                                    ) : (
-                                      <span className='text-yellow-400 text-xs'>Sustituto</span>
-                                    )}
-                                    {!row.activo && (
-                                      <span className='ml-1 text-red-400 text-xs'>(relevado)</span>
-                                    )}
-                                  </>
-                                )}
-                              </td>
-
-                              {/* Eliminar */}
-                              {!gameFinalizationStatus && (
-                                <td className='py-2'>
-                                  <button
-                                    onClick={() => removeRow(row.originalIndex)}
-                                    className='text-red-400 hover:text-red-300 text-xs px-2'
-                                    title='Quitar jugador'
-                                  >
-                                    ✕
-                                  </button>
-                                </td>
+                              ) : (
+                                <select
+                                  value={row.jugador_id}
+                                  onChange={e => updateRow(row.originalIndex, 'jugador_id', e.target.value)}
+                                  className='p-1 bg-gray-800 border border-gray-600 rounded text-white text-sm w-full'
+                                >
+                                  <option value=''>Seleccionar...</option>
+                                  {players
+                                    .filter(p => {
+                                      const pid = String(p.id);
+                                      const hasAttendance = selectablePlayers.some(sp => String(sp.id) === pid);
+                                      return hasAttendance && !usedPlayerIds.has(pid);
+                                    })
+                                    .map(p => (
+                                      <option key={p.id} value={p.id}>
+                                        {p.numero ? `#${p.numero} ` : ''}
+                                        {p.nombre}
+                                      </option>
+                                    ))}
+                                </select>
                               )}
-                            </tr>
-                          </React.Fragment>
-                        ))}
-                      </tbody>
-                    </table>
+                              {!row.activo && (
+                                <span className='ml-1 text-red-400 text-xs'>(relevado)</span>
+                              )}
+                            </div>
+                            {/* Posición inline */}
+                            {gameFinalizationStatus ? (
+                              <span className='text-gray-300 font-mono text-xs shrink-0 bg-gray-700 px-1.5 py-0.5 rounded'>
+                                {POSITION_LABELS[row.posicion_campo] ?? row.posicion_campo}
+                              </span>
+                            ) : (
+                              <select
+                                value={row.posicion_campo}
+                                onChange={e => updateRow(row.originalIndex, 'posicion_campo', e.target.value)}
+                                className='p-0.5 bg-gray-800 border border-gray-600 rounded text-white text-xs shrink-0'
+                              >
+                                <optgroup label='Campo'>
+                                  {['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CLF', 'CRF', 'RF'].map(pos => (
+                                    <option key={pos} value={pos}>{pos}</option>
+                                  ))}
+                                </optgroup>
+                                <optgroup label='Designados'>
+                                  <option value='DH'>DH</option>
+                                  <option value='BD'>BD</option>
+                                  <option value='CD'>CD</option>
+                                </optgroup>
+                              </select>
+                            )}
+                            {!gameFinalizationStatus && (
+                              <button
+                                onClick={() => removeRow(row.originalIndex)}
+                                className='text-red-400 hover:text-red-300 text-xs shrink-0 px-1'
+                                title='Quitar jugador'
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </div>
+                          {/* BD: selector "batea por" (solo aplica a jugadores BD) */}
+                          {row.posicion_campo === 'BD' && (
+                            <div className={`flex items-center gap-2 mt-1 ${!gameFinalizationStatus ? 'pl-12' : 'pl-7'}`}>
+                              {!gameFinalizationStatus ? (
+                                <select
+                                  value={row.batea_por_id || ''}
+                                  onChange={e => updateRow(row.originalIndex, 'batea_por_id', e.target.value)}
+                                  className='p-1 bg-purple-900 border border-purple-600 rounded text-purple-200 text-xs'
+                                >
+                                  <option value=''>Batea por...</option>
+                                  {lineupRows
+                                    .filter(r =>
+                                      r.jugador_id &&
+                                      r.es_titular &&
+                                      String(r.jugador_id) !== String(row.jugador_id)
+                                    )
+                                    .map(r => (
+                                      <option key={r.jugador_id} value={r.jugador_id}>
+                                        {r.numero ? `#${r.numero} ` : ''}{r.nombre}
+                                      </option>
+                                    ))}
+                                </select>
+                              ) : row.batea_por_id ? (
+                                <span className='text-purple-400 text-xs'>
+                                  por: {row.batea_por_nombre || `#${row.batea_por_id}`}
+                                </span>
+                              ) : null}
+                            </div>
+                          )}
+                        </div>
+                      </React.Fragment>
+                    ))}
                   </div>
                 </>
               )}
@@ -887,33 +796,64 @@ const LineupModal = ({
         </div>
 
         {/* Footer */}
-        <div className='p-6 border-t border-gray-600 flex justify-end gap-3'>
-          <button
-            onClick={onClose}
-            className='btn btn-secondary'
-          >
-            {gameFinalizationStatus ? 'Cerrar' : 'Cancelar'}
-          </button>
+        <div className='p-4 border-t border-gray-600 flex flex-col gap-3'>
+          {/* Fila 1: acciones de edición */}
           {!gameFinalizationStatus && (
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className='btn bg-green-600 text-white hover:bg-green-700'
-            >
-              {saving && (
-                <svg
-                  className='animate-spin h-4 w-4 text-white'
-                  xmlns='http://www.w3.org/2000/svg'
-                  fill='none'
-                  viewBox='0 0 24 24'
+            <div className='flex flex-wrap items-center gap-2'>
+              <button onClick={addRow} className='btn-sm btn-primary'>
+                + Agregar
+              </button>
+              {activeLineup.length > 0 && (
+                <button
+                  onClick={() => {
+                    if (!lineupFromDB) {
+                      setSaveError('Guarda el lineup antes de registrar una sustitución.');
+                      return;
+                    }
+                    setSaveError(null);
+                    onOpenSubstitution(activeLineup);
+                  }}
+                  className='btn-sm bg-yellow-600 text-white hover:bg-yellow-700'
                 >
-                  <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
-                  <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v8z' />
-                </svg>
+                  ⇄ Sustitución
+                </button>
               )}
-              {saving ? 'Guardando...' : 'Guardar Lineup'}
-            </button>
+              {hasSubs && (
+                <button
+                  onClick={() => setEditMode(prev => !prev)}
+                  className={`btn-sm transition-colors ${editMode ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}
+                >
+                  {editMode ? '✓ Terminar edición' : '✎ Editar orden'}
+                </button>
+              )}
+            </div>
           )}
+          {/* Fila 2: cancelar / guardar */}
+          <div className='flex justify-end gap-2'>
+            <button onClick={onClose} className='btn btn-secondary'>
+              {gameFinalizationStatus ? 'Cerrar' : 'Cancelar'}
+            </button>
+            {!gameFinalizationStatus && (
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className='btn bg-green-600 text-white hover:bg-green-700'
+              >
+                {saving && (
+                  <svg
+                    className='animate-spin h-4 w-4 text-white'
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                  >
+                    <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+                    <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v8z' />
+                  </svg>
+                )}
+                {saving ? 'Guardando...' : 'Guardar Lineup'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

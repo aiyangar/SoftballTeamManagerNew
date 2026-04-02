@@ -1,365 +1,218 @@
-# 📖 Manual de Usuario - Softball Team Manager
+# Manual de Usuario — Softball Team Manager
 
-**Versión:** 0.14.0  
-**Fecha:** Agosto 2025
-
----
-
-## 🎯 Introducción
-
-El **Softball Team Manager** es una aplicación web moderna diseñada para la gestión completa de equipos de softball. Esta herramienta permite administrar jugadores, programar partidos, registrar asistencia, gestionar pagos y hacer seguimiento del rendimiento del equipo.
-
-### 🚀 Características Principales
-
-- ✅ **Gestión de Equipos**: Crear y administrar múltiples equipos con estadísticas automáticas
-- ✅ **Gestión de Jugadores**: Registrar jugadores con información detallada y filtros avanzados
-- ✅ **Programación de Partidos**: Crear y gestionar calendario de juegos con asistencia integrada
-- ✅ **Control de Asistencia**: Registrar asistencia de jugadores a partidos
-- ✅ **Gestión de Pagos**: Administrar pagos de umpire e inscripción con cálculo dinámico de metas
-- ✅ **Dashboard Informativo**: Vista general del estado del equipo con estadísticas en tiempo real
-- ✅ **Historial de Jugadores**: Seguimiento completo de participación y pagos
-- ✅ **Filtros y Ordenamiento**: Búsqueda avanzada y organización de datos
-- ✅ **Interfaz Moderna**: Cards clickeables y modales optimizados
-- ✅ **Gestión de Cuenta**: Página "Mi Cuenta" para datos personales y cambio de contraseña
+**Versión:** 0.14.0 | **Fecha:** Abril 2026
 
 ---
 
-## 🔐 Acceso al Sistema
+## Introducción
 
-### Registro de Usuario
+**Softball Team Manager** es una aplicación web para gestionar equipos de softball: jugadores, partidos, asistencia, pagos y estadísticas del equipo, todo desde el celular.
 
-1. Accede a la aplicación en tu navegador
-2. Haz clic en **"Registrarse"** en la página de inicio
-3. Completa el formulario con tu información:
-   - **Correo electrónico** (obligatorio)
-   - **Contraseña** (mínimo 6 caracteres)
-4. Haz clic en **"Crear cuenta"**
-5. **Importante**: Tu cuenta debe ser aprobada por el administrador antes de poder acceder
-6. **Nota**: El auto-registro está deshabilitado para mayor seguridad
+---
+
+## Navegación
+
+La app tiene dos formas de navegar:
+
+**Barra inferior** (siempre visible):
+
+| Ícono | Sección |
+|-------|---------|
+| 🏠 Inicio | Dashboard con resumen del equipo |
+| 👥 Jugadores | Lista y gestión de jugadores |
+| ⚾ Partidos | Calendario y gestión de partidos |
+| 🏟️ Equipos | Lista y gestión de equipos |
+
+**Menú hamburguesa** (esquina superior derecha):
+
+![Menú hamburguesa](docs/screenshots/06-menu.png)
+
+Contiene el selector de equipo activo, acceso a Administración (solo admin), Mi Cuenta y Cerrar Sesión.
+
+---
+
+## Acceso al Sistema
 
 ### Inicio de Sesión
 
-1. Ve a la página de **"Iniciar Sesión"**
-2. Ingresa tu correo electrónico y contraseña
-3. Haz clic en **"Iniciar Sesión"**
-4. Una vez autenticado, serás redirigido al Dashboard
+![Login](docs/screenshots/00-login.png)
+
+1. Ingresa tu correo electrónico y contraseña
+2. Toca **"Iniciar Sesión"**
+3. Serás redirigido al Dashboard
+
+> El registro de nuevas cuentas requiere aprobación del administrador.
 
 ---
 
-## 📋 Flujo de Trabajo Completo
+## Dashboard
 
-### **Paso 1: Crear un Equipo Nuevo**
+![Dashboard](docs/screenshots/01-dashboard.png)
 
-#### 1.1 Acceder a Gestión de Equipos
+Vista general del equipo activo. Muestra:
 
-- Desde el Dashboard, haz clic en **"Gestión de Equipos"** en el menú
-- O navega directamente a `/teams`
+- **Total de Jugadores** — cantidad y estado del equipo
+- **Próximo Partido** — fecha, lugar y oponente
+- **Pago de la Inscripción** — total recaudado vs meta
+- **Último Partido** — resultado del partido más reciente
+- **Historial de Resultados** — victorias, derrotas, empates
+- **Top Contribuyentes** — jugadores con mayores pagos
+- **Top Asistencias** — jugadores con más partidos asistidos
+- **Estadísticas Generales** — total partidos, promedio asistencia, % victoria
 
-#### 1.2 Crear Nuevo Equipo
-
-1. Haz clic en el botón **"Agregar Equipo"**
-2. Completa el formulario:
-   - **Nombre del Equipo** (obligatorio): Ej. "Los Tigres"
-   - **Costo de Inscripción** (opcional): Monto total para el torneo
-3. Haz clic en **"Crear Equipo"**
-
-#### 1.3 Seleccionar Equipo para Trabajar
-
-- Una vez creado, el equipo aparecerá en la lista
-- Haz clic en el **selector de equipo** en la parte superior para activarlo
-- El equipo seleccionado será el que uses para todas las operaciones
-
-#### 1.4 Ver Estadísticas del Equipo
-
-- **Nuevo**: Haz clic en cualquier card de equipo para ver detalles completos
-- **Estadísticas automáticas**: El sistema calcula automáticamente:
-  - Victorias, Derrotas, Empates (W-L-D)
-  - Total de partidos jugados
-  - Porcentaje de victorias
-- **Información detallada**: En el modal verás:
-  - Lista de jugadores del equipo
-  - Historial de partidos
-  - Estado de pagos
+Toca cualquier card para ir directamente a la sección correspondiente.
 
 ---
 
-### **Paso 2: Crear los Jugadores**
+## Gestión de Equipos
 
-#### 2.1 Acceder a Gestión de Jugadores
+![Equipos](docs/screenshots/04-equipos.png)
 
-- Desde el Dashboard, haz clic en **"Gestión de Jugadores"**
-- O navega a `/players`
+### Crear un Equipo
 
-#### 2.2 Registrar Nuevo Jugador
+1. Toca **"+ Agregar Equipo"**
+2. Ingresa el nombre y el costo de inscripción (opcional)
+3. Toca **"Crear Equipo"**
 
-1. Haz clic en **"Agregar Jugador"**
-2. Completa la información:
-   - **Nombre completo** (obligatorio)
-   - **Número de camiseta** (opcional)
-   - **Teléfono** (opcional)
-   - **Correo electrónico** (opcional)
-   - **Posiciones** (máximo 3): Selecciona de la lista disponible
-3. Haz clic en **"Crear Jugador"**
+### Seleccionar el Equipo Activo
 
-#### 2.3 Gestionar Jugadores Existentes
+Usa el selector en el menú hamburguesa para cambiar entre equipos. Todas las operaciones (jugadores, partidos, pagos) aplican al equipo seleccionado.
 
-- **Ver lista**: Todos los jugadores aparecen en cards organizadas
-- **Filtros avanzados**: **Nuevo** - Usa los filtros para buscar por:
-  - Nombre del jugador
-  - Número de camiseta
-  - Posiciones (al menos una o todas las seleccionadas)
-- **Ordenamiento**: **Nuevo** - Ordena por nombre o número
-- **Editar**: Haz clic en la card del jugador y selecciona "Editar"
-- **Eliminar**: Usa el botón "Eliminar" en el modal de detalles
-- **Ver historial**: Haz clic en "Ver Historial" para ver asistencia y pagos
+### Detalles del Equipo
 
-#### 2.4 Historial Detallado de Jugadores
-
-- **Nuevo**: Al hacer clic en "Ver Historial" verás:
-  - **Asistencia**: Lista completa de partidos asistidos
-  - **Pagos**: Historial de todos los pagos realizados
-  - **Estadísticas**: Porcentaje de asistencia, totales pagados
-  - **Meta de inscripción**: Cálculo dinámico basado en el equipo
+Toca una card de equipo para ver:
+- Estadísticas W-L-D (Victorias-Derrotas-Empates)
+- Número de jugadores
+- Estado de pagos de inscripción
+- Botones de editar y eliminar
 
 ---
 
-### **Paso 3: Crear los Partidos**
+## Gestión de Jugadores
 
-#### 3.1 Acceder a Gestión de Partidos
+![Jugadores](docs/screenshots/02-jugadores.png)
 
-- Desde el Dashboard, haz clic en **"Gestión de Partidos"**
-- O navega a `/schedule`
+### Agregar un Jugador
 
-#### 3.2 Programar Nuevo Partido
+1. Toca **"+ Agregar Jugador"**
+2. Completa los campos:
+   - Nombre completo (obligatorio)
+   - Número de camiseta
+   - Teléfono / Email
+   - Posiciones (máximo 3)
+3. Toca **"Crear Jugador"**
 
-1. Haz clic en **"Agregar Partido"**
-2. Completa la información:
-   - **Equipo Contrario** (obligatorio): Nombre del equipo rival
-   - **Fecha del Partido** (obligatorio): Selecciona la fecha
-   - **Lugar** (obligatorio): Campo o ubicación del partido
-   - **Pago al Umpire** (obligatorio): Monto a pagar al árbitro
-3. Haz clic en **"Registrar Partido"**
+### Buscar y Filtrar
 
-#### 3.3 Gestionar Partidos Existentes
+Usa los filtros para encontrar jugadores por:
+- Nombre (búsqueda parcial)
+- Número de camiseta
+- Posición (una o varias)
 
-- **Ver lista**: Todos los partidos aparecen en cards ordenadas por fecha
-- **Cards clickeables**: **Nuevo** - Haz clic en cualquier card para ver detalles
-- **Editar**: Usa el botón "Editar" en el modal de detalles
-- **Eliminar**: Elimina partidos que no se realizarán
+### Editar o Eliminar
 
----
+Toca la card del jugador → se abre el modal de detalles → usa los botones **Editar** o **Eliminar**.
 
-### **Paso 4: Marcar Asistencia**
+### Ver Historial del Jugador
 
-#### 4.1 Registrar Asistencia de Jugadores
+Desde el modal de detalles toca **"Ver Historial"** para ver:
+- Todos los partidos en que asistió
+- Todos los pagos realizados (umpire e inscripción)
+- Porcentaje de asistencia y totales
 
-1. En la lista de partidos, busca el partido correspondiente
-2. Haz clic en la **card del partido** para abrir el modal de detalles
-3. En el modal, busca la sección **"Asistencia"**
-4. Haz clic en **"Marcar Asistencia"**
-5. En el formulario que aparece:
-   - Marca las casillas de los jugadores que asistirán
-   - Desmarca los que no asistirán
-6. Haz clic en **"Guardar Asistencia"**
+### Exportar / Importar Jugadores
 
-#### 4.2 Cargar Asistencia Existente
-
-- **Nuevo**: Si ya hay asistencia registrada:
-  1. Haz clic en **"Cargar Asistencia Existente"**
-  2. El sistema cargará automáticamente los jugadores que ya están marcados
-  3. Modifica según sea necesario
-  4. Guarda los cambios
-
-#### 4.3 Actualizar Asistencia
-
-- Si necesitas modificar la asistencia:
-  1. Haz clic en **"Marcar Asistencia"** nuevamente
-  2. Modifica las selecciones según sea necesario
-  3. Guarda los cambios
+- **Exportar**: Genera un CSV con todos los jugadores del equipo
+- **Importar**: Carga jugadores desde otro equipo
 
 ---
 
-### **Paso 5: Registrar Pagos**
+## Gestión de Partidos
 
-#### 5.1 Acceder al Formulario de Pagos
+![Partidos](docs/screenshots/03-partidos.png)
 
-1. En la lista de partidos, busca el partido correspondiente
-2. Haz clic en la **card del partido** para abrir el modal de detalles
-3. En el modal, busca la sección **"Pagos"**
-4. Haz clic en **"Registrar Pago"**
+### Agregar un Partido
 
-#### 5.2 Registrar Pago de Umpire
+1. Toca **"+ Agregar Partido"**
+2. Completa:
+   - Equipo contrario (obligatorio)
+   - Fecha (obligatorio)
+   - Lugar (obligatorio)
+   - Pago al umpire (obligatorio)
+3. Toca **"Registrar Partido"**
 
-1. En el formulario de pagos:
-   - Selecciona el **jugador** que realizó el pago
-   - Ingresa el **monto del umpire** pagado
-   - Selecciona el **método de pago** (Efectivo, Transferencia, etc.)
-2. Haz clic en **"Registrar Pago"**
+### Detalles del Partido
 
-#### 5.3 Registrar Pago de Inscripción
+Toca una card de partido para abrir el modal con:
 
-1. En el mismo formulario:
-   - Selecciona el **jugador** que realizó el pago
-   - Ingresa el **monto de inscripción** pagado
-   - Selecciona el **método de pago**
-2. Haz clic en **"Registrar Pago"**
+#### Asistencia
+1. Toca **"Marcar Asistencia"**
+2. Selecciona los jugadores que asistieron
+3. Toca **"Guardar Asistencia"**
 
-#### 5.4 Ver Totales de Pagos
+Si ya hay asistencia registrada, usa **"Cargar Asistencia Existente"** para editarla.
 
-- El sistema muestra automáticamente:
-  - Total pagado de umpire
-  - Total pagado de inscripción
-  - Monto objetivo de umpire por partido
-  - **Nuevo**: Meta de inscripción calculada dinámicamente por equipo
-  - Estado de pagos por jugador
+#### Pagos
+1. Toca **"Registrar Pago"**
+2. Selecciona el jugador, el monto y el tipo (umpire o inscripción)
+3. Toca **"Registrar Pago"**
 
----
+El modal muestra el total pagado vs el objetivo por partido.
 
-### **Paso 6: Finalizar Partido**
+#### Finalizar Partido
+1. Toca **"Finalizar Partido"**
+2. Ingresa el marcador (carreras tu equipo / carreras oponente)
+3. Toca **"Finalizar Partido"**
 
-#### 6.1 Registrar Resultado del Partido
+Los partidos finalizados muestran el resultado y actualizan las estadísticas W-L-D del equipo.
 
-1. En la lista de partidos, busca el partido a finalizar
-2. Haz clic en la **card del partido** para abrir el modal de detalles
-3. En el modal, busca la sección **"Resultado"**
-4. Haz clic en **"Finalizar Partido"**
-5. En el formulario:
-   - Ingresa las **carreras de tu equipo**
-   - Ingresa las **carreras del equipo contrario**
-6. Haz clic en **"Finalizar Partido"**
-
-#### 6.2 Ver Detalles del Partido
-
-- Una vez finalizado, puedes:
-  1. Ver información completa en el modal de detalles:
-     - Asistencia registrada
-     - Pagos realizados
-     - Resultado del partido
-     - Estadísticas
-  2. **Nuevo**: El resultado se refleja automáticamente en las estadísticas del equipo
+#### Compartir Alineación
+Desde el modal de un partido finalizado puedes generar y compartir una imagen con la alineación del equipo.
 
 ---
 
-## 📊 Dashboard y Reportes
+## Mi Cuenta
 
-### Información Disponible en el Dashboard
+![Mi Cuenta](docs/screenshots/05-mi-cuenta.png)
 
-- **Total de Jugadores**: Número de jugadores registrados
-- **Próximo Juego**: Detalles del próximo partido programado
-- **Pago de la Inscripción**: Estado de pagos de inscripción
-- **Último Partido**: Resultado del último partido jugado
-- **Estadísticas del Equipo**: **Mejorado** - Victorias, derrotas y empates con porcentajes
-- **Top Contribuyentes**: Jugadores que más han pagado
-- **Top Asistencia**: Jugadores con mejor asistencia
-- **Nuevo**: Meta de inscripción calculada dinámicamente
+Accede desde el menú hamburguesa → **"Mi Cuenta"**.
 
-### Navegación Rápida
+Muestra:
+- Correo electrónico registrado
+- Fecha de registro y última actualización
+- Estado de la cuenta
 
-- **Dashboard**: Vista general del equipo
-- **Gestión de Equipos**: Administrar equipos
-- **Gestión de Jugadores**: Gestionar jugadores con filtros avanzados
-- **Gestión de Partidos**: Programar y gestionar partidos
-- **Mi Cuenta**: Gestión de datos personales y contraseña
-- **Panel de Administración**: Funciones administrativas
+### Cambiar Contraseña
+
+1. Ingresa tu contraseña actual
+2. Ingresa la nueva contraseña (mínimo 6 caracteres)
+3. Confírmala
+4. Toca **"Cambiar Contraseña"**
+
+> Después de cambiar la contraseña deberás iniciar sesión nuevamente.
 
 ---
 
-## 🔧 Funciones Adicionales
+## Consejos de Uso
 
-### Gestión de Posiciones
-
-- Los jugadores pueden seleccionar hasta **3 posiciones**
-- Las posiciones disponibles incluyen: Pitcher, Catcher, Primera Base, etc.
-- Se pueden editar las posiciones en cualquier momento
-- **Nuevo**: Filtros por posiciones (al menos una o todas las seleccionadas)
-
-### Historial de Jugadores
-
-- **Asistencia**: Registro completo de asistencia a partidos
-- **Pagos**: Historial de todos los pagos realizados
-- **Estadísticas**: Resumen de participación con porcentajes
-- **Nuevo**: Meta de inscripción personalizada por equipo
-
-### Gestión de Múltiples Equipos
-
-- Puedes crear y gestionar **múltiples equipos**
-- Cambia entre equipos usando el selector en la parte superior
-- Cada equipo mantiene su información independiente
-- **Nuevo**: Estadísticas automáticas por equipo (W-L-D)
-
-### Gestión de Cuenta de Usuario
-
-- **Nuevo**: Accede a "Mi Cuenta" desde el menú principal
-- **Información Personal**: Visualiza tu correo electrónico, ID de usuario y fechas de registro
-- **Cambio de Contraseña**: Formulario seguro para cambiar tu contraseña
-- **Validaciones**: El sistema valida que la nueva contraseña tenga al menos 6 caracteres
-- **Seguridad**: Información sobre las medidas de seguridad implementadas
-
-### Filtros y Ordenamiento
-
-- **Nuevo**: Filtros avanzados en jugadores:
-  - Por nombre (búsqueda parcial)
-  - Por número de camiseta
-  - Por posiciones (múltiples opciones)
-- **Nuevo**: Ordenamiento por nombre o número
-- **Nuevo**: Indicadores visuales de filtros activos
+1. **Selecciona siempre un equipo** en el menú hamburguesa antes de operar
+2. **Registra asistencia antes que pagos** para mejor organización
+3. **Finaliza los partidos** para que las estadísticas W-L-D se actualicen
+4. **Usa los filtros** en Jugadores para encontrar rápidamente a alguien
+5. **Revisa el Dashboard** para tener el estado general del equipo de un vistazo
 
 ---
 
-## ⚠️ Notas Importantes
+## Solución de Problemas
 
-### Seguridad
-
-- **Autenticación requerida**: Debes iniciar sesión para acceder
-- **Aprobación de cuenta**: Tu cuenta debe ser aprobada por el administrador
-- **Auto-registro deshabilitado**: **Nuevo** - Mayor control de acceso
-- **Datos seguros**: Toda la información se almacena de forma segura
-
-### Funcionalidades del Sistema
-
-- **Cards clickeables**: **Nuevo** - Haz clic en cualquier card para ver detalles
-- **Modales optimizados**: Los formularios aparecen en ventanas modales sin afectar la navegación
-- **Scroll interno**: Los modales tienen su propio scroll para mejor usabilidad
-- **Responsive**: La aplicación funciona en dispositivos móviles y de escritorio
-- **Versión**: El número de versión (0.14.0) se muestra en el pie del menú principal
-- **Filtros avanzados**: **Nuevo** - Búsqueda y organización mejorada
-- **Cálculo dinámico**: **Nuevo** - Metas de inscripción calculadas automáticamente
-- **Gestión de cuenta**: **Nuevo** - Página dedicada para datos personales y cambio de contraseña
-
-### Consejos de Uso
-
-1. **Selecciona siempre un equipo** antes de trabajar con jugadores o partidos
-2. **Usa los filtros** para encontrar jugadores rápidamente
-3. **Registra la asistencia** antes de registrar pagos para mejor organización
-4. **Finaliza los partidos** después de registrar todos los datos
-5. **Revisa el Dashboard** regularmente para mantener un seguimiento del equipo
-6. **Haz clic en las cards** para ver información detallada
-7. **Aprovecha los filtros** para organizar mejor la información
-8. **Gestiona tu cuenta** desde "Mi Cuenta" para mantener tu información actualizada
+| Problema | Solución |
+|----------|----------|
+| No puedo acceder | Verifica que tu cuenta haya sido aprobada por el administrador |
+| No veo mis jugadores | Confirma que tienes el equipo correcto seleccionado en el menú |
+| Error al guardar | Revisa que todos los campos obligatorios estén completos |
+| No encuentro un jugador | Usa los filtros de búsqueda por nombre, número o posición |
+| Los datos no se actualizan | Recarga la página; si persiste, cierra sesión y vuelve a entrar |
 
 ---
 
-## 🆘 Soporte
-
-### Problemas Comunes
-
-- **No puedo acceder**: Verifica que tu cuenta haya sido aprobada
-- **No veo mi equipo**: Asegúrate de haber seleccionado un equipo en el selector
-- **Error al guardar**: Verifica que todos los campos obligatorios estén completos
-- **No encuentro un jugador**: Usa los filtros de búsqueda para localizarlo
-- **Error 400 en consultas**: Contacta al administrador si persiste
-
-### Mejoras Recientes
-
-- **Eliminación de logs**: Los logs de debugging han sido removidos para mejor rendimiento
-- **Optimización de consultas**: Mejoradas las consultas a la base de datos
-- **Interfaz más limpia**: Cards clickeables y modales optimizados
-- **Filtros avanzados**: Búsqueda y organización mejorada
-
-### Contacto
-
-Para soporte técnico o preguntas sobre el sistema, contacta al administrador del sistema.
-
----
-
-**Softball Team Manager v0.14.0** - Desarrollado para la gestión eficiente de equipos de softball.
+**Softball Team Manager v0.14.0**

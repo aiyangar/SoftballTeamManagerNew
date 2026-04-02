@@ -27,6 +27,7 @@ const LineupModal = ({
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [subMsg, setSubMsg] = useState(null);
+  const [sharing, setSharing] = useState(false);
   const dragIndexRef = useRef(null);
   const prevRefreshKey = useRef(refreshKey);
 
@@ -306,8 +307,6 @@ const LineupModal = ({
   }
   const duplicatePositions = Object.entries(posCount).filter(([, names]) => names.length > 1);
   const colSpan = gameFinalizationStatus ? 4 : 6;
-
-  const [sharing, setSharing] = useState(false);
 
   const handleShareImage = async () => {
     setSharing(true);

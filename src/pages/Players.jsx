@@ -1590,7 +1590,7 @@ const Players = () => {
         )}
 
         {/* Botones de acción */}
-        <div className='mb-6 sm:mb-8 flex flex-col sm:flex-row gap-3'>
+        <div className='mb-6 sm:mb-8 grid grid-cols-2 sm:flex sm:flex-row gap-3'>
           <button
             onClick={() => {
               if (showForm) {
@@ -1599,7 +1599,7 @@ const Players = () => {
                 setShowForm(true);
               }
             }}
-            className='btn btn-primary w-full sm:w-auto justify-center sm:justify-start'
+            className='btn btn-primary col-span-2 sm:col-span-1 sm:w-auto justify-center'
           >
             <svg
               className='w-5 h-5'
@@ -1620,7 +1620,7 @@ const Players = () => {
           <button
             onClick={exportPlayersToCSV}
             disabled={loading || players.length === 0}
-            className='btn bg-green-600 text-white hover:bg-green-700 w-full sm:w-auto justify-center sm:justify-start'
+            className='btn bg-green-600 text-white hover:bg-green-700 sm:w-auto justify-center'
             title='Exportar datos de jugadores a hoja de cálculo'
           >
             <svg
@@ -1642,7 +1642,7 @@ const Players = () => {
           <button
             onClick={openImportModal}
             disabled={!selectedTeam || loading}
-            className='btn bg-purple-600 text-white hover:bg-purple-700 w-full sm:w-auto justify-center sm:justify-start'
+            className='btn bg-purple-600 text-white hover:bg-purple-700 sm:w-auto justify-center'
             title='Importar jugadores de otro equipo'
           >
             <svg

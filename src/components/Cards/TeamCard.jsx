@@ -20,7 +20,7 @@ const TeamCard = ({ team, onViewHistory }) => {
     >
       {/* Header con nombre del equipo */}
       <div className='mb-4'>
-        <h3 className='font-bold text-xl text-white mb-1'>
+        <h3 className='font-bold text-xl text-white mb-1 truncate' title={team.nombre_equipo}>
           {team.nombre_equipo}
         </h3>
         <div className='w-12 h-1 bg-blue-500 rounded-full'></div>

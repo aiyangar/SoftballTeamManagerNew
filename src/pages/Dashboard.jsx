@@ -284,7 +284,7 @@ const Dashboard = () => {
         <div className='bg-neutral-900 shadow rounded-lg p-6 mb-8 border border-gray-700 overflow-hidden'>
           <h2 className='text-xl font-semibold text-white'>
             Bienvenido,{' '}
-            <span className='break-all'>{session?.user?.email}</span>
+            <span className='break-words'>{session?.user?.email}</span>
           </h2>
           {selectedTeam && (
             <p className='text-gray-300 mt-2'>

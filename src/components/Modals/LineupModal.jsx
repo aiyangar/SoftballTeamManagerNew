@@ -307,6 +307,245 @@ const LineupModal = ({
   const duplicatePositions = Object.entries(posCount).filter(([, names]) => names.length > 1);
   const colSpan = gameFinalizationStatus ? 4 : 6;
 
+  const [sharing, setSharing] = useState(false);
+
+  const handleShareImage = async () => {
+    setSharing(true);
+    try {
+      const titulares = lineupRows
+        .filter(r => r.es_titular && r.activo)
+        .sort((a, b) => (a.orden_bateo || 99) - (b.orden_bateo || 99));
+      const suplentes = lineupRows.filter(r => !r.es_titular || !r.activo);
+
+      const fecha = new Date(game.fecha_partido).toLocaleDateString('es-MX', {
+        day: '2-digit', month: 'long', year: 'numeric',
+      });
+
+      // ── Canvas dimensions ──────────────────────────────────────────
+      const SCALE = 2;          // retina
+      const W = 480;
+      const PAD = 20;
+      const ROW_H = 38;
+      const SEC_H = 30;         // section header height
+      const HEADER_H = 90;
+      const FOOTER_H = 36;
+
+      const numRows = titulares.length + (suplentes.length > 0 ? suplentes.length : 0);
+      const numSections = suplentes.length > 0 ? 2 : 1;
+      const H = HEADER_H + numSections * SEC_H + numRows * ROW_H + FOOTER_H + PAD;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = W * SCALE;
+      canvas.height = H * SCALE;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(SCALE, SCALE);
+
+      // ── Helpers ────────────────────────────────────────────────────
+      const roundRect = (x, y, w, h, r) => {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+      };
+
+      // ── Background ─────────────────────────────────────────────────
+      ctx.fillStyle = '#111827';   // gray-900
+      ctx.fillRect(0, 0, W, H);
+
+      // top accent bar
+      ctx.fillStyle = '#16a34a';   // green-600
+      ctx.fillRect(0, 0, W, 4);
+
+      // ── Header ─────────────────────────────────────────────────────
+      ctx.fillStyle = '#1f2937';   // gray-800
+      ctx.fillRect(0, 4, W, HEADER_H - 4);
+
+      // baseball icon area (left circle)
+      ctx.fillStyle = '#166534';   // green-800
+      roundRect(PAD, 18, 44, 44, 8);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 26px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('⚾', PAD + 22, 40);
+
+      // Title
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 20px system-ui, sans-serif';
+      ctx.fillText('LINEUP', PAD + 56, 30);
+
+      ctx.fillStyle = '#9ca3af';   // gray-400
+      ctx.font = '13px system-ui, sans-serif';
+      ctx.fillText(`vs ${game.equipo_contrario}`, PAD + 56, 50);
+      ctx.fillText(`📅 ${fecha}`, PAD + 56, 68);
+
+      // divider
+      ctx.strokeStyle = '#374151'; // gray-700
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, HEADER_H);
+      ctx.lineTo(W, HEADER_H);
+      ctx.stroke();
+
+      // ── Draw rows ──────────────────────────────────────────────────
+      let y = HEADER_H;
+
+      const drawSectionHeader = (label, bgColor, textColor) => {
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, y, W, SEC_H);
+        ctx.fillStyle = textColor;
+        ctx.font = 'bold 11px system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label.toUpperCase(), PAD, y + SEC_H / 2);
+        y += SEC_H;
+      };
+
+      const drawRow = (index, row, isBench) => {
+        // alternating row bg
+        ctx.fillStyle = index % 2 === 0 ? '#1f2937' : '#111827';
+        ctx.fillRect(0, y, W, ROW_H);
+
+        ctx.textBaseline = 'middle';
+        const midY = y + ROW_H / 2;
+
+        if (!isBench) {
+          // batting order number
+          ctx.fillStyle = '#6b7280';  // gray-500
+          ctx.font = '12px system-ui, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.fillText(String(row.orden_bateo || ''), PAD + 20, midY);
+
+          // jersey number badge
+          ctx.fillStyle = '#92400e';  // amber-800
+          roundRect(PAD + 26, y + 8, 30, ROW_H - 16, 4);
+          ctx.fill();
+          ctx.fillStyle = '#fde68a';  // amber-200
+          ctx.font = 'bold 11px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(row.numero != null ? `#${row.numero}` : '—', PAD + 41, midY);
+
+          // name
+          ctx.fillStyle = '#f9fafb';
+          ctx.font = '14px system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText(row.nombre || '—', PAD + 64, midY);
+
+          // position badge
+          if (row.posicion_campo) {
+            const posX = W - PAD - 36;
+            ctx.fillStyle = '#881337';  // rose-900
+            roundRect(posX, y + 10, 34, ROW_H - 20, 4);
+            ctx.fill();
+            ctx.fillStyle = '#fecdd3';  // rose-200
+            ctx.font = 'bold 11px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(row.posicion_campo, posX + 17, midY);
+          }
+        } else {
+          // bench player: bullet + jersey + name
+          ctx.fillStyle = '#6b7280';
+          ctx.font = '14px system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText('•', PAD + 4, midY);
+
+          ctx.fillStyle = '#9ca3af';
+          ctx.font = '12px system-ui, sans-serif';
+          const numStr = row.numero != null ? `#${row.numero}` : '';
+          ctx.fillText(numStr, PAD + 20, midY);
+
+          ctx.fillStyle = '#d1d5db';
+          ctx.font = '14px system-ui, sans-serif';
+          ctx.fillText(row.nombre || '—', PAD + 52, midY);
+
+          // show state (relevado / sustituto)
+          if (!row.activo) {
+            ctx.fillStyle = '#ef4444';
+            ctx.font = 'italic 11px system-ui, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('relevado', W - PAD, midY);
+          }
+        }
+
+        // bottom row border
+        ctx.strokeStyle = '#1f2937';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(PAD, y + ROW_H);
+        ctx.lineTo(W - PAD, y + ROW_H);
+        ctx.stroke();
+
+        y += ROW_H;
+      };
+
+      // Titulares
+      drawSectionHeader('Titulares', '#052e16', '#4ade80');  // green-950 / green-400
+      titulares.forEach((row, i) => drawRow(i, row, false));
+
+      // Suplentes / Banca
+      if (suplentes.length > 0) {
+        drawSectionHeader('Banca', '#1f2937', '#9ca3af');
+        suplentes.forEach((row, i) => drawRow(i, row, true));
+      }
+
+      // ── Footer ─────────────────────────────────────────────────────
+      y = H - FOOTER_H;
+      ctx.fillStyle = '#1f2937';
+      ctx.fillRect(0, y, W, FOOTER_H);
+      ctx.strokeStyle = '#374151';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '11px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('My Softball Club', W / 2, y + FOOTER_H / 2);
+
+      // ── Share ──────────────────────────────────────────────────────
+      canvas.toBlob(async blob => {
+        const fileName = `lineup-${game.equipo_contrario.replace(/\s+/g, '_')}.png`;
+        const file = new File([blob], fileName, { type: 'image/png' });
+
+        const canShareFiles = navigator.canShare?.({ files: [file] });
+        if (navigator.share && canShareFiles) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: `Lineup vs ${game.equipo_contrario}`,
+            });
+          } catch (_) { /* user cancelled */ }
+        } else {
+          // Fallback: download the image
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(url);
+          setSubMsg('📥 Imagen guardada');
+          setTimeout(() => setSubMsg(null), 3000);
+        }
+      }, 'image/png');
+    } catch (err) {
+      setSaveError('No se pudo generar la imagen: ' + err.message);
+    } finally {
+      setSharing(false);
+    }
+  };
+
+
   return (
     <div className='fixed inset-0 modal-overlay flex items-center justify-center z-50'>
       <div className='bg-neutral-900 border border-gray-600 rounded-lg w-full max-w-3xl mx-4 modal-container'>
@@ -391,39 +630,59 @@ const LineupModal = ({
               )}
 
               {/* Acciones */}
-              {!gameFinalizationStatus && (
-                <div className='flex gap-3 mb-4'>
+              <div className='flex flex-wrap gap-2 mb-4 items-center'>
+                {!gameFinalizationStatus && (
+                  <>
+                    <button onClick={addRow} className='btn-sm btn-primary'>
+                      + Agregar jugador
+                    </button>
+                    {activeLineup.length > 0 && (
+                      <button
+                        onClick={() => {
+                          if (!lineupFromDB) {
+                            setSaveError('Guarda el lineup antes de registrar una sustitución.');
+                            return;
+                          }
+                          setSaveError(null);
+                          onOpenSubstitution(activeLineup);
+                        }}
+                        className='btn-sm bg-yellow-600 text-white hover:bg-yellow-700'
+                      >
+                        ⇄ Sustitución
+                      </button>
+                    )}
+                    {hasSubs && (
+                      <button
+                        onClick={() => setEditMode(prev => !prev)}
+                        className={`px-3 py-2 rounded transition-colors text-sm ${editMode ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}
+                      >
+                        {editMode ? '✓ Terminar edición' : '✎ Editar orden'}
+                      </button>
+                    )}
+                  </>
+                )}
+                {lineupFromDB && lineupRows.length > 0 && (
                   <button
-                    onClick={addRow}
-                    className='btn-sm btn-primary'
+                    onClick={handleShareImage}
+                    disabled={sharing}
+                    className='btn-sm bg-sky-600 text-white hover:bg-sky-700 ml-auto flex items-center gap-1'
+                    title='Compartir lineup como imagen'
                   >
-                    + Agregar jugador
+                    {sharing ? (
+                      <svg className='animate-spin h-4 w-4' fill='none' viewBox='0 0 24 24'>
+                        <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+                        <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v8z' />
+                      </svg>
+                    ) : (
+                      <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2}
+                          d='M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z' />
+                      </svg>
+                    )}
+                    <span>{sharing ? 'Generando...' : 'Compartir'}</span>
                   </button>
-                  {activeLineup.length > 0 && (
-                    <button
-                      onClick={() => {
-                        if (!lineupFromDB) {
-                          setSaveError('Guarda el lineup antes de registrar una sustitución.');
-                          return;
-                        }
-                        setSaveError(null);
-                        onOpenSubstitution(activeLineup);
-                      }}
-                      className='btn-sm bg-yellow-600 text-white hover:bg-yellow-700'
-                    >
-                      ⇄ Sustitución
-                    </button>
-                  )}
-                  {hasSubs && (
-                    <button
-                      onClick={() => setEditMode(prev => !prev)}
-                      className={`px-3 py-2 rounded transition-colors text-sm ${editMode ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}
-                    >
-                      {editMode ? '✓ Terminar edición' : '✎ Editar orden'}
-                    </button>
-                  )}
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Tabla */}
               {renderRows.length === 0 ? (

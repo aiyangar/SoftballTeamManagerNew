@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 // import { useNavigate } from 'react-router-dom'
 import { UserAuth } from '../context/AuthContext';
@@ -8,6 +8,7 @@ import { useTeam } from '../context/useTeam';
 import TeamForm from '../components/Forms/TeamForm';
 import TeamCardsGrid from '../components/CardGrids/TeamCardsGrid';
 import TeamHistoryModal from '../components/Modals/TeamHistoryModal';
+import LeagueTeamForm from '../components/Forms/LeagueTeamForm';
 
 /**
  * Componente para la gestión de equipos
@@ -18,12 +19,19 @@ const Teams = () => {
   // Estados para manejar el formulario
   const [name, setName] = useState('');
   const [inscripcion, setInscripcion] = useState('');
+  const [inscripcionPorJugador, setInscripcionPorJugador] = useState('');
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showTeamHistoryModal, setShowTeamHistoryModal] = useState(false);
   const [selectedTeamForHistory, setSelectedTeamForHistory] = useState(null);
-  const [editingTeam, setEditingTeam] = useState(null); // Para manejar la edición
-  const { teams, loadingTeams, fetchTeams } = useTeam(); // Usar el contexto del equipo
+  const [editingTeam, setEditingTeam] = useState(null);
+  const { teams, loadingTeams, fetchTeams } = useTeam();
+
+  // Estados para equipos de la liga
+  const [leagueTeams, setLeagueTeams] = useState([]);
+  const [loadingLeague, setLoadingLeague] = useState(false);
+  const [editingLeagueTeam, setEditingLeagueTeam] = useState(null);
+  const [editingLeagueName, setEditingLeagueName] = useState('');
 
   // Hook para navegación programática
   // const navigate = useNavigate()
@@ -32,6 +40,47 @@ const Teams = () => {
   const authContext = UserAuth();
   const session = authContext?.session;
 
+  const fetchLeagueTeams = async () => {
+    if (!session?.user?.id) return;
+    setLoadingLeague(true);
+    const { data, error } = await supabase
+      .from('equipos_liga')
+      .select('id, nombre')
+      .eq('user_id', session.user.id)
+      .order('nombre', { ascending: true });
+    setLoadingLeague(false);
+    if (!error) setLeagueTeams(data || []);
+  };
+
+  const deleteLeagueTeam = async id => {
+    const { error } = await supabase.from('equipos_liga').delete().eq('id', id);
+    if (error) {
+      toast.error('Error al eliminar: ' + error.message);
+    } else {
+      fetchLeagueTeams();
+    }
+  };
+
+  const saveLeagueTeamEdit = async id => {
+    if (!editingLeagueName.trim()) return;
+    const { error } = await supabase
+      .from('equipos_liga')
+      .update({ nombre: editingLeagueName.trim() })
+      .eq('id', id);
+    if (error) {
+      toast.error('Error al actualizar: ' + error.message);
+    } else {
+      setEditingLeagueTeam(null);
+      setEditingLeagueName('');
+      fetchLeagueTeams();
+    }
+  };
+
+  useEffect(() => {
+    fetchLeagueTeams();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session]);
+
   /**
    * Crea un nuevo equipo en la base de datos
    * @param {string} nombreEquipo - Nombre del equipo
@@ -39,7 +88,7 @@ const Teams = () => {
    * @param {string} propietarioId - ID del usuario propietario
    * @returns {Object} - Resultado de la operación
    */
-  const createTeam = async (nombreEquipo, inscripcion, propietarioId) => {
+  const createTeam = async (nombreEquipo, inscripcion, inscripcionPJ, propietarioId) => {
     try {
       const { data, error } = await supabase
         .from('equipos')
@@ -47,6 +96,7 @@ const Teams = () => {
           {
             nombre_equipo: nombreEquipo,
             inscripcion: inscripcion ? parseFloat(inscripcion) : null,
+            inscripcion_por_jugador: inscripcionPJ ? parseFloat(inscripcionPJ) : null,
             propietario_id: propietarioId, // ID del usuario que crea el equipo
           },
         ])
@@ -71,13 +121,14 @@ const Teams = () => {
    * @param {string} inscripcion - Nuevo monto de inscripción del equipo
    * @returns {Object} - Resultado de la operación
    */
-  const updateTeam = async (teamId, nombreEquipo, inscripcion) => {
+  const updateTeam = async (teamId, nombreEquipo, inscripcion, inscripcionPJ) => {
     try {
       const { data, error } = await supabase
         .from('equipos')
         .update({
           nombre_equipo: nombreEquipo,
           inscripcion: inscripcion ? parseFloat(inscripcion) : null,
+          inscripcion_por_jugador: inscripcionPJ ? parseFloat(inscripcionPJ) : null,
         })
         .eq('id', teamId)
         .select();
@@ -100,8 +151,9 @@ const Teams = () => {
   const resetForm = () => {
     setName('');
     setInscripcion('');
+    setInscripcionPorJugador('');
     setShowForm(false);
-    setEditingTeam(null); // Limpiar también el equipo en edición
+    setEditingTeam(null);
   };
 
   /**
@@ -111,9 +163,10 @@ const Teams = () => {
   const startEditing = team => {
     setName(team.nombre_equipo);
     setInscripcion(team.inscripcion ? team.inscripcion.toString() : '');
+    setInscripcionPorJugador(team.inscripcion_por_jugador ? team.inscripcion_por_jugador.toString() : '');
     setEditingTeam(team);
     setShowForm(true);
-    setShowTeamHistoryModal(false); // Cerrar el modal de historial
+    setShowTeamHistoryModal(false);
   };
 
   /**
@@ -161,7 +214,7 @@ const Teams = () => {
 
       if (editingTeam) {
         // Actualizar equipo existente
-        result = await updateTeam(editingTeam.id, name, inscripcion);
+        result = await updateTeam(editingTeam.id, name, inscripcion, inscripcionPorJugador);
         if (result.success) {
           resetForm();
           await fetchTeams();
@@ -171,7 +224,7 @@ const Teams = () => {
         }
       } else {
         // Crear nuevo equipo
-        result = await createTeam(name, inscripcion, session.user.id);
+        result = await createTeam(name, inscripcion, inscripcionPorJugador, session.user.id);
         if (result.success) {
           resetForm();
           await fetchTeams();
@@ -229,8 +282,10 @@ const Teams = () => {
           showForm={showForm}
           name={name}
           inscripcion={inscripcion}
+          inscripcionPorJugador={inscripcionPorJugador}
           onNameChange={e => setName(e.target.value)}
           onInscripcionChange={e => setInscripcion(e.target.value)}
+          onInscripcionPorJugadorChange={e => setInscripcionPorJugador(e.target.value)}
           onSubmit={handleSubmitTeam}
           loading={loading}
           editingTeam={editingTeam}
@@ -245,6 +300,70 @@ const Teams = () => {
             loadingTeams={loadingTeams}
             onViewHistory={handleViewTeamHistory}
           />
+        </div>
+
+        {/* Equipos de la Liga */}
+        <div className='bg-neutral-900 shadow rounded-lg p-6 mb-8 border border-gray-700'>
+          <h2 className='text-xl font-semibold mb-2 text-white'>Equipos de la Liga</h2>
+          <p className='text-sm text-gray-400 mb-4'>
+            Registra todos los equipos que forman parte de la liga, sin necesidad de tener un partido agendado.
+          </p>
+
+          {loadingLeague ? (
+            <p className='text-gray-400 text-sm'>Cargando...</p>
+          ) : leagueTeams.length === 0 ? (
+            <p className='text-gray-400 text-sm'>No hay equipos registrados en la liga.</p>
+          ) : (
+            <ul className='space-y-2'>
+              {leagueTeams.map(lt => (
+                <li key={lt.id} className='flex items-center gap-2 p-2 bg-gray-800 rounded-lg'>
+                  {editingLeagueTeam === lt.id ? (
+                    <>
+                      <input
+                        type='text'
+                        value={editingLeagueName}
+                        onChange={e => setEditingLeagueName(e.target.value)}
+                        className='flex-1 p-1 bg-gray-700 border border-gray-500 rounded text-white text-sm'
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => saveLeagueTeamEdit(lt.id)}
+                        className='text-green-400 hover:text-green-300 text-sm px-2'
+                      >
+                        ✓
+                      </button>
+                      <button
+                        onClick={() => { setEditingLeagueTeam(null); setEditingLeagueName(''); }}
+                        className='text-gray-400 hover:text-white text-sm px-2'
+                      >
+                        ✕
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className='flex-1 text-white text-sm'>{lt.nombre}</span>
+                      <button
+                        onClick={() => { setEditingLeagueTeam(lt.id); setEditingLeagueName(lt.nombre); }}
+                        className='text-blue-400 hover:text-blue-300 text-xs px-2'
+                        title='Editar'
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => deleteLeagueTeam(lt.id)}
+                        className='text-red-400 hover:text-red-300 text-xs px-2'
+                        title='Eliminar'
+                      >
+                        🗑️
+                      </button>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <LeagueTeamForm onSaved={fetchLeagueTeams} />
         </div>
 
         {/* Modal de historial del equipo */}

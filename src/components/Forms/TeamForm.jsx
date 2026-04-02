@@ -4,9 +4,11 @@ import React from 'react';
  * Componente para el formulario de creación/edición de equipos
  * @param {boolean} showForm - Estado para mostrar/ocultar el formulario
  * @param {string} name - Nombre del equipo
- * @param {string} inscripcion - Monto de inscripción
+ * @param {string} inscripcion - Meta total de inscripción del equipo
+ * @param {string} inscripcionPorJugador - Monto máximo de inscripción por jugador (default)
  * @param {Function} onNameChange - Función para manejar cambios en el nombre
  * @param {Function} onInscripcionChange - Función para manejar cambios en la inscripción
+ * @param {Function} onInscripcionPorJugadorChange - Función para manejar cambios en inscripción por jugador
  * @param {Function} onSubmit - Función para manejar el envío del formulario
  * @param {boolean} loading - Estado de carga
  * @param {Object} editingTeam - Datos del equipo que se está editando
@@ -16,8 +18,10 @@ const TeamForm = ({
   showForm,
   name,
   inscripcion,
+  inscripcionPorJugador,
   onNameChange,
   onInscripcionChange,
+  onInscripcionPorJugadorChange,
   onSubmit,
   loading,
   editingTeam,
@@ -64,7 +68,7 @@ const TeamForm = ({
 
             <div>
               <label className='block text-sm font-medium text-gray-300 mb-2'>
-                Monto de Inscripción ($)
+                Meta total de inscripción del equipo ($)
               </label>
               <input
                 id='teamInscripcion'
@@ -72,13 +76,33 @@ const TeamForm = ({
                 type='number'
                 step='0.01'
                 min='0'
-                placeholder='Ej: 1500.00'
+                placeholder='Ej: 5000.00'
                 value={inscripcion}
                 onChange={onInscripcionChange}
                 className='w-full p-3 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-gray-800 text-white'
               />
               <p className='text-xs text-gray-400 mt-1'>
-                Opcional: Deja vacío si no hay monto de inscripción
+                Total a recaudar entre todos los jugadores. Opcional.
+              </p>
+            </div>
+
+            <div>
+              <label className='block text-sm font-medium text-gray-300 mb-2'>
+                Monto máximo de inscripción por jugador ($)
+              </label>
+              <input
+                id='teamInscripcionPorJugador'
+                name='teamInscripcionPorJugador'
+                type='number'
+                step='0.01'
+                min='0'
+                placeholder='Ej: 450.00'
+                value={inscripcionPorJugador}
+                onChange={onInscripcionPorJugadorChange}
+                className='w-full p-3 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-gray-800 text-white'
+              />
+              <p className='text-xs text-gray-400 mt-1'>
+                Límite de inscripción aplicado a cada jugador por defecto. Los jugadores tardíos pueden tener un monto diferente.
               </p>
             </div>
 

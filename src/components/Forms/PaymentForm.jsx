@@ -21,17 +21,28 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
     totalInscripcion: 0,
     umpireTarget: 0,
   });
+  const [teamInscripcionPorJugador, setTeamInscripcionPorJugador] = useState(null);
+  const [playerInscripcionMax, setPlayerInscripcionMax] = useState(null);
   // Usar el hook para manejar el modal
   useModal(true); // Siempre true porque este componente es un modal
 
   useEffect(() => {
     const initializeForm = async () => {
-      // Primero limpiar pagos en 0
       await cleanZeroPayments();
-      // Luego cargar los datos
       await fetchPlayers();
       await fetchGameInfo();
       await fetchExistingPayments();
+      // Cargar inscripcion_por_jugador del equipo
+      if (teamId) {
+        const { data } = await supabase
+          .from('equipos')
+          .select('inscripcion_por_jugador')
+          .eq('id', teamId)
+          .single();
+        if (data?.inscripcion_por_jugador) {
+          setTeamInscripcionPorJugador(data.inscripcion_por_jugador);
+        }
+      }
     };
 
     initializeForm();
@@ -63,17 +74,34 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
     }
   };
 
-  const handlePlayerChange = playerId => {
+  const handlePlayerChange = async playerId => {
     setSelectedPlayer(playerId);
     setShowUpdateWarning(false);
     setShowCancelWarning(false);
-    toast.success(''); // Limpiar mensaje de éxito al cambiar jugador
+    toast.success('');
+    setPlayerInscripcionMax(null);
 
-    if (playerId && existingPayments[playerId]) {
-      const payment = existingPayments[playerId];
-      setMontoUmpire(payment.monto_umpire.toString());
-      setMontoRegistro(payment.monto_inscripcion.toString());
-      setMetodoPago(payment.metodo_pago);
+    if (playerId) {
+      // Fetch player's inscripcion_max
+      const { data } = await supabase
+        .from('jugadores')
+        .select('inscripcion_max')
+        .eq('id', playerId)
+        .single();
+      if (data?.inscripcion_max != null) {
+        setPlayerInscripcionMax(data.inscripcion_max);
+      }
+
+      if (existingPayments[playerId]) {
+        const payment = existingPayments[playerId];
+        setMontoUmpire(payment.monto_umpire.toString());
+        setMontoRegistro(payment.monto_inscripcion.toString());
+        setMetodoPago(payment.metodo_pago);
+      } else {
+        setMontoUmpire('');
+        setMontoRegistro('');
+        setMetodoPago('Efectivo');
+      }
     } else {
       setMontoUmpire('');
       setMontoRegistro('');
@@ -513,17 +541,36 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
               <label className='block text-white mb-2'>
                 Monto Registro ($)
               </label>
-              <input
-                id='montoRegistro'
-                name='montoRegistro'
-                type='number'
-                step='10'
-                min='0'
-                value={montoRegistro}
-                onChange={e => setMontoRegistro(e.target.value)}
-                placeholder='0.00'
-                className='w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white'
-              />
+              {(() => {
+                const capMax = playerInscripcionMax ?? teamInscripcionPorJugador ?? null;
+                const alreadyPaid = selectedPlayer && existingPayments[selectedPlayer]
+                  ? existingPayments[selectedPlayer].monto_inscripcion || 0
+                  : 0;
+                const remaining = capMax != null ? Math.max(0, capMax - alreadyPaid) : null;
+                return (
+                  <>
+                    <input
+                      id='montoRegistro'
+                      name='montoRegistro'
+                      type='number'
+                      step='10'
+                      min='0'
+                      max={remaining != null ? remaining : undefined}
+                      value={montoRegistro}
+                      onChange={e => setMontoRegistro(e.target.value)}
+                      placeholder='0.00'
+                      className='w-full p-3 border border-gray-600 rounded-md bg-gray-800 text-white'
+                    />
+                    {capMax != null && (
+                      <div className={`text-xs mt-1 ${remaining === 0 ? 'text-green-400' : 'text-blue-400'}`}>
+                        {remaining === 0
+                          ? '✅ Límite de inscripción alcanzado'
+                          : `Límite: $${capMax.toLocaleString()} — Faltan: $${remaining.toLocaleString()}`}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
 
             {/* Nota informativa sobre transferencia automática */}

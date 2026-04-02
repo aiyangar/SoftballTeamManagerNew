@@ -46,6 +46,7 @@ const ScheduleHistoryModal = ({
   const [localAttendance, setLocalAttendance] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showDeleteWarning, setShowDeleteWarning] = useState(false);
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     attendance: false,
     payments: false,
@@ -99,33 +100,15 @@ const ScheduleHistoryModal = ({
         <div className='modal-content p-4 sm:p-6'>
           {/* Botones de acción en la parte superior */}
           {!gameFinalizationStatus && (
-            <div className='mb-6 grid grid-cols-2 gap-2 *:justify-center sm:flex sm:flex-wrap sm:gap-3 sm:*:justify-start'>
-              <button
-                onClick={() => {
-                  onEditGame(selectedGame);
-                  onClose();
-                }}
-                className='btn btn-primary'
-                title='Editar partido'
-              >
-                <span>✏️</span>
-                <span>Editar</span>
-              </button>
+            <div className='mb-6 flex flex-wrap gap-2 items-center'>
               <button
                 onClick={async () => {
                   if (!isEditingAttendance) {
-                    // Al activar el modo edición, cargar asistencia existente
-                    const success = await onLoadExistingAttendance(
-                      selectedGame.id
-                    );
-                    if (success) {
-                      setIsEditingAttendance(true);
-                    }
+                    const success = await onLoadExistingAttendance(selectedGame.id);
+                    if (success) setIsEditingAttendance(true);
                   } else {
-                    // Al cancelar, resetear el estado local al estado global
                     setIsEditingAttendance(false);
-                    const currentAttendance = attendance[selectedGame.id] || [];
-                    setLocalAttendance(currentAttendance);
+                    setLocalAttendance(attendance[selectedGame.id] || []);
                   }
                 }}
                 className='btn bg-green-600 text-white hover:bg-green-700'
@@ -135,10 +118,7 @@ const ScheduleHistoryModal = ({
                 <span>{isEditingAttendance ? 'Cancelar' : 'Asistencia'}</span>
               </button>
               <button
-                onClick={() => {
-                  onOpenPaymentForm(selectedGame.id);
-                  onClose();
-                }}
+                onClick={() => { onOpenPaymentForm(selectedGame.id); onClose(); }}
                 className='btn bg-yellow-600 text-white hover:bg-yellow-700'
                 title='Registrar pagos'
               >
@@ -154,25 +134,56 @@ const ScheduleHistoryModal = ({
                 <span>Lineup</span>
               </button>
               <button
-                onClick={() => {
-                  onOpenScoreForm(selectedGame);
-                  onClose();
-                }}
+                onClick={() => { onOpenScoreForm(selectedGame); onClose(); }}
                 className='btn bg-orange-600 text-white hover:bg-orange-700'
                 title='Terminar partido'
               >
                 <span>🏁</span>
-                <span className='sm:hidden'>Terminar</span>
-                <span className='hidden sm:inline'>Terminar Partido</span>
+                <span>Terminar</span>
               </button>
-              <button
-                onClick={() => setShowDeleteWarning(true)}
-                className='btn btn-danger'
-                title='Eliminar partido'
-              >
-                <span>🗑️</span>
-                <span>Eliminar</span>
-              </button>
+
+              {/* Menú de opciones (editar / eliminar) */}
+              <div className='relative ml-auto'>
+                <button
+                  onClick={() => setShowOptionsMenu(prev => !prev)}
+                  className='p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors border border-gray-600'
+                  title='Más opciones'
+                >
+                  <svg className='w-5 h-5' fill='currentColor' viewBox='0 0 24 24'>
+                    <circle cx='12' cy='5' r='1.5' />
+                    <circle cx='12' cy='12' r='1.5' />
+                    <circle cx='12' cy='19' r='1.5' />
+                  </svg>
+                </button>
+                {showOptionsMenu && (
+                  <>
+                    <div
+                      className='fixed inset-0 z-10'
+                      onClick={() => setShowOptionsMenu(false)}
+                    />
+                    <div className='absolute right-0 mt-1 w-40 bg-neutral-800 border border-gray-600 rounded-lg shadow-lg z-20'>
+                      <button
+                        onClick={() => {
+                          setShowOptionsMenu(false);
+                          onEditGame(selectedGame);
+                          onClose();
+                        }}
+                        className='flex items-center gap-2 w-full px-4 py-2 text-sm text-white hover:bg-gray-700 rounded-t-lg'
+                      >
+                        <span>✏️</span>
+                        <span>Editar partido</span>
+                      </button>
+                      <button
+                        onClick={() => { setShowOptionsMenu(false); setShowDeleteWarning(true); }}
+                        className='flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-red-900/50 rounded-b-lg'
+                      >
+                        <span>🗑️</span>
+                        <span>Eliminar partido</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           )}
 

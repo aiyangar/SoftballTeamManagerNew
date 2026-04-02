@@ -34,6 +34,7 @@ const Players = () => {
   const [telefono, setTelefono] = useState('');
   const [email, setEmail] = useState('');
   const [equipoId, setEquipoId] = useState('');
+  const [inscripcionMax, setInscripcionMax] = useState('');
   const [selectedPositions, setSelectedPositions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [players, setPlayers] = useState([]);
@@ -72,6 +73,7 @@ const Players = () => {
   });
   const [playerInscripcionTotals, setPlayerInscripcionTotals] = useState({});
   const [inscripcionTarget, setInscripcionTarget] = useState(450);
+  const [inscripcionPorJugador, setInscripcionPorJugador] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlayerForPayment, setSelectedPlayerForPayment] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState('');
@@ -298,10 +300,10 @@ const Players = () => {
     if (!teamId) return 450; // Valor por defecto si no hay equipo seleccionado
 
     try {
-      // Obtener información del equipo (inscripción total)
+      // Obtener información del equipo (inscripción total y por jugador)
       const { data: teamData, error: teamError } = await supabase
         .from('equipos')
-        .select('inscripcion')
+        .select('inscripcion, inscripcion_por_jugador')
         .eq('id', teamId)
         .single();
 
@@ -309,6 +311,13 @@ const Players = () => {
         return 450;
       }
 
+      // Si hay monto máximo por jugador configurado, usarlo directamente
+      if (teamData.inscripcion_por_jugador) {
+        setInscripcionPorJugador(teamData.inscripcion_por_jugador);
+        return teamData.inscripcion_por_jugador;
+      }
+
+      setInscripcionPorJugador(null);
       const totalInscripcion = teamData.inscripcion || 0;
       if (totalInscripcion === 0) return 450;
 
@@ -556,6 +565,7 @@ const Players = () => {
             telefono: playerData.telefono || null,
             email: playerData.email || null,
             equipo_id: playerData.equipo_id,
+            inscripcion_max: playerData.inscripcion_max ? parseFloat(playerData.inscripcion_max) : null,
           })
           .eq('id', editingPlayer.id)
           .select();
@@ -579,7 +589,8 @@ const Players = () => {
               telefono: playerData.telefono || null,
               email: playerData.email || null,
               equipo_id: playerData.equipo_id,
-              propietario_id: session.user.id, // Incluir el propietario_id
+              propietario_id: session.user.id,
+              inscripcion_max: playerData.inscripcion_max ? parseFloat(playerData.inscripcion_max) : null,
             },
           ])
           .select();
@@ -670,6 +681,7 @@ const Players = () => {
       telefono: telefono,
       email: email,
       equipo_id: equipoSeleccionado,
+      inscripcion_max: inscripcionMax,
     };
 
       const result = await registerPlayer(playerData);
@@ -709,9 +721,10 @@ const Players = () => {
     setNumero('');
     setTelefono('');
     setEmail('');
-    // Mantener el equipo seleccionado actualmente
+    setInscripcionMax('');
     setEquipoId(selectedTeam || '');
-    setSelectedPositions([]);    setEditingPlayer(null);
+    setSelectedPositions([]);
+    setEditingPlayer(null);
     setShowForm(false);
   };
 
@@ -727,7 +740,7 @@ const Players = () => {
       setNumero(player.numero.toString());
       setTelefono(player.telefono || '');
       setEmail(player.email || '');
-      // Usar el equipo del jugador o el equipo seleccionado actualmente
+      setInscripcionMax(player.inscripcion_max ? player.inscripcion_max.toString() : '');
       setEquipoId(player.equipo_id || selectedTeam || '');
 
       // Obtener las posiciones del jugador
@@ -1534,6 +1547,7 @@ const Players = () => {
               telefono,
               email,
               equipoId,
+              inscripcionMax,
             }}
             onFormDataChange={(field, value) => {
               switch (field) {
@@ -1552,6 +1566,9 @@ const Players = () => {
                 case 'equipoId':
                   setEquipoId(value);
                   break;
+                case 'inscripcionMax':
+                  setInscripcionMax(value);
+                  break;
               }
             }}
             selectedPositions={selectedPositions}
@@ -1568,6 +1585,7 @@ const Players = () => {
             onCancel={() => {
               resetForm();
             }}
+            teamInscripcionPorJugador={inscripcionPorJugador}
           />
         )}
 

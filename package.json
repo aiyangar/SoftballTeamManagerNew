@@ -17,6 +17,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.54.0",
     "@tailwindcss/vite": "^4.1.11",
+    "html2canvas": "^1.4.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hot-toast": "^2.6.0",

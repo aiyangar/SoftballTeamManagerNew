@@ -15,6 +15,7 @@ import SubstitutionModal from '../components/Modals/SubstitutionModal';
 
 const Schedule = () => {
   const { teams, selectedTeam } = useTeam();
+  const { session } = UserAuth() || {};
 
   // Obtener el nombre del equipo local
   const getLocalTeamName = () => {
@@ -81,6 +82,7 @@ const Schedule = () => {
   const [selectedGameForLineup, setSelectedGameForLineup] = useState(null);
   const [showSubstitutionModal, setShowSubstitutionModal] = useState(false);
   const [activeLineupForSubstitution, setActiveLineupForSubstitution] = useState([]);
+  const [leagueTeams, setLeagueTeams] = useState([]);
 
   // Usar el hook para manejar los modales
   useModal(
@@ -1107,6 +1109,22 @@ const Schedule = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTeam]);
 
+  // Cargar equipos de la liga
+  useEffect(() => {
+    const fetchLeagueTeams = async () => {
+      const userId = session?.user?.id;
+      if (!userId) return;
+      const { data } = await supabase
+        .from('equipos_liga')
+        .select('id, nombre')
+        .eq('user_id', userId)
+        .order('nombre', { ascending: true });
+      if (data) setLeagueTeams(data);
+    };
+    fetchLeagueTeams();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session]);
+
   return (
     <>
       <div>
@@ -1157,6 +1175,7 @@ const Schedule = () => {
               }}
               loading={loading}
               editingGame={editingGame}
+              leagueTeams={leagueTeams}
             />
 
             {/* Games List */}

@@ -46,6 +46,8 @@ const ScheduleHistoryModal = ({
   const [localAttendance, setLocalAttendance] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showDeleteWarning, setShowDeleteWarning] = useState(false);
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+  const [sharingLineup, setSharingLineup] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     attendance: false,
     payments: false,
@@ -78,6 +80,319 @@ const ScheduleHistoryModal = ({
 
   if (!showModal || !selectedGame) return null;
 
+  const handleShareLineup = async (lineup, game) => {
+    setSharingLineup(true);
+    try {
+      // ── Build ordered rows mirroring the accordion ──────────────────
+      const isBD = e => e.posicion_campo === 'BD' && e.batea_por_id;
+      const starters = lineup
+        .filter(e => e.es_titular)
+        .sort((a, b) => (a.orden_bateo || 0) - (b.orden_bateo || 0));
+      const inGameSubs = lineup.filter(e => !e.es_titular && e.orden_bateo != null && !isBD(e));
+      const bench = lineup.filter(e => !e.es_titular && e.orden_bateo == null && !isBD(e) && e.activo);
+      const bdPlayers = lineup.filter(e => isBD(e));
+
+      const rows = [];
+      const usedSubs = new Set();
+      starters.forEach(starter => {
+        rows.push({ ...starter, indent: false, section: 'titular' });
+        // BD players batting for this starter (indented right below)
+        bdPlayers
+          .filter(bd => String(bd.batea_por_id) === String(starter.jugadores?.id))
+          .forEach(bd => rows.push({ ...bd, indent: true, section: 'bd', replacedName: starter.jugadores?.nombre }));
+        // In-game subs that share this slot (only when starter went out)
+        if (!starter.activo) {
+          inGameSubs
+            .filter(s => s.orden_bateo === starter.orden_bateo)
+            .forEach(s => {
+              rows.push({ ...s, indent: true, section: 'sub', replacedName: starter.jugadores?.nombre });
+              usedSubs.add(s);
+            });
+        }
+      });
+      inGameSubs.filter(s => !usedSubs.has(s)).forEach(s => bench.push(s));
+      const allBench = [...bench];
+
+      const fecha = new Date(game.fecha_partido).toLocaleDateString('es-MX', {
+        day: '2-digit', month: 'long', year: 'numeric',
+      });
+
+      // ── Canvas dimensions ───────────────────────────────────────────
+      const SCALE = 2;
+      const W = 480;
+      const PAD = 20;
+      const ROW_H = 40;
+      const SEC_H = 28;
+      const HEADER_H = 90;
+      const FOOTER_H = 36;
+      const totalRows = rows.length + allBench.length;
+      const numSections = allBench.length > 0 ? 2 : 1;
+      const H = HEADER_H + numSections * SEC_H + totalRows * ROW_H + FOOTER_H + PAD;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = W * SCALE;
+      canvas.height = H * SCALE;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(SCALE, SCALE);
+
+      const roundRect = (x, y, w, h, r) => {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+      };
+
+      // ── Background & header bar ─────────────────────────────────────
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#16a34a';
+      ctx.fillRect(0, 0, W, 5);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 22px system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText('⚾  LINEUP', PAD, 14);
+
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '13px system-ui, sans-serif';
+      ctx.fillText(`vs ${game.equipo_contrario}  ·  ${fecha}`, PAD, 46);
+
+      ctx.strokeStyle = '#374151';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(PAD, HEADER_H - 10);
+      ctx.lineTo(W - PAD, HEADER_H - 10);
+      ctx.stroke();
+
+      let y = HEADER_H;
+      let rowIdx = 0;
+
+      const drawSectionHeader = (label, bgColor, textColor) => {
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, y, W, SEC_H);
+        ctx.fillStyle = textColor;
+        ctx.font = 'bold 11px system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label.toUpperCase(), PAD, y + SEC_H / 2);
+        y += SEC_H;
+      };
+
+      // ── Draw a single row ────────────────────────────────────────────
+      // section: 'titular' | 'bd' | 'sub' | 'bench'
+      const drawRow = (entry) => {
+        const { section, indent, replacedName } = entry;
+        const isInactive = !entry.activo;
+
+        // row background
+        let rowBg = rowIdx % 2 === 0 ? '#1f2937' : '#111827';
+        if (section === 'bd') rowBg = '#2e1065';    // purple-950 tint
+        if (section === 'sub') rowBg = '#2d1a00';   // amber-950 tint
+        ctx.fillStyle = rowBg;
+        ctx.fillRect(0, y, W, ROW_H);
+
+        const midY = y + ROW_H / 2;
+        ctx.textBaseline = 'middle';
+        const xStart = indent ? PAD + 16 : PAD;
+
+        // ↳ indent arrow
+        if (indent) {
+          ctx.fillStyle = section === 'bd' ? '#a78bfa' : '#fbbf24';
+          ctx.font = '13px system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText('↳', PAD, midY);
+        }
+
+        // turn number (only non-BD starters and subs)
+        if (section !== 'bd') {
+          ctx.fillStyle = isInactive ? '#4b5563' : '#6b7280';
+          ctx.font = '13px system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText(String(entry.orden_bateo ?? '—'), xStart, midY);
+        }
+
+        // jersey badge
+        const num = entry.jugadores?.numero;
+        const badgeX = indent ? xStart + 22 : xStart + 22;
+        if (num != null) {
+          const badgeColor = section === 'bd' ? '#4c1d95' : section === 'sub' ? '#451a03' : '#78350f';
+          const textColor = section === 'bd' ? '#ddd6fe' : '#fde68a';
+          ctx.fillStyle = badgeColor;
+          roundRect(badgeX, y + 10, 30, ROW_H - 20, 4);
+          ctx.fill();
+          ctx.fillStyle = textColor;
+          ctx.font = 'bold 10px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(`#${num}`, badgeX + 15, midY);
+        }
+
+        // name
+        const nameX = badgeX + 36;
+        if (section === 'bd') {
+          ctx.fillStyle = '#c4b5fd';
+        } else if (section === 'sub') {
+          ctx.fillStyle = '#fde68a';
+        } else if (isInactive) {
+          ctx.fillStyle = '#6b7280';
+        } else {
+          ctx.fillStyle = '#f3f4f6';
+        }
+        ctx.font = `${isInactive ? 'italic ' : ''}14px system-ui, sans-serif`;
+        ctx.textAlign = 'left';
+        const nombre = entry.jugadores?.nombre || '—';
+        ctx.fillText(nombre, nameX, midY);
+
+        // strikethrough for inactive starters
+        if (isInactive && section === 'titular') {
+          ctx.strokeStyle = '#6b7280';
+          ctx.lineWidth = 1;
+          const textW = ctx.measureText(nombre).width;
+          ctx.beginPath();
+          ctx.moveTo(nameX, midY);
+          ctx.lineTo(nameX + textW, midY);
+          ctx.stroke();
+        }
+
+        // right side: position badge (starters/subs) or BD label
+        const posX = W - PAD - 38;
+        if (section === 'bd') {
+          // show "BD" badge + "por [name]" hint
+          ctx.fillStyle = '#581c87';
+          roundRect(posX, y + 10, 30, ROW_H - 20, 4);
+          ctx.fill();
+          ctx.fillStyle = '#e9d5ff';
+          ctx.font = 'bold 10px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('BD', posX + 15, midY);
+        } else if (entry.posicion_campo && !isInactive) {
+          ctx.fillStyle = section === 'sub' ? '#78350f' : '#881337';
+          roundRect(posX, y + 10, 36, ROW_H - 20, 4);
+          ctx.fill();
+          ctx.fillStyle = section === 'sub' ? '#fde68a' : '#fecdd3';
+          ctx.font = 'bold 10px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(entry.posicion_campo, posX + 18, midY);
+        }
+
+        // sub label: "por [replacedName]"
+        if (section === 'sub' && replacedName) {
+          ctx.fillStyle = '#d97706';
+          ctx.font = 'italic 10px system-ui, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.fillText(`por ${replacedName}`, posX - 4, midY);
+        }
+
+        // divider line
+        ctx.strokeStyle = '#374151';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(0, y + ROW_H);
+        ctx.lineTo(W, y + ROW_H);
+        ctx.stroke();
+
+        y += ROW_H;
+        rowIdx++;
+      };
+
+      // ── Draw bench row (simpler layout) ─────────────────────────────
+      const drawBenchRow = (entry) => {
+        ctx.fillStyle = rowIdx % 2 === 0 ? '#1f2937' : '#111827';
+        ctx.fillRect(0, y, W, ROW_H);
+        const midY = y + ROW_H / 2;
+        ctx.textBaseline = 'middle';
+
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '13px system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('•', PAD + 4, midY);
+
+        const num = entry.jugadores?.numero;
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = '12px system-ui, sans-serif';
+        ctx.fillText(num != null ? `#${num}` : '', PAD + 20, midY);
+
+        ctx.fillStyle = '#d1d5db';
+        ctx.font = '14px system-ui, sans-serif';
+        ctx.fillText(entry.jugadores?.nombre || '—', PAD + 54, midY);
+
+        if (entry.posicion_campo && entry.posicion_campo !== 'BD') {
+          const posX = W - PAD - 38;
+          ctx.fillStyle = '#374151';
+          roundRect(posX, y + 10, 36, ROW_H - 20, 4);
+          ctx.fill();
+          ctx.fillStyle = '#9ca3af';
+          ctx.font = 'bold 10px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(entry.posicion_campo, posX + 18, midY);
+        }
+
+        ctx.strokeStyle = '#374151';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(0, y + ROW_H);
+        ctx.lineTo(W, y + ROW_H);
+        ctx.stroke();
+
+        y += ROW_H;
+        rowIdx++;
+      };
+
+      // ── Render sections ──────────────────────────────────────────────
+      drawSectionHeader('Titulares', '#052e16', '#4ade80');
+      rows.forEach(row => drawRow(row));
+
+      if (allBench.length > 0) {
+        drawSectionHeader('Banca', '#1f2937', '#9ca3af');
+        allBench.forEach(row => drawBenchRow(row));
+      }
+
+      // ── Footer ───────────────────────────────────────────────────────
+      y = H - FOOTER_H;
+      ctx.fillStyle = '#1f2937';
+      ctx.fillRect(0, y, W, FOOTER_H);
+      ctx.strokeStyle = '#374151';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '11px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('My Softball Club', W / 2, y + FOOTER_H / 2);
+
+      canvas.toBlob(async blob => {
+        const fileName = `lineup-${game.equipo_contrario.replace(/\s+/g, '_')}.png`;
+        const file = new File([blob], fileName, { type: 'image/png' });
+        const canShareFiles = navigator.canShare?.({ files: [file] });
+        if (navigator.share && canShareFiles) {
+          try {
+            await navigator.share({ files: [file], title: `Lineup vs ${game.equipo_contrario}` });
+          } catch (_) { /* cancelled */ }
+        } else {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+      }, 'image/png');
+    } catch (err) {
+      console.error('Error generando imagen:', err);
+    } finally {
+      setSharingLineup(false);
+    }
+  };
+
   return (
     <div className='fixed inset-0 modal-overlay flex items-center justify-center z-50'>
       <div className='bg-neutral-900 border border-gray-600 rounded-lg w-full max-w-4xl mx-4 modal-container'>
@@ -99,79 +414,90 @@ const ScheduleHistoryModal = ({
         <div className='modal-content p-4 sm:p-6'>
           {/* Botones de acción en la parte superior */}
           {!gameFinalizationStatus && (
-            <div className='mb-6 grid grid-cols-2 gap-2 *:justify-center sm:flex sm:flex-wrap sm:gap-3 sm:*:justify-start'>
-              <button
-                onClick={() => {
-                  onEditGame(selectedGame);
-                  onClose();
-                }}
-                className='btn btn-primary'
-                title='Editar partido'
-              >
-                <span>✏️</span>
-                <span>Editar</span>
-              </button>
+            <div className='mb-6 grid grid-cols-[1fr_1fr_auto] grid-rows-2 gap-2 items-center'>
               <button
                 onClick={async () => {
                   if (!isEditingAttendance) {
-                    // Al activar el modo edición, cargar asistencia existente
-                    const success = await onLoadExistingAttendance(
-                      selectedGame.id
-                    );
-                    if (success) {
-                      setIsEditingAttendance(true);
-                    }
+                    const success = await onLoadExistingAttendance(selectedGame.id);
+                    if (success) setIsEditingAttendance(true);
                   } else {
-                    // Al cancelar, resetear el estado local al estado global
                     setIsEditingAttendance(false);
-                    const currentAttendance = attendance[selectedGame.id] || [];
-                    setLocalAttendance(currentAttendance);
+                    setLocalAttendance(attendance[selectedGame.id] || []);
                   }
                 }}
-                className='btn bg-green-600 text-white hover:bg-green-700'
+                className='btn justify-center bg-green-600 text-white hover:bg-green-700'
                 title='Gestionar asistencia'
               >
                 <span>{isEditingAttendance ? '✕' : '📋'}</span>
                 <span>{isEditingAttendance ? 'Cancelar' : 'Asistencia'}</span>
               </button>
               <button
-                onClick={() => {
-                  onOpenPaymentForm(selectedGame.id);
-                  onClose();
-                }}
-                className='btn bg-yellow-600 text-white hover:bg-yellow-700'
+                onClick={() => { onOpenPaymentForm(selectedGame.id); onClose(); }}
+                className='btn justify-center bg-yellow-600 text-white hover:bg-yellow-700'
                 title='Registrar pagos'
               >
                 <span>💰</span>
                 <span>Pagos</span>
               </button>
+
+              {/* Menú de opciones — ocupa las 2 filas */}
+              <div className='relative row-span-2 self-stretch flex items-center'>
+                <button
+                  onClick={() => setShowOptionsMenu(prev => !prev)}
+                  className='p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors border border-gray-600'
+                  title='Más opciones'
+                >
+                  <svg className='w-5 h-5' fill='currentColor' viewBox='0 0 24 24'>
+                    <circle cx='12' cy='5' r='1.5' />
+                    <circle cx='12' cy='12' r='1.5' />
+                    <circle cx='12' cy='19' r='1.5' />
+                  </svg>
+                </button>
+                {showOptionsMenu && (
+                  <>
+                    <div
+                      className='fixed inset-0 z-10'
+                      onClick={() => setShowOptionsMenu(false)}
+                    />
+                    <div className='absolute right-0 mt-1 w-40 bg-neutral-800 border border-gray-600 rounded-lg shadow-lg z-20'>
+                      <button
+                        onClick={() => {
+                          setShowOptionsMenu(false);
+                          onEditGame(selectedGame);
+                          onClose();
+                        }}
+                        className='flex items-center gap-2 w-full px-4 py-2 text-sm text-white hover:bg-gray-700 rounded-t-lg'
+                      >
+                        <span>✏️</span>
+                        <span>Editar partido</span>
+                      </button>
+                      <button
+                        onClick={() => { setShowOptionsMenu(false); setShowDeleteWarning(true); }}
+                        className='flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-red-900/50 rounded-b-lg'
+                      >
+                        <span>🗑️</span>
+                        <span>Eliminar partido</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <button
                 onClick={() => onOpenLineup(selectedGame)}
-                className='btn bg-purple-600 text-white hover:bg-purple-700'
+                className='btn justify-center bg-purple-600 text-white hover:bg-purple-700'
                 title='Gestionar lineup'
               >
                 <span>⚾</span>
                 <span>Lineup</span>
               </button>
               <button
-                onClick={() => {
-                  onOpenScoreForm(selectedGame);
-                  onClose();
-                }}
-                className='btn bg-orange-600 text-white hover:bg-orange-700'
+                onClick={() => { onOpenScoreForm(selectedGame); onClose(); }}
+                className='btn justify-center bg-orange-600 text-white hover:bg-orange-700'
                 title='Terminar partido'
               >
                 <span>🏁</span>
-                <span className='sm:hidden'>Terminar</span>
-                <span className='hidden sm:inline'>Terminar Partido</span>
-              </button>
-              <button
-                onClick={() => setShowDeleteWarning(true)}
-                className='btn btn-danger'
-                title='Eliminar partido'
-              >
-                <span>🗑️</span>
-                <span>Eliminar</span>
+                <span>Terminar</span>
               </button>
             </div>
           )}
@@ -588,97 +914,100 @@ const ScheduleHistoryModal = ({
 
               return (
                 <div className='mt-3 bg-gray-700 rounded-lg overflow-hidden'>
-                  <table className='w-full text-sm text-left'>
-                    <thead>
-                      <tr className='text-gray-400 border-b border-gray-600'>
-                        <th className='pb-2 pt-3 px-3'>Turno</th>
-                        <th className='pb-2 pt-3 pr-3'>Jugador</th>
-                        <th className='pb-2 pt-3 pr-3'><span className='sm:hidden'>Pos.</span><span className='hidden sm:inline'>Posición</span></th>
-                        <th className='pb-2 pt-3 pr-3 hidden sm:table-cell'>Estado</th>
-                      </tr>
-                      <tr className='bg-green-900/30'>
-                        <td colSpan={4} className='px-3 py-1'>
-                          <span className='text-xs font-semibold text-green-400 uppercase tracking-wide'>Titulares</span>
-                        </td>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map((entry, i) => (
-                        <tr
-                          key={i}
-                          className={[
-                            'border-b border-gray-600 transition-colors',
-                            !entry.activo ? 'opacity-40' : '',
-                            entry.section === 'bd' ? 'bg-purple-900/20' : '',
-                            entry.section === 'sub' ? 'bg-yellow-900/15' : '',
-                          ].join(' ')}
-                        >
-                          <td className={`py-2 pr-3 font-mono ${entry.section === 'bd' ? 'text-purple-300' : 'text-white'} ${entry.indent ? 'pl-6' : 'pl-3'}`}>
-                            {entry.orden_bateo ?? '—'}
-                          </td>
-                          <td className='py-2 pr-3'>
-                            {entry.indent && (
-                              <span className={`mr-1 ${entry.section === 'bd' ? 'text-purple-400' : 'text-gray-500'}`}>↳</span>
-                            )}
-                            <span className={
-                              entry.section === 'bd'
-                                ? 'text-purple-200'
-                                : !entry.activo
-                                  ? 'line-through text-gray-500'
-                                  : 'text-white'
-                            }>
-                              {playerName(entry)}
+                  <div className='p-3 space-y-1'>
+                    <div className='bg-green-900/30 rounded px-2 py-1 mb-1'>
+                      <span className='text-xs font-semibold text-green-400 uppercase tracking-wide'>Titulares</span>
+                    </div>
+                    {rows.map((entry, i) => (
+                      <div
+                        key={i}
+                        className={[
+                          'rounded-lg px-3 py-2 flex items-center gap-2 transition-colors',
+                          !entry.activo ? 'opacity-40' : '',
+                          entry.section === 'bd' ? 'bg-purple-900/20' : '',
+                          entry.section === 'sub' ? 'bg-yellow-900/15' : '',
+                        ].join(' ')}
+                      >
+                        <span className={`font-mono text-sm w-5 shrink-0 text-center ${entry.section === 'bd' ? 'text-purple-300' : 'text-white'}`}>
+                          {entry.orden_bateo ?? '—'}
+                        </span>
+                        <span className='flex-1 text-sm min-w-0'>
+                          {entry.indent && (
+                            <span className={`mr-1 ${entry.section === 'bd' ? 'text-purple-400' : 'text-gray-500'}`}>↳</span>
+                          )}
+                          <span className={
+                            entry.section === 'bd'
+                              ? 'text-purple-200'
+                              : !entry.activo
+                                ? 'line-through text-gray-500'
+                                : 'text-white'
+                          }>
+                            {playerName(entry)}
+                          </span>
+                        </span>
+                        <span className={`font-mono text-sm shrink-0 ${entry.section === 'bd' ? 'text-purple-300' : 'text-white'}`}>
+                          {entry.posicion_campo}
+                        </span>
+                        <span className='text-xs shrink-0 min-w-[3.5rem] text-right'>
+                          {entry.section === 'bd' ? (
+                            <span className='text-purple-400'>BD</span>
+                          ) : entry.es_titular ? (
+                            <span className='text-green-400'>Titular</span>
+                          ) : (
+                            <span className='text-yellow-400'>Sub</span>
+                          )}
+                          {!entry.activo && (
+                            <span className='ml-1 text-red-400'>(rel)</span>
+                          )}
+                        </span>
+                      </div>
+                    ))}
+                    {allBench.length > 0 && (
+                      <>
+                        <div className='bg-gray-800/60 rounded px-2 py-1 mt-2 mb-1'>
+                          <span className='text-xs font-semibold text-gray-400 uppercase tracking-wide'>Banca</span>
+                        </div>
+                        {allBench.map((entry, i) => (
+                          <div
+                            key={`bench-${i}`}
+                            className={['rounded-lg px-3 py-2 flex items-center gap-2', isBD(entry) ? 'bg-purple-900/20' : ''].join(' ')}
+                          >
+                            <span className='font-mono text-sm w-5 shrink-0 text-center text-gray-400'>—</span>
+                            <span className='flex-1 text-white text-sm min-w-0'>{playerName(entry)}</span>
+                            <span className='font-mono text-sm text-white shrink-0'>{entry.posicion_campo}</span>
+                            <span className='text-xs shrink-0 min-w-[3.5rem] text-right'>
+                              {isBD(entry) ? (
+                                <span className='text-purple-400'>BD</span>
+                              ) : (
+                                <span className='text-gray-400'>Banca</span>
+                              )}
                             </span>
-                          </td>
-                          <td className={`py-2 pr-3 font-mono ${entry.section === 'bd' ? 'text-purple-300' : 'text-white'}`}>
-                            {entry.posicion_campo}
-                          </td>
-                          <td className='py-2 pr-3 hidden sm:table-cell'>
-                            {entry.section === 'bd' ? (
-                              <span className='text-purple-400 text-xs'>BD</span>
-                            ) : entry.es_titular ? (
-                              <span className='text-green-400 text-xs'>Titular</span>
-                            ) : (
-                              <span className='text-yellow-400 text-xs'>Sustituto</span>
-                            )}
-                            {!entry.activo && (
-                              <span className='ml-1 text-red-400 text-xs'>(relevado)</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-
-                      {allBench.length > 0 && (
-                        <>
-                          <tr className='bg-gray-800/60'>
-                            <td colSpan={4} className='px-3 py-1'>
-                              <span className='text-xs font-semibold text-gray-400 uppercase tracking-wide'>Banca</span>
-                            </td>
-                          </tr>
-                          {allBench.map((entry, i) => (
-                            <tr
-                              key={`bench-${i}`}
-                              className={[
-                                'border-b border-gray-600',
-                                isBD(entry) ? 'bg-purple-900/20' : '',
-                              ].join(' ')}
-                            >
-                              <td className='py-2 pl-3 pr-3 font-mono text-gray-400'>—</td>
-                              <td className='py-2 pr-3 text-white'>{playerName(entry)}</td>
-                              <td className='py-2 pr-3 text-white font-mono'>{entry.posicion_campo}</td>
-                              <td className='py-2 pr-3 hidden sm:table-cell'>
-                                {isBD(entry) ? (
-                                  <span className='text-purple-400 text-xs'>BD</span>
-                                ) : (
-                                  <span className='text-gray-400 text-xs'>Banca</span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                  <div className='p-3 flex justify-end border-t border-gray-600'>
+                    <button
+                      onClick={() => handleShareLineup(gameDetailsData.lineup, selectedGame)}
+                      disabled={sharingLineup}
+                      className='btn-sm bg-sky-600 text-white hover:bg-sky-700 flex items-center gap-1'
+                      title='Compartir lineup como imagen'
+                    >
+                      {sharingLineup ? (
+                        <svg className='animate-spin h-4 w-4' fill='none' viewBox='0 0 24 24'>
+                          <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+                          <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v8z' />
+                        </svg>
+                      ) : (
+                        <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2}
+                            d='M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z' />
+                        </svg>
                       )}
-                    </tbody>
-                  </table>
+                      <span>{sharingLineup ? 'Generando...' : 'Compartir'}</span>
+                    </button>
+                  </div>
                 </div>
               );
             })()}

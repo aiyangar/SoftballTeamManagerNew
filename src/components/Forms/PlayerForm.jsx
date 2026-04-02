@@ -12,6 +12,7 @@ import React from 'react';
  * @param {boolean} loading - Estado de carga
  * @param {Function} onSubmit - Función para manejar el envío del formulario
  * @param {Function} onCancel - Función para cancelar el formulario
+ * @param {number|null} teamInscripcionPorJugador - Monto máximo por defecto del equipo (para placeholder)
  */
 const PlayerForm = ({
   formData,
@@ -24,6 +25,7 @@ const PlayerForm = ({
   loading,
   onSubmit,
   onCancel,
+  teamInscripcionPorJugador = null,
 }) => {
   const handleSubmit = e => {
     e.preventDefault();
@@ -119,6 +121,31 @@ const PlayerForm = ({
               </p>
             )}
           </div>
+        </div>
+
+        {/* Monto personalizado de inscripción */}
+        <div>
+          <label className='block text-sm font-medium text-gray-300 mb-2'>
+            Monto personalizado de inscripción ($)
+          </label>
+          <input
+            id='playerInscripcionMax'
+            name='playerInscripcionMax'
+            type='number'
+            step='0.01'
+            min='0'
+            placeholder={
+              teamInscripcionPorJugador
+                ? `Por defecto del equipo: $${teamInscripcionPorJugador}`
+                : 'Sin límite por defecto'
+            }
+            value={formData.inscripcionMax ?? ''}
+            onChange={e => onFormDataChange('inscripcionMax', e.target.value)}
+            className='w-full p-3 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 bg-gray-800 text-white'
+          />
+          <p className='text-xs text-gray-400 mt-1'>
+            Opcional. Dejar vacío para usar el monto del equipo. Útil para jugadores que se inscriben tarde.
+          </p>
         </div>
 
         {/* Selección de posiciones */}

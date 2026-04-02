@@ -27,6 +27,7 @@ const LineupModal = ({
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [subMsg, setSubMsg] = useState(null);
+  const [sharing, setSharing] = useState(false);
   const dragIndexRef = useRef(null);
   const prevRefreshKey = useRef(refreshKey);
 
@@ -307,6 +308,243 @@ const LineupModal = ({
   const duplicatePositions = Object.entries(posCount).filter(([, names]) => names.length > 1);
   const colSpan = gameFinalizationStatus ? 4 : 6;
 
+  const handleShareImage = async () => {
+    setSharing(true);
+    try {
+      const titulares = lineupRows
+        .filter(r => r.es_titular && r.activo)
+        .sort((a, b) => (a.orden_bateo || 99) - (b.orden_bateo || 99));
+      const suplentes = lineupRows.filter(r => !r.es_titular || !r.activo);
+
+      const fecha = new Date(game.fecha_partido).toLocaleDateString('es-MX', {
+        day: '2-digit', month: 'long', year: 'numeric',
+      });
+
+      // ── Canvas dimensions ──────────────────────────────────────────
+      const SCALE = 2;          // retina
+      const W = 480;
+      const PAD = 20;
+      const ROW_H = 38;
+      const SEC_H = 30;         // section header height
+      const HEADER_H = 90;
+      const FOOTER_H = 36;
+
+      const numRows = titulares.length + (suplentes.length > 0 ? suplentes.length : 0);
+      const numSections = suplentes.length > 0 ? 2 : 1;
+      const H = HEADER_H + numSections * SEC_H + numRows * ROW_H + FOOTER_H + PAD;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = W * SCALE;
+      canvas.height = H * SCALE;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(SCALE, SCALE);
+
+      // ── Helpers ────────────────────────────────────────────────────
+      const roundRect = (x, y, w, h, r) => {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+      };
+
+      // ── Background ─────────────────────────────────────────────────
+      ctx.fillStyle = '#111827';   // gray-900
+      ctx.fillRect(0, 0, W, H);
+
+      // top accent bar
+      ctx.fillStyle = '#16a34a';   // green-600
+      ctx.fillRect(0, 0, W, 4);
+
+      // ── Header ─────────────────────────────────────────────────────
+      ctx.fillStyle = '#1f2937';   // gray-800
+      ctx.fillRect(0, 4, W, HEADER_H - 4);
+
+      // baseball icon area (left circle)
+      ctx.fillStyle = '#166534';   // green-800
+      roundRect(PAD, 18, 44, 44, 8);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 26px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('⚾', PAD + 22, 40);
+
+      // Title
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 20px system-ui, sans-serif';
+      ctx.fillText('LINEUP', PAD + 56, 30);
+
+      ctx.fillStyle = '#9ca3af';   // gray-400
+      ctx.font = '13px system-ui, sans-serif';
+      ctx.fillText(`vs ${game.equipo_contrario}`, PAD + 56, 50);
+      ctx.fillText(`📅 ${fecha}`, PAD + 56, 68);
+
+      // divider
+      ctx.strokeStyle = '#374151'; // gray-700
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, HEADER_H);
+      ctx.lineTo(W, HEADER_H);
+      ctx.stroke();
+
+      // ── Draw rows ──────────────────────────────────────────────────
+      let y = HEADER_H;
+
+      const drawSectionHeader = (label, bgColor, textColor) => {
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, y, W, SEC_H);
+        ctx.fillStyle = textColor;
+        ctx.font = 'bold 11px system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label.toUpperCase(), PAD, y + SEC_H / 2);
+        y += SEC_H;
+      };
+
+      const drawRow = (index, row, isBench) => {
+        // alternating row bg
+        ctx.fillStyle = index % 2 === 0 ? '#1f2937' : '#111827';
+        ctx.fillRect(0, y, W, ROW_H);
+
+        ctx.textBaseline = 'middle';
+        const midY = y + ROW_H / 2;
+
+        if (!isBench) {
+          // batting order number
+          ctx.fillStyle = '#6b7280';  // gray-500
+          ctx.font = '12px system-ui, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.fillText(String(row.orden_bateo || ''), PAD + 20, midY);
+
+          // jersey number badge
+          ctx.fillStyle = '#92400e';  // amber-800
+          roundRect(PAD + 26, y + 8, 30, ROW_H - 16, 4);
+          ctx.fill();
+          ctx.fillStyle = '#fde68a';  // amber-200
+          ctx.font = 'bold 11px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(row.numero != null ? `#${row.numero}` : '—', PAD + 41, midY);
+
+          // name
+          ctx.fillStyle = '#f9fafb';
+          ctx.font = '14px system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText(row.nombre || '—', PAD + 64, midY);
+
+          // position badge
+          if (row.posicion_campo) {
+            const posX = W - PAD - 36;
+            ctx.fillStyle = '#881337';  // rose-900
+            roundRect(posX, y + 10, 34, ROW_H - 20, 4);
+            ctx.fill();
+            ctx.fillStyle = '#fecdd3';  // rose-200
+            ctx.font = 'bold 11px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(row.posicion_campo, posX + 17, midY);
+          }
+        } else {
+          // bench player: bullet + jersey + name
+          ctx.fillStyle = '#6b7280';
+          ctx.font = '14px system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText('•', PAD + 4, midY);
+
+          ctx.fillStyle = '#9ca3af';
+          ctx.font = '12px system-ui, sans-serif';
+          const numStr = row.numero != null ? `#${row.numero}` : '';
+          ctx.fillText(numStr, PAD + 20, midY);
+
+          ctx.fillStyle = '#d1d5db';
+          ctx.font = '14px system-ui, sans-serif';
+          ctx.fillText(row.nombre || '—', PAD + 52, midY);
+
+          // show state (relevado / sustituto)
+          if (!row.activo) {
+            ctx.fillStyle = '#ef4444';
+            ctx.font = 'italic 11px system-ui, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('relevado', W - PAD, midY);
+          }
+        }
+
+        // bottom row border
+        ctx.strokeStyle = '#1f2937';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(PAD, y + ROW_H);
+        ctx.lineTo(W - PAD, y + ROW_H);
+        ctx.stroke();
+
+        y += ROW_H;
+      };
+
+      // Titulares
+      drawSectionHeader('Titulares', '#052e16', '#4ade80');  // green-950 / green-400
+      titulares.forEach((row, i) => drawRow(i, row, false));
+
+      // Suplentes / Banca
+      if (suplentes.length > 0) {
+        drawSectionHeader('Banca', '#1f2937', '#9ca3af');
+        suplentes.forEach((row, i) => drawRow(i, row, true));
+      }
+
+      // ── Footer ─────────────────────────────────────────────────────
+      y = H - FOOTER_H;
+      ctx.fillStyle = '#1f2937';
+      ctx.fillRect(0, y, W, FOOTER_H);
+      ctx.strokeStyle = '#374151';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '11px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('My Softball Club', W / 2, y + FOOTER_H / 2);
+
+      // ── Share ──────────────────────────────────────────────────────
+      canvas.toBlob(async blob => {
+        const fileName = `lineup-${game.equipo_contrario.replace(/\s+/g, '_')}.png`;
+        const file = new File([blob], fileName, { type: 'image/png' });
+
+        const canShareFiles = navigator.canShare?.({ files: [file] });
+        if (navigator.share && canShareFiles) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: `Lineup vs ${game.equipo_contrario}`,
+            });
+          } catch (_) { /* user cancelled */ }
+        } else {
+          // Fallback: download the image
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(url);
+          setSubMsg('📥 Imagen guardada');
+          setTimeout(() => setSubMsg(null), 3000);
+        }
+      }, 'image/png');
+    } catch (err) {
+      setSaveError('No se pudo generar la imagen: ' + err.message);
+    } finally {
+      setSharing(false);
+    }
+  };
+
+
   return (
     <div className='fixed inset-0 modal-overlay flex items-center justify-center z-50'>
       <div className='bg-neutral-900 border border-gray-600 rounded-lg w-full max-w-3xl mx-4 modal-container'>
@@ -390,41 +628,6 @@ const LineupModal = ({
                 </div>
               )}
 
-              {/* Acciones */}
-              {!gameFinalizationStatus && (
-                <div className='flex gap-3 mb-4'>
-                  <button
-                    onClick={addRow}
-                    className='btn-sm btn-primary'
-                  >
-                    + Agregar jugador
-                  </button>
-                  {activeLineup.length > 0 && (
-                    <button
-                      onClick={() => {
-                        if (!lineupFromDB) {
-                          setSaveError('Guarda el lineup antes de registrar una sustitución.');
-                          return;
-                        }
-                        setSaveError(null);
-                        onOpenSubstitution(activeLineup);
-                      }}
-                      className='btn-sm bg-yellow-600 text-white hover:bg-yellow-700'
-                    >
-                      ⇄ Sustitución
-                    </button>
-                  )}
-                  {hasSubs && (
-                    <button
-                      onClick={() => setEditMode(prev => !prev)}
-                      className={`px-3 py-2 rounded transition-colors text-sm ${editMode ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}
-                    >
-                      {editMode ? '✓ Terminar edición' : '✎ Editar orden'}
-                    </button>
-                  )}
-                </div>
-              )}
-
               {/* Tabla */}
               {renderRows.length === 0 ? (
                 <div className='text-center text-gray-500 py-8'>
@@ -437,190 +640,154 @@ const LineupModal = ({
                       Arrastra las filas para cambiar el orden al bat o mover jugadores al banco.
                     </p>
                   )}
-                  <div className='overflow-x-auto'>
-                    <table className='w-full text-sm text-left'>
-                      <thead>
-                        <tr className='text-gray-400 border-b border-gray-700'>
-                          {!gameFinalizationStatus && <th className='pb-2 pr-2 w-6' />}
-                          <th className='pb-2 pr-3'>Turno</th>
-                          <th className='pb-2 pr-3'>Jugador</th>
-                          <th className='pb-2 pr-3'>Posición</th>
-                          <th className='pb-2 pr-3'>Estado</th>
-                          {!gameFinalizationStatus && <th className='pb-2' />}
-                        </tr>
-                        {/* Encabezado sección Titulares */}
-                        <tr className='bg-green-900/20'>
-                          <td colSpan={colSpan} className='px-1 py-1'>
-                            <span className='text-xs font-semibold text-green-400 uppercase tracking-wide'>
-                              Titulares
+                  <div className='space-y-1'>
+                    {/* Encabezado sección Titulares */}
+                    <div className='bg-green-900/20 rounded px-2 py-1'>
+                      <span className='text-xs font-semibold text-green-400 uppercase tracking-wide'>
+                        Titulares
+                      </span>
+                    </div>
+                    {renderRows.map((row, renderIdx) => (
+                      <React.Fragment key={row.originalIndex}>
+                        {row.showBancoSep && (
+                          <div className='bg-gray-800/60 rounded px-2 py-1 mt-1'>
+                            <span className='text-xs font-semibold text-gray-400 uppercase tracking-wide'>
+                              Banca
                             </span>
-                          </td>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {renderRows.map((row, renderIdx) => (
-                          <React.Fragment key={row.originalIndex}>
-                            {row.showBancoSep && (
-                              <tr className='bg-gray-800/60'>
-                                <td colSpan={colSpan} className='px-1 py-1'>
-                                  <span className='text-xs font-semibold text-gray-400 uppercase tracking-wide'>
-                                    Banca
+                          </div>
+                        )}
+                        <div
+                          draggable={(!hasSubs || editMode) && canDrag(row)}
+                          onDragStart={(!hasSubs || editMode) && canDrag(row) ? e => handleDragStart(e, row.originalIndex) : undefined}
+                          onDragOver={(!hasSubs || editMode) && canDrag(row) ? e => handleDragOver(e, renderIdx) : undefined}
+                          onDrop={(!hasSubs || editMode) && canDrag(row) ? e => handleDrop(e, row.originalIndex) : undefined}
+                          onDragEnd={handleDragEnd}
+                          className={[
+                            'rounded-lg border border-gray-700 p-2 transition-colors',
+                            !row.activo ? 'opacity-50' : '',
+                            dragOverIndex === renderIdx
+                              ? 'bg-blue-900/40'
+                              : row.isBD
+                                ? 'bg-purple-900/20'
+                                : 'bg-gray-800/40',
+                          ].join(' ')}
+                        >
+                          {/* Fila: handle + turno + jugador + posición + eliminar */}
+                          <div className='flex items-center gap-2'>
+                            {!gameFinalizationStatus && (
+                              <span className='w-5 shrink-0 text-center'>
+                                {(!hasSubs || editMode) && canDrag(row) && (
+                                  <span
+                                    className='text-gray-600 hover:text-gray-400 cursor-grab active:cursor-grabbing select-none text-base'
+                                    title='Arrastrar para reordenar'
+                                  >
+                                    ⠿
                                   </span>
-                                </td>
-                              </tr>
+                                )}
+                              </span>
                             )}
-                            <tr
-                              draggable={(!hasSubs || editMode) && canDrag(row)}
-                              onDragStart={(!hasSubs || editMode) && canDrag(row) ? e => handleDragStart(e, row.originalIndex) : undefined}
-                              onDragOver={(!hasSubs || editMode) && canDrag(row) ? e => handleDragOver(e, renderIdx) : undefined}
-                              onDrop={(!hasSubs || editMode) && canDrag(row) ? e => handleDrop(e, row.originalIndex) : undefined}
-                              onDragEnd={handleDragEnd}
-                              className={[
-                                'border-b border-gray-800 transition-colors',
-                                !row.activo ? 'opacity-50' : '',
-                                dragOverIndex === renderIdx
-                                  ? 'bg-blue-900/40'
-                                  : row.isBD
-                                    ? 'bg-purple-900/20'
-                                    : '',
-                              ].join(' ')}
-                            >
-                              {/* Handle arrastre */}
-                              {!gameFinalizationStatus && (
-                                <td className='py-2 pr-2'>
-                                  {(!hasSubs || editMode) && canDrag(row) && (
-                                    <span
-                                      className='text-gray-600 hover:text-gray-400 cursor-grab active:cursor-grabbing select-none text-base'
-                                      title='Arrastrar para reordenar'
-                                    >
-                                      ⠿
-                                    </span>
-                                  )}
-                                </td>
+                            <span className='font-mono text-white text-sm w-5 shrink-0 text-center'>
+                              {row.orden_bateo ?? '—'}
+                            </span>
+                            <div className='flex-1 min-w-0'>
+                              {row.indent && (
+                                <span className='text-gray-500 mr-1'>↳</span>
                               )}
-
-                              {/* Turno */}
-                              <td className={`py-2 pr-3 ${row.indent ? 'pl-6' : ''}`}>
-                                <span className='text-white font-mono'>
-                                  {row.orden_bateo ?? '—'}
+                              {row.jugador_id ? (
+                                <span className={`text-sm ${!row.activo ? 'line-through text-gray-500' : 'text-white'}`}>
+                                  {row.numero ? `#${row.numero} ` : ''}
+                                  {row.nombre}
                                 </span>
-                              </td>
-
-                              {/* Jugador */}
-                              <td className={`py-2 pr-3 ${row.indent ? 'pl-4' : ''}`}>
-                                {row.indent && (
-                                  <span className='text-gray-500 mr-1'>↳</span>
-                                )}
-                                {row.jugador_id ? (
-                                  <span className={`${!row.activo ? 'line-through text-gray-500' : 'text-white'}`}>
-                                    {row.numero ? `#${row.numero} ` : ''}
-                                    {row.nombre}
-                                  </span>
-                                ) : (
-                                  <select
-                                    value={row.jugador_id}
-                                    onChange={e => updateRow(row.originalIndex, 'jugador_id', e.target.value)}
-                                    className='p-1 bg-gray-800 border border-gray-600 rounded text-white text-sm min-w-36'
-                                  >
-                                    <option value=''>Seleccionar...</option>
-                                    {players
-                                      .filter(p => {
-                                        const pid = String(p.id);
-                                        const hasAttendance = selectablePlayers.some(sp => String(sp.id) === pid);
-                                        return hasAttendance && !usedPlayerIds.has(pid);
-                                      })
-                                      .map(p => (
-                                        <option key={p.id} value={p.id}>
-                                          {p.numero ? `#${p.numero} ` : ''}
-                                          {p.nombre}
-                                        </option>
-                                      ))}
-                                  </select>
-                                )}
-                              </td>
-
-                              {/* Posición */}
-                              <td className='py-2 pr-3'>
-                                {gameFinalizationStatus ? (
-                                  <span className='text-white font-mono'>
-                                    {POSITION_LABELS[row.posicion_campo] ?? row.posicion_campo}
-                                  </span>
-                                ) : (
-                                  <select
-                                    value={row.posicion_campo}
-                                    onChange={e => updateRow(row.originalIndex, 'posicion_campo', e.target.value)}
-                                    className='p-1 bg-gray-800 border border-gray-600 rounded text-white text-sm'
-                                  >
-                                    <optgroup label='Campo'>
-                                      {['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CLF', 'CRF', 'RF'].map(pos => (
-                                        <option key={pos} value={pos}>{pos}</option>
-                                      ))}
-                                    </optgroup>
-                                    <optgroup label='Designados'>
-                                      <option value='DH'>DH</option>
-                                      <option value='BD'>BD – Bateador Designado</option>
-                                      <option value='CD'>CD – Corredor Designado</option>
-                                    </optgroup>
-                                  </select>
-                                )}
-                              </td>
-
-                              {/* Estado / Batea por */}
-                              <td className='py-2 pr-3'>
-                                {row.posicion_campo === 'BD' && !gameFinalizationStatus ? (
-                                  <select
-                                    value={row.batea_por_id || ''}
-                                    onChange={e => updateRow(row.originalIndex, 'batea_por_id', e.target.value)}
-                                    className='p-1 bg-purple-900 border border-purple-600 rounded text-purple-200 text-xs min-w-28'
-                                  >
-                                    <option value=''>Batea por...</option>
-                                    {lineupRows
-                                      .filter(r =>
-                                        r.jugador_id &&
-                                        r.es_titular &&
-                                        String(r.jugador_id) !== String(row.jugador_id)
-                                      )
-                                      .map(r => (
-                                        <option key={r.jugador_id} value={r.jugador_id}>
-                                          {r.numero ? `#${r.numero} ` : ''}{r.nombre}
-                                        </option>
-                                      ))}
-                                  </select>
-                                ) : row.posicion_campo === 'BD' && row.batea_por_id ? (
-                                  <span className='text-purple-400 text-xs'>
-                                    por: {row.batea_por_nombre || `#${row.batea_por_id}`}
-                                  </span>
-                                ) : (
-                                  <>
-                                    {row.es_titular ? (
-                                      <span className='text-green-400 text-xs'>Titular</span>
-                                    ) : (
-                                      <span className='text-yellow-400 text-xs'>Sustituto</span>
-                                    )}
-                                    {!row.activo && (
-                                      <span className='ml-1 text-red-400 text-xs'>(relevado)</span>
-                                    )}
-                                  </>
-                                )}
-                              </td>
-
-                              {/* Eliminar */}
-                              {!gameFinalizationStatus && (
-                                <td className='py-2'>
-                                  <button
-                                    onClick={() => removeRow(row.originalIndex)}
-                                    className='text-red-400 hover:text-red-300 text-xs px-2'
-                                    title='Quitar jugador'
-                                  >
-                                    ✕
-                                  </button>
-                                </td>
+                              ) : (
+                                <select
+                                  value={row.jugador_id}
+                                  onChange={e => updateRow(row.originalIndex, 'jugador_id', e.target.value)}
+                                  className='p-1 bg-gray-800 border border-gray-600 rounded text-white text-sm w-full'
+                                >
+                                  <option value=''>Seleccionar...</option>
+                                  {players
+                                    .filter(p => {
+                                      const pid = String(p.id);
+                                      const hasAttendance = selectablePlayers.some(sp => String(sp.id) === pid);
+                                      return hasAttendance && !usedPlayerIds.has(pid);
+                                    })
+                                    .map(p => (
+                                      <option key={p.id} value={p.id}>
+                                        {p.numero ? `#${p.numero} ` : ''}
+                                        {p.nombre}
+                                      </option>
+                                    ))}
+                                </select>
                               )}
-                            </tr>
-                          </React.Fragment>
-                        ))}
-                      </tbody>
-                    </table>
+                              {!row.activo && (
+                                <span className='ml-1 text-red-400 text-xs'>(relevado)</span>
+                              )}
+                            </div>
+                            {/* Posición inline */}
+                            {gameFinalizationStatus ? (
+                              <span className='text-gray-300 font-mono text-xs shrink-0 bg-gray-700 px-1.5 py-0.5 rounded'>
+                                {POSITION_LABELS[row.posicion_campo] ?? row.posicion_campo}
+                              </span>
+                            ) : (
+                              <select
+                                value={row.posicion_campo}
+                                onChange={e => updateRow(row.originalIndex, 'posicion_campo', e.target.value)}
+                                className='p-0.5 bg-gray-800 border border-gray-600 rounded text-white text-xs shrink-0'
+                              >
+                                <optgroup label='Campo'>
+                                  {['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CLF', 'CRF', 'RF'].map(pos => (
+                                    <option key={pos} value={pos}>{pos}</option>
+                                  ))}
+                                </optgroup>
+                                <optgroup label='Designados'>
+                                  <option value='DH'>DH</option>
+                                  <option value='BD'>BD</option>
+                                  <option value='CD'>CD</option>
+                                </optgroup>
+                              </select>
+                            )}
+                            {!gameFinalizationStatus && (
+                              <button
+                                onClick={() => removeRow(row.originalIndex)}
+                                className='text-red-400 hover:text-red-300 text-xs shrink-0 px-1'
+                                title='Quitar jugador'
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </div>
+                          {/* BD: selector "batea por" (solo aplica a jugadores BD) */}
+                          {row.posicion_campo === 'BD' && (
+                            <div className={`flex items-center gap-2 mt-1 ${!gameFinalizationStatus ? 'pl-12' : 'pl-7'}`}>
+                              {!gameFinalizationStatus ? (
+                                <select
+                                  value={row.batea_por_id || ''}
+                                  onChange={e => updateRow(row.originalIndex, 'batea_por_id', e.target.value)}
+                                  className='p-1 bg-purple-900 border border-purple-600 rounded text-purple-200 text-xs'
+                                >
+                                  <option value=''>Batea por...</option>
+                                  {lineupRows
+                                    .filter(r =>
+                                      r.jugador_id &&
+                                      r.es_titular &&
+                                      String(r.jugador_id) !== String(row.jugador_id)
+                                    )
+                                    .map(r => (
+                                      <option key={r.jugador_id} value={r.jugador_id}>
+                                        {r.numero ? `#${r.numero} ` : ''}{r.nombre}
+                                      </option>
+                                    ))}
+                                </select>
+                              ) : row.batea_por_id ? (
+                                <span className='text-purple-400 text-xs'>
+                                  por: {row.batea_por_nombre || `#${row.batea_por_id}`}
+                                </span>
+                              ) : null}
+                            </div>
+                          )}
+                        </div>
+                      </React.Fragment>
+                    ))}
                   </div>
                 </>
               )}
@@ -629,33 +796,64 @@ const LineupModal = ({
         </div>
 
         {/* Footer */}
-        <div className='p-6 border-t border-gray-600 flex justify-end gap-3'>
-          <button
-            onClick={onClose}
-            className='btn btn-secondary'
-          >
-            {gameFinalizationStatus ? 'Cerrar' : 'Cancelar'}
-          </button>
+        <div className='p-4 border-t border-gray-600 flex flex-col gap-3'>
+          {/* Fila 1: acciones de edición */}
           {!gameFinalizationStatus && (
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className='btn bg-green-600 text-white hover:bg-green-700'
-            >
-              {saving && (
-                <svg
-                  className='animate-spin h-4 w-4 text-white'
-                  xmlns='http://www.w3.org/2000/svg'
-                  fill='none'
-                  viewBox='0 0 24 24'
+            <div className='flex flex-wrap items-center gap-2'>
+              <button onClick={addRow} className='btn-sm btn-primary'>
+                + Agregar
+              </button>
+              {activeLineup.length > 0 && (
+                <button
+                  onClick={() => {
+                    if (!lineupFromDB) {
+                      setSaveError('Guarda el lineup antes de registrar una sustitución.');
+                      return;
+                    }
+                    setSaveError(null);
+                    onOpenSubstitution(activeLineup);
+                  }}
+                  className='btn-sm bg-yellow-600 text-white hover:bg-yellow-700'
                 >
-                  <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
-                  <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v8z' />
-                </svg>
+                  ⇄ Sustitución
+                </button>
               )}
-              {saving ? 'Guardando...' : 'Guardar Lineup'}
-            </button>
+              {hasSubs && (
+                <button
+                  onClick={() => setEditMode(prev => !prev)}
+                  className={`btn-sm transition-colors ${editMode ? 'bg-orange-600 hover:bg-orange-700 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'}`}
+                >
+                  {editMode ? '✓ Terminar edición' : '✎ Editar orden'}
+                </button>
+              )}
+            </div>
           )}
+          {/* Fila 2: cancelar / guardar */}
+          <div className='flex justify-end gap-2'>
+            <button onClick={onClose} className='btn btn-secondary'>
+              {gameFinalizationStatus ? 'Cerrar' : 'Cancelar'}
+            </button>
+            {!gameFinalizationStatus && (
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className='btn bg-green-600 text-white hover:bg-green-700'
+              >
+                {saving && (
+                  <svg
+                    className='animate-spin h-4 w-4 text-white'
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                  >
+                    <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+                    <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v8z' />
+                  </svg>
+                )}
+                {saving ? 'Guardando...' : 'Guardar Lineup'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -83,25 +83,51 @@ const ScheduleHistoryModal = ({
   const handleShareLineup = async (lineup, game) => {
     setSharingLineup(true);
     try {
-      const titulares = lineup
-        .filter(e => e.es_titular && e.activo)
-        .sort((a, b) => (a.orden_bateo || 99) - (b.orden_bateo || 99));
-      const suplentes = lineup.filter(e => !e.es_titular || !e.activo);
+      // ── Build ordered rows mirroring the accordion ──────────────────
+      const isBD = e => e.posicion_campo === 'BD' && e.batea_por_id;
+      const starters = lineup
+        .filter(e => e.es_titular)
+        .sort((a, b) => (a.orden_bateo || 0) - (b.orden_bateo || 0));
+      const inGameSubs = lineup.filter(e => !e.es_titular && e.orden_bateo != null && !isBD(e));
+      const bench = lineup.filter(e => !e.es_titular && e.orden_bateo == null && !isBD(e) && e.activo);
+      const bdPlayers = lineup.filter(e => isBD(e));
+
+      const rows = [];
+      const usedSubs = new Set();
+      starters.forEach(starter => {
+        rows.push({ ...starter, indent: false, section: 'titular' });
+        // BD players batting for this starter (indented right below)
+        bdPlayers
+          .filter(bd => String(bd.batea_por_id) === String(starter.jugadores?.id))
+          .forEach(bd => rows.push({ ...bd, indent: true, section: 'bd', replacedName: starter.jugadores?.nombre }));
+        // In-game subs that share this slot (only when starter went out)
+        if (!starter.activo) {
+          inGameSubs
+            .filter(s => s.orden_bateo === starter.orden_bateo)
+            .forEach(s => {
+              rows.push({ ...s, indent: true, section: 'sub', replacedName: starter.jugadores?.nombre });
+              usedSubs.add(s);
+            });
+        }
+      });
+      inGameSubs.filter(s => !usedSubs.has(s)).forEach(s => bench.push(s));
+      const allBench = [...bench];
 
       const fecha = new Date(game.fecha_partido).toLocaleDateString('es-MX', {
         day: '2-digit', month: 'long', year: 'numeric',
       });
 
+      // ── Canvas dimensions ───────────────────────────────────────────
       const SCALE = 2;
       const W = 480;
       const PAD = 20;
-      const ROW_H = 38;
-      const SEC_H = 30;
+      const ROW_H = 40;
+      const SEC_H = 28;
       const HEADER_H = 90;
       const FOOTER_H = 36;
-      const numRows = titulares.length + (suplentes.length > 0 ? suplentes.length : 0);
-      const numSections = suplentes.length > 0 ? 2 : 1;
-      const H = HEADER_H + numSections * SEC_H + numRows * ROW_H + FOOTER_H + PAD;
+      const totalRows = rows.length + allBench.length;
+      const numSections = allBench.length > 0 ? 2 : 1;
+      const H = HEADER_H + numSections * SEC_H + totalRows * ROW_H + FOOTER_H + PAD;
 
       const canvas = document.createElement('canvas');
       canvas.width = W * SCALE;
@@ -111,8 +137,7 @@ const ScheduleHistoryModal = ({
 
       const roundRect = (x, y, w, h, r) => {
         ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.lineTo(x + w - r, y);
+        ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y);
         ctx.quadraticCurveTo(x + w, y, x + w, y + r);
         ctx.lineTo(x + w, y + h - r);
         ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
@@ -123,6 +148,7 @@ const ScheduleHistoryModal = ({
         ctx.closePath();
       };
 
+      // ── Background & header bar ─────────────────────────────────────
       ctx.fillStyle = '#111827';
       ctx.fillRect(0, 0, W, H);
       ctx.fillStyle = '#16a34a';
@@ -146,6 +172,7 @@ const ScheduleHistoryModal = ({
       ctx.stroke();
 
       let y = HEADER_H;
+      let rowIdx = 0;
 
       const drawSectionHeader = (label, bgColor, textColor) => {
         ctx.fillStyle = bgColor;
@@ -158,81 +185,175 @@ const ScheduleHistoryModal = ({
         y += SEC_H;
       };
 
-      const drawRow = (idx, entry, isBench) => {
-        ctx.fillStyle = idx % 2 === 0 ? '#1f2937' : '#111827';
+      // ── Draw a single row ────────────────────────────────────────────
+      // section: 'titular' | 'bd' | 'sub' | 'bench'
+      const drawRow = (entry) => {
+        const { section, indent, replacedName } = entry;
+        const isInactive = !entry.activo;
+
+        // row background
+        let rowBg = rowIdx % 2 === 0 ? '#1f2937' : '#111827';
+        if (section === 'bd') rowBg = '#2e1065';    // purple-950 tint
+        if (section === 'sub') rowBg = '#2d1a00';   // amber-950 tint
+        ctx.fillStyle = rowBg;
+        ctx.fillRect(0, y, W, ROW_H);
+
+        const midY = y + ROW_H / 2;
+        ctx.textBaseline = 'middle';
+        const xStart = indent ? PAD + 16 : PAD;
+
+        // ↳ indent arrow
+        if (indent) {
+          ctx.fillStyle = section === 'bd' ? '#a78bfa' : '#fbbf24';
+          ctx.font = '13px system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText('↳', PAD, midY);
+        }
+
+        // turn number (only non-BD starters and subs)
+        if (section !== 'bd') {
+          ctx.fillStyle = isInactive ? '#4b5563' : '#6b7280';
+          ctx.font = '13px system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText(String(entry.orden_bateo ?? '—'), xStart, midY);
+        }
+
+        // jersey badge
+        const num = entry.jugadores?.numero;
+        const badgeX = indent ? xStart + 22 : xStart + 22;
+        if (num != null) {
+          const badgeColor = section === 'bd' ? '#4c1d95' : section === 'sub' ? '#451a03' : '#78350f';
+          const textColor = section === 'bd' ? '#ddd6fe' : '#fde68a';
+          ctx.fillStyle = badgeColor;
+          roundRect(badgeX, y + 10, 30, ROW_H - 20, 4);
+          ctx.fill();
+          ctx.fillStyle = textColor;
+          ctx.font = 'bold 10px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(`#${num}`, badgeX + 15, midY);
+        }
+
+        // name
+        const nameX = badgeX + 36;
+        if (section === 'bd') {
+          ctx.fillStyle = '#c4b5fd';
+        } else if (section === 'sub') {
+          ctx.fillStyle = '#fde68a';
+        } else if (isInactive) {
+          ctx.fillStyle = '#6b7280';
+        } else {
+          ctx.fillStyle = '#f3f4f6';
+        }
+        ctx.font = `${isInactive ? 'italic ' : ''}14px system-ui, sans-serif`;
+        ctx.textAlign = 'left';
+        const nombre = entry.jugadores?.nombre || '—';
+        ctx.fillText(nombre, nameX, midY);
+
+        // strikethrough for inactive starters
+        if (isInactive && section === 'titular') {
+          ctx.strokeStyle = '#6b7280';
+          ctx.lineWidth = 1;
+          const textW = ctx.measureText(nombre).width;
+          ctx.beginPath();
+          ctx.moveTo(nameX, midY);
+          ctx.lineTo(nameX + textW, midY);
+          ctx.stroke();
+        }
+
+        // right side: position badge (starters/subs) or BD label
+        const posX = W - PAD - 38;
+        if (section === 'bd') {
+          // show "BD" badge + "por [name]" hint
+          ctx.fillStyle = '#581c87';
+          roundRect(posX, y + 10, 30, ROW_H - 20, 4);
+          ctx.fill();
+          ctx.fillStyle = '#e9d5ff';
+          ctx.font = 'bold 10px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('BD', posX + 15, midY);
+        } else if (entry.posicion_campo && !isInactive) {
+          ctx.fillStyle = section === 'sub' ? '#78350f' : '#881337';
+          roundRect(posX, y + 10, 36, ROW_H - 20, 4);
+          ctx.fill();
+          ctx.fillStyle = section === 'sub' ? '#fde68a' : '#fecdd3';
+          ctx.font = 'bold 10px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(entry.posicion_campo, posX + 18, midY);
+        }
+
+        // sub label: "por [replacedName]"
+        if (section === 'sub' && replacedName) {
+          ctx.fillStyle = '#d97706';
+          ctx.font = 'italic 10px system-ui, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.fillText(`por ${replacedName}`, posX - 4, midY);
+        }
+
+        // divider line
+        ctx.strokeStyle = '#374151';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(0, y + ROW_H);
+        ctx.lineTo(W, y + ROW_H);
+        ctx.stroke();
+
+        y += ROW_H;
+        rowIdx++;
+      };
+
+      // ── Draw bench row (simpler layout) ─────────────────────────────
+      const drawBenchRow = (entry) => {
+        ctx.fillStyle = rowIdx % 2 === 0 ? '#1f2937' : '#111827';
         ctx.fillRect(0, y, W, ROW_H);
         const midY = y + ROW_H / 2;
         ctx.textBaseline = 'middle';
 
-        if (!isBench) {
-          ctx.fillStyle = '#6b7280';
-          ctx.font = '13px system-ui, sans-serif';
-          ctx.textAlign = 'left';
-          ctx.fillText(String(entry.orden_bateo ?? ''), PAD, midY);
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '13px system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('•', PAD + 4, midY);
 
-          const num = entry.jugadores?.numero;
-          if (num != null) {
-            const bx = PAD + 28;
-            ctx.fillStyle = '#78350f';
-            roundRect(bx, y + 9, 28, ROW_H - 18, 4);
-            ctx.fill();
-            ctx.fillStyle = '#fde68a';
-            ctx.font = 'bold 11px system-ui, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(`#${num}`, bx + 14, midY);
-          }
+        const num = entry.jugadores?.numero;
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = '12px system-ui, sans-serif';
+        ctx.fillText(num != null ? `#${num}` : '', PAD + 20, midY);
 
-          ctx.fillStyle = '#f3f4f6';
-          ctx.font = '14px system-ui, sans-serif';
-          ctx.textAlign = 'left';
-          ctx.fillText(entry.jugadores?.nombre || '—', PAD + 64, midY);
+        ctx.fillStyle = '#d1d5db';
+        ctx.font = '14px system-ui, sans-serif';
+        ctx.fillText(entry.jugadores?.nombre || '—', PAD + 54, midY);
 
-          if (entry.posicion_campo) {
-            const posX = W - PAD - 36;
-            ctx.fillStyle = '#881337';
-            roundRect(posX, y + 10, 34, ROW_H - 20, 4);
-            ctx.fill();
-            ctx.fillStyle = '#fecdd3';
-            ctx.font = 'bold 11px system-ui, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(entry.posicion_campo, posX + 17, midY);
-          }
-        } else {
-          ctx.fillStyle = '#6b7280';
-          ctx.font = '14px system-ui, sans-serif';
-          ctx.textAlign = 'left';
-          ctx.fillText('•', PAD + 4, midY);
-          const num = entry.jugadores?.numero;
+        if (entry.posicion_campo && entry.posicion_campo !== 'BD') {
+          const posX = W - PAD - 38;
+          ctx.fillStyle = '#374151';
+          roundRect(posX, y + 10, 36, ROW_H - 20, 4);
+          ctx.fill();
           ctx.fillStyle = '#9ca3af';
-          ctx.font = '12px system-ui, sans-serif';
-          ctx.fillText(num != null ? `#${num}` : '', PAD + 20, midY);
-          ctx.fillStyle = '#d1d5db';
-          ctx.font = '14px system-ui, sans-serif';
-          ctx.fillText(entry.jugadores?.nombre || '—', PAD + 52, midY);
-          if (!entry.activo) {
-            ctx.fillStyle = '#ef4444';
-            ctx.font = 'italic 11px system-ui, sans-serif';
-            ctx.textAlign = 'right';
-            ctx.fillText('relevado', W - PAD, midY);
-          }
+          ctx.font = 'bold 10px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(entry.posicion_campo, posX + 18, midY);
         }
 
-        ctx.strokeStyle = '#1f2937';
+        ctx.strokeStyle = '#374151';
         ctx.lineWidth = 0.5;
         ctx.beginPath();
-        ctx.moveTo(PAD, y + ROW_H);
-        ctx.lineTo(W - PAD, y + ROW_H);
+        ctx.moveTo(0, y + ROW_H);
+        ctx.lineTo(W, y + ROW_H);
         ctx.stroke();
+
         y += ROW_H;
+        rowIdx++;
       };
 
+      // ── Render sections ──────────────────────────────────────────────
       drawSectionHeader('Titulares', '#052e16', '#4ade80');
-      titulares.forEach((e, i) => drawRow(i, e, false));
-      if (suplentes.length > 0) {
+      rows.forEach(row => drawRow(row));
+
+      if (allBench.length > 0) {
         drawSectionHeader('Banca', '#1f2937', '#9ca3af');
-        suplentes.forEach((e, i) => drawRow(i, e, true));
+        allBench.forEach(row => drawBenchRow(row));
       }
 
+      // ── Footer ───────────────────────────────────────────────────────
       y = H - FOOTER_H;
       ctx.fillStyle = '#1f2937';
       ctx.fillRect(0, y, W, FOOTER_H);

@@ -30,14 +30,15 @@ const PlayerCard = ({
     return abbreviations[positionName] || positionName;
   };
 
-  // Configuración de la meta de inscripción (ahora viene como parámetro)
-  const inscripcionProgress = Math.min(
-    (totalInscripcionPaid / inscripcionTarget) * 100,
-    100
-  );
+  // Per-player override beats the team default — keeps players with a
+  // custom inscripcion_max in sync with what they actually owe.
+  const effectiveTarget = player?.inscripcion_max ?? inscripcionTarget;
+  const inscripcionProgress = effectiveTarget > 0
+    ? Math.min((totalInscripcionPaid / effectiveTarget) * 100, 100)
+    : 100;
   const inscripcionRemaining = Math.max(
     0,
-    inscripcionTarget - totalInscripcionPaid
+    effectiveTarget - totalInscripcionPaid
   );
 
   // Determinar el color de la barra de progreso
@@ -101,7 +102,7 @@ const PlayerCard = ({
             <span className='text-xs text-gray-400'>Inscripción</span>
             <span className='text-xs text-gray-300'>
               ${totalInscripcionPaid.toLocaleString()} / $
-              {inscripcionTarget.toLocaleString()}
+              {effectiveTarget.toLocaleString()}
             </span>
           </div>
           <div className='w-full bg-gray-700 rounded-full h-2'>

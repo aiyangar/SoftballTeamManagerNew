@@ -1009,10 +1009,11 @@ const Players = () => {
    * @param {Object} player - Jugador para el cual aceptar el pago
    */
   const handleAcceptInscripcionPayment = (player) => {
-    // Calcular el monto restante de inscripción
+    // Per-player override beats the team default.
+    const effectiveTarget = player?.inscripcion_max ?? inscripcionTarget;
     const currentInscripcionPaid = playerInscripcionTotals[player.id] || 0;
-    const remainingAmount = inscripcionTarget - currentInscripcionPaid;
-    
+    const remainingAmount = effectiveTarget - currentInscripcionPaid;
+
     if (remainingAmount <= 0) {
       toast.error('Este jugador ya ha completado su pago de inscripción');
       return;

@@ -30,14 +30,14 @@ const PlayerHistoryModal = ({
 }) => {
   if (!isOpen || !player) return null;
 
-  // Configuración de la meta de inscripción
-  const inscripcionProgress = Math.min(
-    (history.totalInscripcionPaid / inscripcionTarget) * 100,
-    100
-  );
+  // Per-player override beats the team default.
+  const effectiveTarget = player?.inscripcion_max ?? inscripcionTarget;
+  const inscripcionProgress = effectiveTarget > 0
+    ? Math.min((history.totalInscripcionPaid / effectiveTarget) * 100, 100)
+    : 100;
   const inscripcionRemaining = Math.max(
     0,
-    inscripcionTarget - history.totalInscripcionPaid
+    effectiveTarget - history.totalInscripcionPaid
   );
 
   // Determinar el color de la barra de progreso
@@ -137,7 +137,7 @@ const PlayerHistoryModal = ({
                     </span>
                     <span className='text-sm text-gray-300'>
                       ${history.totalInscripcionPaid.toLocaleString()} / $
-                      {inscripcionTarget.toLocaleString()}
+                      {effectiveTarget.toLocaleString()}
                     </span>
                   </div>
                   <div className='w-full bg-gray-700 rounded-full h-3'>
@@ -148,7 +148,7 @@ const PlayerHistoryModal = ({
                   </div>
                   <div className='flex justify-between items-center mt-2'>
                     <span className='text-xs text-gray-400'>
-                      Meta: ${inscripcionTarget.toLocaleString()}
+                      Meta: ${effectiveTarget.toLocaleString()}
                     </span>
                     {inscripcionRemaining > 0 ? (
                       <span

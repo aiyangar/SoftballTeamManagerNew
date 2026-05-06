@@ -29,7 +29,9 @@ const PaymentModal = ({
 }) => {
   if (!isOpen || !player) return null;
 
-  const remainingAmount = inscripcionTarget - currentInscripcionPaid;
+  // Per-player override beats the team default.
+  const effectiveTarget = player?.inscripcion_max ?? inscripcionTarget;
+  const remainingAmount = effectiveTarget - currentInscripcionPaid;
 
   return (
     <div className='fixed inset-0 modal-overlay flex items-center justify-center z-50'>
@@ -74,7 +76,7 @@ const PaymentModal = ({
             <div className='flex justify-between items-center mb-2'>
               <span className='text-gray-300'>Meta de inscripción:</span>
               <span className='text-white font-semibold'>
-                ${inscripcionTarget.toLocaleString()}
+                ${effectiveTarget.toLocaleString()}
               </span>
             </div>
             <div className='flex justify-between items-center'>

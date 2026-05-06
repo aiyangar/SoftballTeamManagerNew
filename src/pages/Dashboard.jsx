@@ -5,6 +5,7 @@ import { supabase } from '../supabaseClient';
 import Menu from '../components/Menu';
 import { useTeam } from '../context/useTeam';
 import DashboardCardsGrid from '../components/CardGrids/DashboardCardsGrid';
+import { formatGameDate, todayLocalISODate } from '../utils/dateFormat';
 
 /**
  * Componente Dashboard - Página principal para usuarios autenticados
@@ -96,7 +97,7 @@ const Dashboard = () => {
         .from('partidos')
         .select('id, equipo_contrario, fecha_partido, lugar')
         .eq('equipo_id', teamId)
-        .gte('fecha_partido', new Date().toISOString().split('T')[0])
+        .gte('fecha_partido', todayLocalISODate())
         .order('fecha_partido', { ascending: true })
         .limit(1);
 
@@ -356,9 +357,7 @@ const Dashboard = () => {
                         Fecha:
                       </span>
                       <span className='text-white text-sm'>
-                        {new Date(
-                          teamInfo.nextGame.fecha_partido
-                        ).toLocaleDateString()}
+                        {formatGameDate(teamInfo.nextGame.fecha_partido)}
                       </span>
                     </div>
                     <div className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'>
@@ -445,9 +444,7 @@ const Dashboard = () => {
                         Fecha:
                       </span>
                       <span className='text-white text-sm'>
-                        {new Date(
-                          teamInfo.lastGame.fecha_partido
-                        ).toLocaleDateString()}
+                        {formatGameDate(teamInfo.lastGame.fecha_partido)}
                       </span>
                     </div>
                     <div className='flex justify-between items-center p-2 bg-gray-800 rounded w-full'>

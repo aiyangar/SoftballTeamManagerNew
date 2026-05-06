@@ -8,6 +8,7 @@ import { useTeam } from '../context/useTeam';
 import { useModal } from '../hooks/useModal';
 import ScheduleCardsGrid from '../components/CardGrids/ScheduleCardsGrid';
 import ScheduleForm from '../components/Forms/ScheduleForm';
+import { formatGameDate } from '../utils/dateFormat';
 import ScheduleHistoryModal from '../components/Modals/ScheduleHistoryModal';
 import PlayerHistoryModal from '../components/Modals/PlayerHistoryModal';
 import LineupModal from '../components/Modals/LineupModal';
@@ -1302,9 +1303,7 @@ const Schedule = () => {
                 <div className='mb-4 p-3 bg-gray-800 rounded'>
                   <p className='text-gray-300 text-xs'>
                     Fecha:{' '}
-                    {new Date(
-                      selectedGameForScore.fecha_partido
-                    ).toLocaleDateString()}
+                    {formatGameDate(selectedGameForScore.fecha_partido)}
                   </p>
                 </div>
 

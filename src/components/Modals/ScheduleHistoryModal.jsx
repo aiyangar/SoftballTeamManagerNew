@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PaymentStatusWidget from '../Widgets/PaymentStatusWidget';
+import { formatGameDate } from '../../utils/dateFormat';
 
 /**
  * Componente para el modal de detalles del partido
@@ -113,7 +114,7 @@ const ScheduleHistoryModal = ({
       inGameSubs.filter(s => !usedSubs.has(s)).forEach(s => bench.push(s));
       const allBench = [...bench];
 
-      const fecha = new Date(game.fecha_partido).toLocaleDateString('es-MX', {
+      const fecha = formatGameDate(game.fecha_partido, 'es-MX', {
         day: '2-digit', month: 'long', year: 'numeric',
       });
 
@@ -511,7 +512,7 @@ const ScheduleHistoryModal = ({
                 </h3>
                 <p className='text-gray-300'>
                   Fecha:{' '}
-                  {new Date(selectedGame.fecha_partido).toLocaleDateString()}
+                  {formatGameDate(selectedGame.fecha_partido)}
                 </p>
                 <p className='text-gray-300'>Lugar: {selectedGame.lugar}</p>
                 <p className='text-gray-300'>
@@ -1193,7 +1194,7 @@ const ScheduleHistoryModal = ({
                   vs {selectedGame.equipo_contrario}
                 </p>
                 <p className='text-gray-300 text-sm'>
-                  {new Date(selectedGame.fecha_partido).toLocaleDateString()} -{' '}
+                  {formatGameDate(selectedGame.fecha_partido)} -{' '}
                   {selectedGame.lugar}
                 </p>
               </div>

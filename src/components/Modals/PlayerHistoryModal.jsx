@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatGameDate } from '../../utils/dateFormat';
 
 /**
  * Componente para el modal de historial del jugador
@@ -220,9 +221,7 @@ const PlayerHistoryModal = ({
                                 vs {attendance.partidos?.equipo_contrario}
                               </div>
                               <div className='text-sm text-gray-300'>
-                                {new Date(
-                                  attendance.partidos?.fecha_partido
-                                ).toLocaleDateString()}
+                                {formatGameDate(attendance.partidos?.fecha_partido)}
                               </div>
                               <div className='text-xs text-gray-400'>
                                 {attendance.partidos?.lugar}

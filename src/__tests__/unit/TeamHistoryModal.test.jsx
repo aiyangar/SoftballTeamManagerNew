@@ -163,7 +163,7 @@ describe('TeamHistoryModal', () => {
       const onClose = vi.fn();
       const user = userEvent.setup();
       render(<TeamHistoryModal {...baseProps} onEdit={onEdit} onClose={onClose} />);
-      await user.click(screen.getByRole('button', { name: /Editar Equipo/ }));
+      await user.click(screen.getByRole('button', { name: /Editar/ }));
       expect(onEdit).toHaveBeenCalledWith(mockTeam);
       expect(onClose).toHaveBeenCalledOnce();
     });
@@ -173,7 +173,7 @@ describe('TeamHistoryModal', () => {
       const onClose = vi.fn();
       const user = userEvent.setup();
       render(<TeamHistoryModal {...baseProps} onDelete={onDelete} onClose={onClose} />);
-      await user.click(screen.getByRole('button', { name: /Eliminar Equipo/ }));
+      await user.click(screen.getByRole('button', { name: /Eliminar/ }));
       expect(onDelete).toHaveBeenCalledWith(mockTeam);
       expect(onClose).toHaveBeenCalledOnce();
     });

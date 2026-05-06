@@ -375,13 +375,12 @@ const PlayerHistoryModal = ({
         </div>
 
         {/* Footer con botones de acción */}
-        <div className='modal-footer p-6 border-t border-gray-600 bg-gray-800'>
-          <div className='flex justify-between items-center'>
-            {/* Botón de pago de inscripción (izquierda) */}
+        <div className='modal-footer p-4 sm:p-6 border-t border-gray-600 bg-gray-800'>
+          <div className='flex flex-wrap items-center gap-2'>
             {inscripcionRemaining > 0 && onAcceptPayment && (
               <button
                 onClick={() => onAcceptPayment(player)}
-                className='btn bg-green-600 text-white hover:bg-green-700'
+                className='btn bg-green-600 text-white hover:bg-green-700 mr-auto'
                 title='Registrar pago de inscripción para este jugador'
               >
                 <svg
@@ -400,30 +399,23 @@ const PlayerHistoryModal = ({
                 <span>Aceptar Pago</span>
               </button>
             )}
-            
-            {/* Botones de edición y eliminación (derecha) */}
-            <div className='flex space-x-3'>
-              <button
-                onClick={() => {
-                  onEdit(player.id);
-                  // El modal se cierra desde el componente padre
-                }}
-                className='btn btn-primary'
-              >
-                <span>✏️</span>
-                <span>Editar Jugador</span>
-              </button>
-              <button
-                onClick={() => {
-                  onDelete(player.id);
-                  onClose();
-                }}
-                className='btn btn-danger'
-              >
-                <span>🗑️</span>
-                <span>Eliminar Jugador</span>
-              </button>
-            </div>
+            <button
+              onClick={() => onEdit(player.id)}
+              className='btn btn-primary'
+            >
+              <span>✏️</span>
+              <span>Editar</span>
+            </button>
+            <button
+              onClick={() => {
+                onDelete(player.id);
+                onClose();
+              }}
+              className='btn btn-danger'
+            >
+              <span>🗑️</span>
+              <span>Eliminar</span>
+            </button>
           </div>
         </div>
       </div>

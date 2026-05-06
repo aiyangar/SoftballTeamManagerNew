@@ -184,8 +184,8 @@ const TeamHistoryModal = ({
         </div>
 
         {/* Footer con botones de acción */}
-        <div className='modal-footer p-6 border-t border-gray-600 bg-gray-800'>
-          <div className='flex justify-end space-x-3'>
+        <div className='modal-footer p-4 sm:p-6 border-t border-gray-600 bg-gray-800'>
+          <div className='flex flex-wrap justify-end gap-2'>
             <button
               onClick={() => {
                 onEdit(selectedTeam);
@@ -194,7 +194,7 @@ const TeamHistoryModal = ({
               className='btn btn-primary'
             >
               <span>✏️</span>
-              <span>Editar Equipo</span>
+              <span>Editar</span>
             </button>
             <button
               onClick={() => {
@@ -204,7 +204,7 @@ const TeamHistoryModal = ({
               className='btn btn-danger'
             >
               <span>🗑️</span>
-              <span>Eliminar Equipo</span>
+              <span>Eliminar</span>
             </button>
           </div>
         </div>

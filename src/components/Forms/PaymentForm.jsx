@@ -4,6 +4,7 @@ import { supabase } from '../../supabaseClient';
 import { Link } from 'react-router-dom';
 import { useModal } from '../../hooks/useModal';
 import PaymentStatusWidget from '../Widgets/PaymentStatusWidget';
+import { formatGameDate } from '../../utils/dateFormat';
 
 const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
   const [players, setPlayers] = useState([]);
@@ -444,7 +445,7 @@ const PaymentForm = ({ gameId, teamId, onClose, onPaymentComplete }) => {
               </h3>
               <p className='text-gray-300'>vs {gameInfo.equipo_contrario}</p>
               <p className='text-gray-300'>
-                Fecha: {new Date(gameInfo.fecha_partido).toLocaleDateString()}
+                Fecha: {formatGameDate(gameInfo.fecha_partido)}
               </p>
               <p className='text-gray-300'>Lugar: {gameInfo.lugar}</p>
 

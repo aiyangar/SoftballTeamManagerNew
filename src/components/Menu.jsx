@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { UserAuth } from '../context/AuthContext';
 import { useTeam } from '../context/useTeam';
 import { getFullVersion } from '../version';
@@ -14,7 +14,14 @@ const Menu = () => {
   const signOut = authContext?.signOut;
   const { teams, selectedTeam, handleTeamChange } = useTeam();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showMenu, setShowMenu] = useState(false);
+
+  // Auto-close on route change so any navigation (top nav, bottom nav,
+  // links inside the menu, programmatic) puts the menu away.
+  useEffect(() => {
+    setShowMenu(false);
+  }, [location.pathname]);
 
   /**
    * Maneja el proceso de cerrar sesión
@@ -68,6 +75,7 @@ const Menu = () => {
                     onChange={e => {
                       const teamId = e.target.value === '' ? '' : e.target.value;
                       handleTeamChange(teamId);
+                      setShowMenu(false);
                     }}
                     className='w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-white text-sm'
                   >

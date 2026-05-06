@@ -1,10 +1,56 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const MAX_BATTING_ORDER = 10;
 
 const POSITION_LABELS = {
   BD: 'BD – Bateador Designado',
   CD: 'CD – Corredor Designado',
+};
+
+// Render-prop wrapper around useSortable. Hands the consumer the props it
+// needs to bind the row container, the drag handle (activator) and to react
+// to the drag state. `id` must be unique among siblings inside SortableContext.
+const SortableRow = ({ id, disabled, children }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, disabled });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 20 : undefined,
+  };
+
+  const handleProps = {
+    ref: setActivatorNodeRef,
+    attrs: attributes,
+    listeners,
+  };
+
+  return children({ setNodeRef, style, isDragging, handleProps });
 };
 
 const LineupModal = ({
@@ -24,12 +70,18 @@ const LineupModal = ({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [lineupFromDB, setLineupFromDB] = useState(false);
-  const [dragOverIndex, setDragOverIndex] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [subMsg, setSubMsg] = useState(null);
   const [sharing, setSharing] = useState(false);
-  const dragIndexRef = useRef(null);
   const prevRefreshKey = useRef(refreshKey);
+
+  // Sensors: small distance/delay activation so a tap never starts a drag
+  // (and the browser long-press context-menu never fires on the handle).
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   useEffect(() => {
     if (show && game) loadLineup();
@@ -174,40 +226,11 @@ const LineupModal = ({
   // Drag-and-drop — all active rows participate
   const canDrag = row => !gameFinalizationStatus && row.activo;
 
-  const handleDragStart = (e, originalIndex) => {
-    dragIndexRef.current = originalIndex;
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e, renderIndex) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setDragOverIndex(renderIndex);
-  };
-
-  const handleDrop = (e, dropOriginalIndex) => {
-    e.preventDefault();
-    const dragIndex = dragIndexRef.current;
-    if (dragIndex === null || dragIndex === dropOriginalIndex) {
-      setDragOverIndex(null);
-      return;
-    }
-
-    setLineupRows(prev => {
-      const rows = [...prev];
-      const [moved] = rows.splice(dragIndex, 1);
-      const adjustedDrop = dropOriginalIndex > dragIndex ? dropOriginalIndex - 1 : dropOriginalIndex;
-      rows.splice(adjustedDrop, 0, moved);
-      return recalcOrder(rows);
-    });
-
-    dragIndexRef.current = null;
-    setDragOverIndex(null);
-  };
-
-  const handleDragEnd = () => {
-    dragIndexRef.current = null;
-    setDragOverIndex(null);
+  const handleDragEnd = ({ active, over }) => {
+    if (!over || active.id === over.id) return;
+    const oldIndex = Number(active.id);
+    const newIndex = Number(over.id);
+    setLineupRows(prev => recalcOrder(arrayMove(prev, oldIndex, newIndex)));
   };
 
   const handleSave = async () => {
@@ -284,6 +307,25 @@ const LineupModal = ({
 
     return result;
   }, [lineupRows]);
+
+  // Move a row one slot up/down through render order.
+  // Skips rows that aren't draggable (inactive / finalized) so the visible
+  // result mirrors what a drag-and-drop swap would produce.
+  const findNeighborOriginalIndex = (originalIndex, direction) => {
+    const renderIdx = renderRows.findIndex(r => r.originalIndex === originalIndex);
+    if (renderIdx < 0) return null;
+    const step = direction === 'up' ? -1 : 1;
+    for (let i = renderIdx + step; i >= 0 && i < renderRows.length; i += step) {
+      if (canDrag(renderRows[i])) return renderRows[i].originalIndex;
+    }
+    return null;
+  };
+
+  const moveByOne = (originalIndex, direction) => {
+    const target = findNeighborOriginalIndex(originalIndex, direction);
+    if (target == null) return;
+    setLineupRows(prev => recalcOrder(arrayMove(prev, originalIndex, target)));
+  };
 
   if (!show || !game) return null;
 
@@ -637,158 +679,205 @@ const LineupModal = ({
                 <>
                   {!gameFinalizationStatus && (!hasSubs || editMode) && (
                     <p className='text-xs text-gray-500 mb-2'>
-                      Arrastra las filas para cambiar el orden al bat o mover jugadores al banco.
+                      Arrastra las filas o usa los botones ▲/▼ para reordenar.
                     </p>
                   )}
-                  <div className='space-y-1'>
-                    {/* Encabezado sección Titulares */}
-                    <div className='bg-green-900/20 rounded px-2 py-1'>
-                      <span className='text-xs font-semibold text-green-400 uppercase tracking-wide'>
-                        Titulares
-                      </span>
-                    </div>
-                    {renderRows.map((row, renderIdx) => (
-                      <React.Fragment key={row.originalIndex}>
-                        {row.showBancoSep && (
-                          <div className='bg-gray-800/60 rounded px-2 py-1 mt-1'>
-                            <span className='text-xs font-semibold text-gray-400 uppercase tracking-wide'>
-                              Banca
-                            </span>
-                          </div>
-                        )}
-                        <div
-                          draggable={(!hasSubs || editMode) && canDrag(row)}
-                          onDragStart={(!hasSubs || editMode) && canDrag(row) ? e => handleDragStart(e, row.originalIndex) : undefined}
-                          onDragOver={(!hasSubs || editMode) && canDrag(row) ? e => handleDragOver(e, renderIdx) : undefined}
-                          onDrop={(!hasSubs || editMode) && canDrag(row) ? e => handleDrop(e, row.originalIndex) : undefined}
-                          onDragEnd={handleDragEnd}
-                          className={[
-                            'rounded-lg border border-gray-700 p-2 transition-colors',
-                            !row.activo ? 'opacity-50' : '',
-                            dragOverIndex === renderIdx
-                              ? 'bg-blue-900/40'
-                              : row.isBD
-                                ? 'bg-purple-900/20'
-                                : 'bg-gray-800/40',
-                          ].join(' ')}
-                        >
-                          {/* Fila: handle + turno + jugador + posición + eliminar */}
-                          <div className='flex items-center gap-2'>
-                            {!gameFinalizationStatus && (
-                              <span className='w-5 shrink-0 text-center'>
-                                {(!hasSubs || editMode) && canDrag(row) && (
-                                  <span
-                                    className='text-gray-600 hover:text-gray-400 cursor-grab active:cursor-grabbing select-none text-base'
-                                    title='Arrastrar para reordenar'
-                                  >
-                                    ⠿
-                                  </span>
-                                )}
-                              </span>
-                            )}
-                            <span className='font-mono text-white text-sm w-5 shrink-0 text-center'>
-                              {row.orden_bateo ?? '—'}
-                            </span>
-                            <div className='flex-1 min-w-0'>
-                              {row.indent && (
-                                <span className='text-gray-500 mr-1'>↳</span>
-                              )}
-                              {row.jugador_id ? (
-                                <span className={`text-sm ${!row.activo ? 'line-through text-gray-500' : 'text-white'}`}>
-                                  {row.numero ? `#${row.numero} ` : ''}
-                                  {row.nombre}
-                                </span>
-                              ) : (
-                                <select
-                                  value={row.jugador_id}
-                                  onChange={e => updateRow(row.originalIndex, 'jugador_id', e.target.value)}
-                                  className='p-1 bg-gray-800 border border-gray-600 rounded text-white text-sm w-full'
-                                >
-                                  <option value=''>Seleccionar...</option>
-                                  {players
-                                    .filter(p => {
-                                      const pid = String(p.id);
-                                      const hasAttendance = selectablePlayers.some(sp => String(sp.id) === pid);
-                                      return hasAttendance && !usedPlayerIds.has(pid);
-                                    })
-                                    .map(p => (
-                                      <option key={p.id} value={p.id}>
-                                        {p.numero ? `#${p.numero} ` : ''}
-                                        {p.nombre}
-                                      </option>
-                                    ))}
-                                </select>
-                              )}
-                              {!row.activo && (
-                                <span className='ml-1 text-red-400 text-xs'>(relevado)</span>
-                              )}
-                            </div>
-                            {/* Posición inline */}
-                            {gameFinalizationStatus ? (
-                              <span className='text-gray-300 font-mono text-xs shrink-0 bg-gray-700 px-1.5 py-0.5 rounded'>
-                                {POSITION_LABELS[row.posicion_campo] ?? row.posicion_campo}
-                              </span>
-                            ) : (
-                              <select
-                                value={row.posicion_campo}
-                                onChange={e => updateRow(row.originalIndex, 'posicion_campo', e.target.value)}
-                                className='p-0.5 bg-gray-800 border border-gray-600 rounded text-white text-xs shrink-0'
-                              >
-                                <optgroup label='Campo'>
-                                  {['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CLF', 'CRF', 'RF'].map(pos => (
-                                    <option key={pos} value={pos}>{pos}</option>
-                                  ))}
-                                </optgroup>
-                                <optgroup label='Designados'>
-                                  <option value='DH'>DH</option>
-                                  <option value='BD'>BD</option>
-                                  <option value='CD'>CD</option>
-                                </optgroup>
-                              </select>
-                            )}
-                            {!gameFinalizationStatus && (
-                              <button
-                                onClick={() => removeRow(row.originalIndex)}
-                                className='text-red-400 hover:text-red-300 text-xs shrink-0 px-1'
-                                title='Quitar jugador'
-                              >
-                                ✕
-                              </button>
-                            )}
-                          </div>
-                          {/* BD: selector "batea por" (solo aplica a jugadores BD) */}
-                          {row.posicion_campo === 'BD' && (
-                            <div className={`flex items-center gap-2 mt-1 ${!gameFinalizationStatus ? 'pl-12' : 'pl-7'}`}>
-                              {!gameFinalizationStatus ? (
-                                <select
-                                  value={row.batea_por_id || ''}
-                                  onChange={e => updateRow(row.originalIndex, 'batea_por_id', e.target.value)}
-                                  className='p-1 bg-purple-900 border border-purple-600 rounded text-purple-200 text-xs'
-                                >
-                                  <option value=''>Batea por...</option>
-                                  {lineupRows
-                                    .filter(r =>
-                                      r.jugador_id &&
-                                      r.es_titular &&
-                                      String(r.jugador_id) !== String(row.jugador_id)
-                                    )
-                                    .map(r => (
-                                      <option key={r.jugador_id} value={r.jugador_id}>
-                                        {r.numero ? `#${r.numero} ` : ''}{r.nombre}
-                                      </option>
-                                    ))}
-                                </select>
-                              ) : row.batea_por_id ? (
-                                <span className='text-purple-400 text-xs'>
-                                  por: {row.batea_por_nombre || `#${row.batea_por_id}`}
-                                </span>
-                              ) : null}
-                            </div>
-                          )}
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={renderRows.map(r => r.originalIndex)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className='space-y-1'>
+                        {/* Encabezado sección Titulares */}
+                        <div className='bg-green-900/20 rounded px-2 py-1'>
+                          <span className='text-xs font-semibold text-green-400 uppercase tracking-wide'>
+                            Titulares
+                          </span>
                         </div>
-                      </React.Fragment>
-                    ))}
-                  </div>
+                        {renderRows.map(row => {
+                          const dragEnabled = (!hasSubs || editMode) && canDrag(row);
+                          const canMoveUp = dragEnabled && findNeighborOriginalIndex(row.originalIndex, 'up') != null;
+                          const canMoveDown = dragEnabled && findNeighborOriginalIndex(row.originalIndex, 'down') != null;
+                          return (
+                            <React.Fragment key={row.originalIndex}>
+                              {row.showBancoSep && (
+                                <div className='bg-gray-800/60 rounded px-2 py-1 mt-1'>
+                                  <span className='text-xs font-semibold text-gray-400 uppercase tracking-wide'>
+                                    Banca
+                                  </span>
+                                </div>
+                              )}
+                              <SortableRow id={row.originalIndex} disabled={!dragEnabled}>
+                                {({ setNodeRef, style, isDragging, handleProps }) => (
+                                  <div
+                                    ref={setNodeRef}
+                                    style={style}
+                                    className={[
+                                      'rounded-lg border border-gray-700 p-2 transition-colors',
+                                      !row.activo ? 'opacity-50' : '',
+                                      isDragging
+                                        ? 'bg-blue-900/40 shadow-lg ring-1 ring-blue-500'
+                                        : row.isBD
+                                          ? 'bg-purple-900/20'
+                                          : 'bg-gray-800/40',
+                                    ].join(' ')}
+                                  >
+                                    {/* Fila: handle + turno + jugador + posición + ↑↓ + eliminar */}
+                                    <div className='flex items-center gap-2'>
+                                      {!gameFinalizationStatus && (
+                                        <span className='w-6 shrink-0 text-center'>
+                                          {dragEnabled && (
+                                            <button
+                                              type='button'
+                                              ref={handleProps.ref}
+                                              {...handleProps.attrs}
+                                              {...handleProps.listeners}
+                                              className='text-gray-500 hover:text-gray-300 active:cursor-grabbing select-none text-lg leading-none p-1 -m-1 touch-none'
+                                              style={{ touchAction: 'none' }}
+                                              title='Arrastrar para reordenar'
+                                              aria-label='Arrastrar para reordenar'
+                                            >
+                                              ⠿
+                                            </button>
+                                          )}
+                                        </span>
+                                      )}
+                                      <span className='font-mono text-white text-sm w-5 shrink-0 text-center'>
+                                        {row.orden_bateo ?? '—'}
+                                      </span>
+                                      <div className='flex-1 min-w-0'>
+                                        {row.indent && (
+                                          <span className='text-gray-500 mr-1'>↳</span>
+                                        )}
+                                        {row.jugador_id ? (
+                                          <span className={`text-sm ${!row.activo ? 'line-through text-gray-500' : 'text-white'}`}>
+                                            {row.numero ? `#${row.numero} ` : ''}
+                                            {row.nombre}
+                                          </span>
+                                        ) : (
+                                          <select
+                                            value={row.jugador_id}
+                                            onChange={e => updateRow(row.originalIndex, 'jugador_id', e.target.value)}
+                                            className='p-1 bg-gray-800 border border-gray-600 rounded text-white text-sm w-full'
+                                          >
+                                            <option value=''>Seleccionar...</option>
+                                            {players
+                                              .filter(p => {
+                                                const pid = String(p.id);
+                                                const hasAttendance = selectablePlayers.some(sp => String(sp.id) === pid);
+                                                return hasAttendance && !usedPlayerIds.has(pid);
+                                              })
+                                              .map(p => (
+                                                <option key={p.id} value={p.id}>
+                                                  {p.numero ? `#${p.numero} ` : ''}
+                                                  {p.nombre}
+                                                </option>
+                                              ))}
+                                          </select>
+                                        )}
+                                        {!row.activo && (
+                                          <span className='ml-1 text-red-400 text-xs'>(relevado)</span>
+                                        )}
+                                      </div>
+                                      {/* Posición inline */}
+                                      {gameFinalizationStatus ? (
+                                        <span className='text-gray-300 font-mono text-xs shrink-0 bg-gray-700 px-1.5 py-0.5 rounded'>
+                                          {POSITION_LABELS[row.posicion_campo] ?? row.posicion_campo}
+                                        </span>
+                                      ) : (
+                                        <select
+                                          value={row.posicion_campo}
+                                          onChange={e => updateRow(row.originalIndex, 'posicion_campo', e.target.value)}
+                                          className='p-0.5 bg-gray-800 border border-gray-600 rounded text-white text-xs shrink-0'
+                                        >
+                                          <optgroup label='Campo'>
+                                            {['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CLF', 'CRF', 'RF'].map(pos => (
+                                              <option key={pos} value={pos}>{pos}</option>
+                                            ))}
+                                          </optgroup>
+                                          <optgroup label='Designados'>
+                                            <option value='DH'>DH</option>
+                                            <option value='BD'>BD</option>
+                                            <option value='CD'>CD</option>
+                                          </optgroup>
+                                        </select>
+                                      )}
+                                      {!gameFinalizationStatus && dragEnabled && (
+                                        <div className='flex flex-col shrink-0 -my-1'>
+                                          <button
+                                            type='button'
+                                            onClick={() => moveByOne(row.originalIndex, 'up')}
+                                            disabled={!canMoveUp}
+                                            className='text-gray-300 hover:text-white disabled:text-gray-700 disabled:cursor-not-allowed text-xs leading-none px-1.5 py-0.5'
+                                            title='Mover arriba'
+                                            aria-label='Mover arriba'
+                                          >
+                                            ▲
+                                          </button>
+                                          <button
+                                            type='button'
+                                            onClick={() => moveByOne(row.originalIndex, 'down')}
+                                            disabled={!canMoveDown}
+                                            className='text-gray-300 hover:text-white disabled:text-gray-700 disabled:cursor-not-allowed text-xs leading-none px-1.5 py-0.5'
+                                            title='Mover abajo'
+                                            aria-label='Mover abajo'
+                                          >
+                                            ▼
+                                          </button>
+                                        </div>
+                                      )}
+                                      {!gameFinalizationStatus && (
+                                        <button
+                                          onClick={() => removeRow(row.originalIndex)}
+                                          className='text-red-400 hover:text-red-300 text-xs shrink-0 px-1'
+                                          title='Quitar jugador'
+                                        >
+                                          ✕
+                                        </button>
+                                      )}
+                                    </div>
+                                    {/* BD: selector "batea por" (solo aplica a jugadores BD) */}
+                                    {row.posicion_campo === 'BD' && (
+                                      <div className={`flex items-center gap-2 mt-1 ${!gameFinalizationStatus ? 'pl-12' : 'pl-7'}`}>
+                                        {!gameFinalizationStatus ? (
+                                          <select
+                                            value={row.batea_por_id || ''}
+                                            onChange={e => updateRow(row.originalIndex, 'batea_por_id', e.target.value)}
+                                            className='p-1 bg-purple-900 border border-purple-600 rounded text-purple-200 text-xs'
+                                          >
+                                            <option value=''>Batea por...</option>
+                                            {lineupRows
+                                              .filter(r =>
+                                                r.jugador_id &&
+                                                r.es_titular &&
+                                                String(r.jugador_id) !== String(row.jugador_id)
+                                              )
+                                              .map(r => (
+                                                <option key={r.jugador_id} value={r.jugador_id}>
+                                                  {r.numero ? `#${r.numero} ` : ''}{r.nombre}
+                                                </option>
+                                              ))}
+                                          </select>
+                                        ) : row.batea_por_id ? (
+                                          <span className='text-purple-400 text-xs'>
+                                            por: {row.batea_por_nombre || `#${row.batea_por_id}`}
+                                          </span>
+                                        ) : null}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </SortableRow>
+                            </React.Fragment>
+                          );
+                        })}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
                 </>
               )}
             </>

@@ -16,6 +16,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { formatGameDate } from '../../utils/dateFormat';
 
 const MAX_BATTING_ORDER = 10;
 
@@ -358,7 +359,7 @@ const LineupModal = ({
         .sort((a, b) => (a.orden_bateo || 99) - (b.orden_bateo || 99));
       const suplentes = lineupRows.filter(r => !r.es_titular || !r.activo);
 
-      const fecha = new Date(game.fecha_partido).toLocaleDateString('es-MX', {
+      const fecha = formatGameDate(game.fecha_partido, 'es-MX', {
         day: '2-digit', month: 'long', year: 'numeric',
       });
 
@@ -597,7 +598,7 @@ const LineupModal = ({
               <h2 className='text-xl font-semibold text-white'>Lineup</h2>
               <p className='text-sm text-gray-400 mt-1'>
                 vs {game.equipo_contrario} —{' '}
-                {new Date(game.fecha_partido).toLocaleDateString()}
+                {formatGameDate(game.fecha_partido)}
               </p>
             </div>
             <button onClick={onClose} className='text-gray-400 hover:text-white text-2xl' title='Cerrar lineup'>

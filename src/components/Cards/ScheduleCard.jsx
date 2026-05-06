@@ -1,5 +1,6 @@
 import React from 'react';
 import PaymentStatusWidget from '../Widgets/PaymentStatusWidget';
+import { formatGameDate } from '../../utils/dateFormat';
 
 /**
  * Componente para las tarjetas individuales de partidos
@@ -48,7 +49,7 @@ const ScheduleCard = ({
           <div className='flex justify-between items-start'>
             <div className='flex-1'>
               <h3 className='font-bold text-lg'>{game.equipo_contrario}</h3>
-              <p>Fecha: {new Date(game.fecha_partido).toLocaleDateString()}</p>
+              <p>Fecha: {formatGameDate(game.fecha_partido)}</p>
 
               {/* Marcador siempre visible */}
               {game.resultado && (
@@ -85,7 +86,7 @@ const ScheduleCard = ({
         <div className='flex justify-between items-start'>
           <div className='flex-1'>
             <h3 className='font-bold text-lg'>{game.equipo_contrario}</h3>
-            <p>Fecha: {new Date(game.fecha_partido).toLocaleDateString()}</p>
+            <p>Fecha: {formatGameDate(game.fecha_partido)}</p>
             <p>Lugar: {game.lugar}</p>
             <p>Umpire: ${game.umpire || 550}</p>
 
